@@ -1,7 +1,7 @@
 from sqlmodel import Session, create_engine, select
 
 from app.core.config import settings
-from app.models import User
+from app.models import *
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -12,13 +12,13 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
 
 def init_db(session: Session) -> None:
-    # # Tables should be created with Alembic migrations
-    # # But if you don't want to use migrations, create
-    # # the tables un-commenting the next lines
-    # # from sqlmodel import SQLModel
+    # Tables should be created with Alembic migrations
+    # But if you don't want to use migrations, create
+    # the tables un-commenting the next lines
+    # from sqlmodel import SQLModel
 
-    # # This works because the models are already imported and registered from app.models
-    # # SQLModel.metadata.create_all(engine)
+    # This works because the models are already imported and registered from app.models
+    # SQLModel.metadata.create_all(engine)
 
     # user = session.exec(
     #     select(User).where(User.email == settings.FIRST_SUPERUSER)
@@ -30,4 +30,32 @@ def init_db(session: Session) -> None:
     #         is_superuser=True,
     #     )
     #     user = crud.create_user(session=session, user_create=user_in)
+    menu = session.exec(select(Menus)).first()
+    if not menu:
+        # tables
+        session.add_all(
+            [Tables(no=i) for i in range(1, 35)],
+        )
+
+        # menus
+        session.add_all(
+            [
+                Menus(
+                    title="장어",
+                    desc="장어구이 2마리",
+                    price=30000,
+                ),
+                Menus(
+                    title="대하",
+                    desc="대하 소금구이 20마리",
+                    price=30000,
+                ),
+                Menus(
+                    title="콜라",
+                    desc="코카-콜라 1.25L",
+                    price=30000,
+                ),
+            ]
+        )
+        session.commit()
     pass

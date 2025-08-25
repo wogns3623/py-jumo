@@ -3,19 +3,17 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
-from sqlmodel import Session
+from sqlmodel import Session, SQLModel
 
 from app.core import security
 from app.core.config import settings
 from app.core.db import engine
 from app.models import TokenPayload, User, AdminUser
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
-)
+get_admin_token = HTTPBearer()
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -24,13 +22,13 @@ def get_db() -> Generator[Session, None, None]:
 
 
 SessionDep = Annotated[Session, Depends(get_db)]
-TokenDep = Annotated[str, Depends(reusable_oauth2)]
+AdminTokenDep = Annotated[HTTPAuthorizationCredentials, Depends(get_admin_token)]
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User:
+def get_admin_user(session: SessionDep, token: AdminTokenDep) -> User:
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token.credentials, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
         )
         token_data = TokenPayload(**payload)
     except (InvalidTokenError, ValidationError):
@@ -46,9 +44,7 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
     #     raise HTTPException(status_code=400, detail="Inactive user")
     # return user
 
-    if token_data.sub != "admin":
-        raise HTTPException(status_code=404, detail="User not found")
-    return AdminUser()
+    return AdminUser(username=token_data.sub)
 
 
-CurrentUser = Annotated[User, Depends(get_current_user)]
+CurrentAdmin = Annotated[User, Depends(get_admin_user)]

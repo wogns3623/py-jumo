@@ -93,5 +93,8 @@ class Settings(BaseSettings):
 
         return self
 
+    BREAKTIME_START_TIME: str | None = None
+    BREAKTIME_END_TIME: str | None = None
+
 
 settings = Settings()  # type: ignore
