@@ -3,7 +3,7 @@ from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from sqlmodel import Session, select
@@ -14,7 +14,9 @@ from app.core.db import engine
 from app.models import TokenPayload, User, AdminUser, Restaurants
 
 
-get_admin_token = HTTPBearer()
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/admin/login", scheme_name="JWT"
+)
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -23,13 +25,14 @@ def get_db() -> Generator[Session, None, None]:
 
 
 SessionDep = Annotated[Session, Depends(get_db)]
-AdminTokenDep = Annotated[HTTPAuthorizationCredentials, Depends(get_admin_token)]
+AdminTokenDep = Annotated[str, Depends(reusable_oauth2)]
+AdminLoginForm = Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 def get_admin_user(session: SessionDep, token: AdminTokenDep) -> User:
     try:
         payload = jwt.decode(
-            token.credentials, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
         )
         token_data = TokenPayload(**payload)
     except (InvalidTokenError, ValidationError):

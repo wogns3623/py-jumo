@@ -1,13 +1,14 @@
 from datetime import datetime, timedelta
 from typing import Sequence
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore[import-untyped]
+from apscheduler.triggers.cron import CronTrigger  # type: ignore[import-untyped]
 from sqlmodel import Session, select, col
 
 from app.core.config import settings
 from app.core.db import engine
 from app.models import (
+    Restaurants,
     Orders,
     Payments,
     BankTransaction,
@@ -25,7 +26,6 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         password=settings.BANK_ACCOUNT_PASSWORD,
         days=30,
         # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
-        # LOG_PATH='/Users/beomi/phantom.log' # Optional, default is os.path.devnull (no log)
     )
 
     return [BankTransaction.model_validate(trs) for trs in transaction_list]
@@ -37,16 +37,22 @@ def connect_payment_to_order():
         now = datetime.now()
         before_10_minutes = now - timedelta(minutes=10)
 
+        restaurant = session.exec(select(Restaurants)).first()
+        assert restaurant is not None, "Restaurant not found"
+
         exist_payments = session.exec(
             select(Payments).where(
+                Payments.restaurant_id == restaurant.id,
                 col(Payments.created_at).in_(
                     [transaction.date for transaction in transaction_list]
-                )
+                ),
             )
         ).all()
-
         non_exist_payments = [
-            transaction.to_payment()
+            Payments.model_validate(
+                transaction.to_payment_data_dict(),
+                update={"restaurant_id": restaurant.id},
+            )
             for transaction in transaction_list
             if not any(
                 payment.amount == transaction.amount
@@ -74,7 +80,7 @@ def connect_payment_to_order():
 
             for order in orders_without_payment.values():
                 if (
-                    order.order_no % 100 == expected_order_no
+                    order.no % 100 == expected_order_no
                     and order.total_price == payment.amount + expected_order_no
                 ):
                     order.payment_id = payment.id

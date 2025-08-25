@@ -41,7 +41,10 @@ COPY ./app /app/app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-RUN playwright install firefox
-RUN playwright install-deps
+
+RUN --mount=type=cache,target=/root/.cache/ms-playwright \
+    playwright install firefox
+RUN --mount=type=cache,target=/root/.cache/ms-playwright \
+    playwright install-deps
 
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timezone, timedelta
 import uuid
 from typing import Union, Sequence
 
@@ -6,10 +6,28 @@ from typing import Union, Sequence
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
-from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant
+from app.api.deps import SessionDep, AdminLoginForm, CurrentAdmin, DefaultRestaurant
 from app.core import security
 from app.core.config import settings
-from app.models import *
+from app.models import (
+    Token,
+    Restaurants,
+    RestaurantUpdate,
+    Menus,
+    MenuUpdate,
+    Tables,
+    TableStatus,
+    TableUpdate,
+    AllFilter,
+    Waitings,
+    Orders,
+    OrderStatus,
+    OrderUpdate,
+    OrderedMenus,
+    OrderedMenuUpdate,
+    MenuOrderStatus,
+    Payments,
+)
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -161,7 +179,11 @@ def read_orders(
     restaurant: DefaultRestaurant,
     status: Union[OrderStatus, AllFilter] = AllFilter.all,
 ) -> Sequence[Orders]:
-    statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
+    statement = (
+        select(Orders, Payments)
+        .join(Payments, isouter=True)
+        .where(Orders.restaurant_id == restaurant.id)
+    )
     if status == AllFilter.all:
         pass
     elif status == OrderStatus.ordered:
@@ -181,7 +203,11 @@ def read_orders(
 
     orders = session.exec(statement.order_by(col(Orders.created_at).desc())).all()
 
-    return orders
+    for order, payment in orders:
+        if payment and order.payment_id == payment.id:
+            order.payment = payment
+
+    return [order for order, _ in orders]
 
 
 @router.patch("/orders/{order_id}", tags=["orders"])
@@ -286,3 +312,40 @@ def reject_menu_order(
     session.commit()
 
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
+
+
+@router.get("/payments/", tags=["payments"])
+def read_payments(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+) -> Sequence[Payments]:
+    payments = session.exec(
+        select(Payments)
+        .where(Payments.restaurant_id == restaurant.id)
+        .order_by(col(Payments.created_at).desc())
+    ).all()
+
+    return payments
+
+
+@router.patch("/payments/{payment_id}/refund", tags=["payments"])
+def refund_payment(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    payment_id: uuid.UUID,
+) -> Payments:
+
+    payment = session.get(Payments, {"id": payment_id, "restaurant_id": restaurant.id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="결제 내역을 찾을 수 없습니다.")
+    if payment.refunded_at:
+        raise HTTPException(status_code=400, detail="이미 환불된 결제 내역입니다.")
+
+    payment.refunded_at = datetime.now(timezone.utc)
+    session.add(payment)
+    session.commit()
+    session.refresh(payment)
+
+    return payment

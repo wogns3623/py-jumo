@@ -32,10 +32,11 @@ def read_watings(
     waiting_data: WaitingFind,
 ) -> Sequence[Waitings]:
     waitings = session.exec(
-        select(Waitings)
-        .where(Waitings.restaurant_id == restaurant.id)
-        .where(Waitings.name == waiting_data.name)
-        .where(Waitings.phone == waiting_data.phone)
+        select(Waitings).where(
+            Waitings.restaurant_id == restaurant.id,
+            Waitings.name == waiting_data.name,
+            Waitings.phone == waiting_data.phone,
+        )
     ).all()
 
     return waitings

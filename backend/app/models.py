@@ -1,9 +1,16 @@
 from datetime import datetime, timezone
 import enum
-from typing import Optional
+from typing import Optional, ClassVar
 import uuid
 
-from sqlmodel import SQLModel, Field, Enum, Column, Relationship, text
+from sqlmodel import (
+    SQLModel,
+    Field,
+    Enum,
+    Column,
+    Relationship,
+    Sequence,
+)
 
 
 class User(SQLModel):
@@ -13,11 +20,6 @@ class User(SQLModel):
 
 class AdminUser(User):
     is_superuser: bool = True
-
-
-class AdminLoginForm(SQLModel):
-    username: str
-    password: str
 
 
 # JSON payload containing access token
@@ -53,14 +55,17 @@ class RestaurantUpdate(SQLModel):
     break_end_time: Optional[str] = None
 
 
-class Menus(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+class MenuBase(SQLModel):
     name: str = Field(index=True)
     desc: Optional[str] = Field(default=None)
     price: int = Field(description="price in won")
     image: Optional[str] = Field(default=None)
     no_stock: bool = Field(default=False)
+
+
+class Menus(MenuBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="menus")
@@ -68,6 +73,11 @@ class Menus(SQLModel, table=True):
 
 class MenuUpdate(SQLModel):
     no_stock: Optional[bool] = None
+
+
+class MenuPublic(MenuBase):
+    class Config:
+        from_attributes = True
 
 
 class TableStatus(str, enum.Enum):
@@ -153,27 +163,32 @@ class OrderStatus(str, enum.Enum):
     finished = "finished"
 
 
-class Orders(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    # op.execute("CREATE SEQUENCE IF NOT EXISTS orders_no_seq increment by 1 MINVALUE 0 MAXVALUE 999 START WITH 0 cycle;")
-    no: int = Field(
-        sa_column_kwargs={"server_default": text("nextval('orders_no_seq')")}
-    )
-    team_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="teams.id", index=True
-    )
-    payment_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="payments.id", index=True
-    )
+class OrderBase(SQLModel):
     reject_reason: Optional[str] = Field(default=None)
     finished_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+
+class Orders(OrderBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    team_id: uuid.UUID = Field(foreign_key="teams.id", index=True)
+    payment_id: Optional[uuid.UUID] = Field(
+        default=None, foreign_key="payments.id", index=True
+    )
+    orders_no_seq: ClassVar = Sequence(
+        "orders_no_seq", increment=1, minvalue=0, start=0, cycle=True
+    )
+    no: Optional[int] = Field(
+        default=None,
+        sa_column_args=[orders_no_seq],
+        sa_column_kwargs={"server_default": orders_no_seq.next_value()},
+    )
+
     restaurant: "Restaurants" = Relationship(back_populates="orders")
     team: "Teams" = Relationship(back_populates="orders")
     payment: Optional["Payments"] = Relationship(back_populates="order")
-    menu_orders: list["OrderedMenus"] = Relationship(back_populates="order")
+    ordered_menus: list["OrderedMenus"] = Relationship(back_populates="order")
 
     @property
     def status(self) -> OrderStatus:
@@ -189,13 +204,13 @@ class Orders(SQLModel, table=True):
     @property
     def total_price(self) -> int:
         return sum(
-            menu_order.menu.price * menu_order.amount for menu_order in self.menu_orders
+            menu_order.menu.price * menu_order.amount
+            for menu_order in self.ordered_menus
         )
 
 
 class OrderCreate(SQLModel):
-    team_id: uuid.UUID
-    menu_orders: list["OrderedMenuCreate"]
+    ordered_menus: list["OrderedMenuCreate"]
 
 
 class OrderUpdate(SQLModel):
@@ -204,8 +219,21 @@ class OrderUpdate(SQLModel):
     reject_reason: Optional[str] = None
 
 
+class OrderPublic(OrderBase):
+    id: uuid.UUID
+    no: int
+    status: OrderStatus
+    total_price: int
+
+    ordered_menus: list["OrderedMenuPublic"]
+    payment: Optional["Payments"]
+
+    class Config:
+        from_attributes = True
+
+
 class OrderWithPaymentMethod(SQLModel):
-    order: Orders
+    order: OrderPublic
     bank_name: str
     bank_account_no: str
 
@@ -217,19 +245,22 @@ class MenuOrderStatus(str, enum.Enum):
     served = "served"
 
 
-class OrderedMenus(SQLModel, table=True):
+class OrderedMenuBase(SQLModel):
+    amount: int = Field(gt=0)
+    reject_reason: Optional[str] = Field(default=None)
+    cook_started_at: Optional[datetime] = Field(default=None)
+    served_at: Optional[datetime] = Field(default=None)
+
+
+class OrderedMenus(OrderedMenuBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
     order_id: uuid.UUID = Field(foreign_key="orders.id", index=True)
     menu_id: uuid.UUID = Field(foreign_key="menus.id", index=True)
-    amount: int = Field()
-    reject_reason: Optional[str] = Field(default=None)
-    cook_started_at: Optional[datetime] = Field(default=None)
-    served_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship()
-    order: "Orders" = Relationship(back_populates="menu_orders")
+    order: "Orders" = Relationship(back_populates="ordered_menus")
     menu: "Menus" = Relationship()
 
     @property
@@ -246,7 +277,7 @@ class OrderedMenus(SQLModel, table=True):
 
 class OrderedMenuCreate(SQLModel):
     menu_id: uuid.UUID
-    amount: int
+    amount: int = Field(gt=0)
 
 
 class OrderedMenuUpdate(SQLModel):
@@ -255,12 +286,21 @@ class OrderedMenuUpdate(SQLModel):
     reject_reason: Optional[str] = None
 
 
+class OrderedMenuPublic(OrderedMenuBase):
+    status: MenuOrderStatus
+    menu: MenuPublic
+
+    class Config:
+        from_attributes = True
+
+
 class Payments(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    amount: int = Field()
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     transaction_by: Optional[str] = Field(default=None)
+    amount: int = Field()
+    refunded_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="payments")
     order: "Orders" = Relationship(
@@ -274,9 +314,9 @@ class BankTransaction(SQLModel):
     amount: int
     balance: int
 
-    def to_payment(self) -> Payments:
-        return Payments(
-            amount=self.amount,
-            created_at=self.date,
-            transaction_by=self.transaction_by,
-        )
+    def to_payment_data_dict(self) -> dict:
+        return {
+            "amount": self.amount,
+            "created_at": self.date,
+            "transaction_by": self.transaction_by,
+        }
