@@ -39,9 +39,7 @@ def connect_payment_to_order():
         before_10_minutes = now.replace(minute=now.minute - 10)
 
         exist_payments = session.exec(
-            select(Payments)
-            .where(Payments.created_at > yesterday)
-            .where(
+            select(Payments).where(
                 col(Payments.created_at).in_(
                     [transaction.date for transaction in transaction_list]
                 )
@@ -57,6 +55,9 @@ def connect_payment_to_order():
                 for payment in exist_payments
             )
         ]
+
+        if not non_exist_payments:
+            return
 
         # 전체 결제 내역 동기화
         session.add_all(non_exist_payments)
