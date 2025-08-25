@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     BANK_ACCOUNT_NO: str = ""
     BANK_ACCOUNT_BIRTHDAY: str = ""
     BANK_ACCOUNT_PASSWORD: str = ""
+    BANK_SYNC_INTERVAL_SECOND: int = 10
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -92,9 +93,6 @@ class Settings(BaseSettings):
         self._check_default_secret("ADMIN_PASSWORD", self.ADMIN_PASSWORD)
 
         return self
-
-    BREAKTIME_START_TIME: str | None = None
-    BREAKTIME_END_TIME: str | None = None
 
 
 settings = Settings()  # type: ignore

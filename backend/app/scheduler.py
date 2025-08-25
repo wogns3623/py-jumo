@@ -95,5 +95,7 @@ def connect_payment_to_order():
 
 scheduler = BackgroundScheduler()
 
-# every 15 seconds
-scheduler.add_job(connect_payment_to_order, CronTrigger(second="*/15"))
+scheduler.add_job(
+    connect_payment_to_order,
+    CronTrigger(second=f"*/{settings.BANK_SYNC_INTERVAL_SECOND}"),
+)

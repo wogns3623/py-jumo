@@ -6,12 +6,12 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
-from sqlmodel import Session, SQLModel
+from sqlmodel import Session, select
 
 from app.core import security
 from app.core.config import settings
 from app.core.db import engine
-from app.models import TokenPayload, User, AdminUser
+from app.models import TokenPayload, User, AdminUser, Restaurants
 
 get_admin_token = HTTPBearer()
 
@@ -48,3 +48,12 @@ def get_admin_user(session: SessionDep, token: AdminTokenDep) -> User:
 
 
 CurrentAdmin = Annotated[User, Depends(get_admin_user)]
+
+
+def get_default_restaurant(session: SessionDep) -> Restaurants:
+    restaurant = session.exec(select(Restaurants)).first()
+    assert restaurant is not None, "Restaurant not found"
+    return restaurant
+
+
+DefaultRestaurant = Annotated[Restaurants, Depends(get_default_restaurant)]

@@ -30,32 +30,46 @@ def init_db(session: Session) -> None:
     #         is_superuser=True,
     #     )
     #     user = crud.create_user(session=session, user_create=user_in)
-    menu = session.exec(select(Menus)).first()
-    if not menu:
-        # tables
-        session.add_all(
-            [Tables(no=i) for i in range(1, 35)],
-        )
 
-        # menus
-        session.add_all(
-            [
-                Menus(
-                    title="장어",
-                    desc="장어구이 2마리",
-                    price=30000,
-                ),
-                Menus(
-                    title="대하",
-                    desc="대하 소금구이 20마리",
-                    price=30000,
-                ),
-                Menus(
-                    title="콜라",
-                    desc="코카-콜라 1.25L",
-                    price=30000,
-                ),
-            ]
-        )
-        session.commit()
-    pass
+    restaurant = session.exec(select(Restaurants)).first()
+    if restaurant:
+        return
+
+    restaurant = Restaurants(
+        name="시리야 장어랑 대하해줘",
+        open_time="18:00",
+        close_time="00:00",
+    )
+    session.add(restaurant)
+    session.commit()
+    session.refresh(restaurant)
+
+    # tables
+    session.add_all(
+        [Tables(no=i, restaurant_id=restaurant.id) for i in range(1, 35)],
+    )
+
+    # menus
+    session.add_all(
+        [
+            Menus(
+                restaurant_id=restaurant.id,
+                name="장어",
+                desc="장어구이 2마리",
+                price=30000,
+            ),
+            Menus(
+                restaurant_id=restaurant.id,
+                name="대하",
+                desc="대하 소금구이 20마리",
+                price=30000,
+            ),
+            Menus(
+                restaurant_id=restaurant.id,
+                name="콜라",
+                desc="코카-콜라 1.25L",
+                price=30000,
+            ),
+        ]
+    )
+    session.commit()

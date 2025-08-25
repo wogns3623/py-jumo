@@ -6,7 +6,7 @@ from typing import Sequence
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
-from app.api.deps import SessionDep, CurrentAdmin
+from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant
 from app.core import security
 from app.core.config import settings
 from app.models import *
@@ -32,20 +32,33 @@ def admin_login(form_data: AdminLoginForm) -> Token:
 
 @router.patch("/restaurants", tags=["admin"])
 def update_restaurant(
-    session: SessionDep, admin: CurrentAdmin, restaurant_data: RestaurantUpdate
-) -> dict:
-    settings.BREAK_START_TIME = restaurant_data.break_start_time
-    settings.BREAK_END_TIME = restaurant_data.break_end_time
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    restaurant_data: RestaurantUpdate,
+) -> Restaurants:
+    restaurant_data_dict = restaurant_data.model_dump(exclude_unset=True)
+    restaurant.sqlmodel_update(restaurant_data_dict)
+    session.add(restaurant)
+    session.commit()
+    session.refresh(restaurant)
+
+    return restaurant
 
 
 @router.patch("/menus/{menu_id}", tags=["menus"])
 def update_menu(
-    session: SessionDep, menu_id: uuid.UUID, menu_data: MenuUpdate
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    menu_id: uuid.UUID,
+    menu_data: MenuUpdate,
 ) -> Menus:
 
-    menu = session.get(Menus, menu_id)
+    menu = session.get(Menus, {"id": menu_id, "restaurant_id": restaurant.id})
     if not menu:
         raise HTTPException(status_code=404, detail="메뉴를 찾을 수 없습니다.")
+
     menu_data_dict = menu_data.model_dump(exclude_unset=True)
     menu.sqlmodel_update(menu_data_dict)
     session.add(menu)
@@ -59,9 +72,10 @@ def update_menu(
 def read_orders(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     status: Union[OrderStatus, AllFilter] = AllFilter.all,
 ) -> Sequence[Orders]:
-    statement = select(Orders)
+    statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
     if status == AllFilter.all:
         pass
     elif status == OrderStatus.ordered:
@@ -88,11 +102,12 @@ def read_orders(
 def update_order(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     order_id: uuid.UUID,
     order_data: OrderUpdate,
 ) -> Orders:
 
-    order = session.get(Orders, order_id)
+    order = session.get(Orders, {"id": order_id, "restaurant_id": restaurant.id})
     if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     order_data_dict = order_data.model_dump(exclude_unset=True)
@@ -108,11 +123,12 @@ def update_order(
 def reject_order(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     order_id: uuid.UUID,
     reason: str = "관리자에 의해 주문이 거절되었습니다.",
 ) -> dict:
 
-    order = session.get(Orders, order_id)
+    order = session.get(Orders, {"id": order_id, "restaurant_id": restaurant.id})
     if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     if order.status == OrderStatus.rejected:
@@ -136,12 +152,16 @@ def reject_order(
 def update_menu_order(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     order_id: uuid.UUID,
     menu_id: uuid.UUID,
-    order_data: MenuOrderUpdate,
-) -> MenuOrders:
+    order_data: OrderedMenuUpdate,
+) -> OrderedMenus:
 
-    ordered_menu = session.get(MenuOrders, menu_id)
+    ordered_menu = session.get(
+        OrderedMenus,
+        {"order_id": order_id, "menu_id": menu_id, "restaurant_id": restaurant.id},
+    )
     if not ordered_menu:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     order_data_dict = order_data.model_dump(exclude_unset=True)
@@ -157,12 +177,16 @@ def update_menu_order(
 def reject_menu_order(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     order_id: uuid.UUID,
     menu_id: uuid.UUID,
     reason: str = "관리자에 의해 메뉴 주문이 거절되었습니다.",
 ) -> dict:
 
-    ordered_menu = session.get(MenuOrders, menu_id)
+    ordered_menu = session.get(
+        OrderedMenus,
+        {"order_id": order_id, "menu_id": menu_id, "restaurant_id": restaurant.id},
+    )
     if not ordered_menu:
         raise HTTPException(status_code=404, detail="메뉴 주문을 찾을 수 없습니다.")
     if ordered_menu.status is MenuOrderStatus.rejected:
@@ -182,9 +206,10 @@ def reject_menu_order(
 def read_tables(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     status: Union[TableStatus, AllFilter] = AllFilter.all,
 ) -> Sequence[Tables]:
-    statement = select(Tables)
+    statement = select(Tables).where(Tables.restaurant_id == restaurant.id)
     if status != AllFilter.all:
         statement = statement.where(Tables.status == status)
 
@@ -196,10 +221,11 @@ def read_tables(
 def update_table(
     session: SessionDep,
     admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
     table_id: uuid.UUID,
     table_data: TableUpdate,
 ) -> Tables:
-    table = session.get(Tables, table_id)
+    table = session.get(Tables, {"id": table_id, "restaurant_id": restaurant.id})
     if not table:
         raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
     table_data_dict = table_data.model_dump(exclude_unset=True)
