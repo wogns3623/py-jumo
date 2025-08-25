@@ -1,4 +1,5 @@
-FROM python:3.10
+# FROM python:3.10
+FROM mcr.microsoft.com/playwright/python:v1.54.0-noble
 
 ENV PYTHONUNBUFFERED=1
 
@@ -39,5 +40,10 @@ COPY ./app /app/app
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    playwright install firefox
+RUN --mount=type=cache,target=/root/.cache/uv \
+    playwright install-deps
 
 CMD ["fastapi", "run", "--workers", "4", "app/main.py"]

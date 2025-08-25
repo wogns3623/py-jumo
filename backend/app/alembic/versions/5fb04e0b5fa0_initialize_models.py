@@ -68,7 +68,7 @@ def upgrade():
     op.execute("CREATE SEQUENCE IF NOT EXISTS orders_no_seq increment by 1 MINVALUE 0 MAXVALUE 999 START WITH 0 cycle;")
     op.create_table('orders',
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.Column('no', sa.Integer(), server_default="nextval('orders_no_seq')", nullable=True),
+    sa.Column('no', sa.Integer(), server_default=sa.text("nextval('orders_no_seq')"), nullable=True),
     sa.Column('team_id', sa.Uuid(), nullable=True),
     sa.Column('payment_id', sa.Uuid(), nullable=True),
     sa.Column('reject_reason', sqlmodel.sql.sqltypes.AutoString(), nullable=True),

@@ -23,7 +23,7 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         bank_num=settings.BANK_ACCOUNT_NO,
         birthday=settings.BANK_ACCOUNT_BIRTHDAY,
         password=settings.BANK_ACCOUNT_PASSWORD,
-        days=2,
+        days=30,
         # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
         # LOG_PATH='/Users/beomi/phantom.log' # Optional, default is os.path.devnull (no log)
     )

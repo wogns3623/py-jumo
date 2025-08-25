@@ -3,13 +3,7 @@ import enum
 from typing import Union
 import uuid
 
-from sqlmodel import (
-    SQLModel,
-    Field,
-    Enum,
-    Column,
-    Relationship,
-)
+from sqlmodel import SQLModel, Field, Enum, Column, Relationship, text
 
 
 class User(SQLModel):
@@ -120,7 +114,9 @@ class OrderStatus(str, enum.Enum):
 class Orders(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     # op.execute("CREATE SEQUENCE IF NOT EXISTS orders_no_seq increment by 1 MINVALUE 0 MAXVALUE 999 START WITH 0 cycle;")
-    no: int = Field(sa_column_kwargs={"server_default": "nextval('orders_no_seq')"})
+    no: int = Field(
+        sa_column_kwargs={"server_default": text("nextval('orders_no_seq')")}
+    )
     team_id: Union[uuid.UUID, None] = Field(
         default=None, foreign_key="teams.id", index=True
     )
@@ -232,5 +228,7 @@ class BankTransaction(SQLModel):
 
     def to_payment(self) -> Payments:
         return Payments(
-            price=self.amount, created_at=self.date, transaction_by=self.transaction_by
+            amount=self.amount,
+            created_at=self.date,
+            transaction_by=self.transaction_by,
         )

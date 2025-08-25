@@ -30,7 +30,8 @@ def get_keypad_img():
     area_hash_list = []
     area_pattern = re.compile("'(\w+)'")
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel="chrome")
+        # browser = playwright.chromium.launch(channel="chrome")
+        browser = playwright.firefox.launch(channel="firefox")
         context = browser.new_context(viewport={"width": 1920, "height": 1080})
         page = context.new_page()
         page.goto(
@@ -128,12 +129,23 @@ def rmsdiff(im1, im2):
 
 
 def _get_keypad_num_list(img):
+    img = img.convert("RGBA")
     # 57x57 box
-    box_5th = Image.open(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_5th.png"))
-    box_7th = Image.open(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_7th.png"))
-    box_8th = Image.open(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_8th.png"))
-    box_9th = Image.open(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_9th.png"))
-    box_0th = Image.open(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_0th.png"))
+    box_5th = Image.open(
+        Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_5th.png")
+    ).convert("RGBA")
+    box_7th = Image.open(
+        Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_7th.png")
+    ).convert("RGBA")
+    box_8th = Image.open(
+        Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_8th.png")
+    ).convert("RGBA")
+    box_9th = Image.open(
+        Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_9th.png")
+    ).convert("RGBA")
+    box_0th = Image.open(
+        Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "box_0th.png")
+    ).convert("RGBA")
 
     box_dict = {
         "5": box_5th,
@@ -149,6 +161,12 @@ def _get_keypad_num_list(img):
     crop_8th = img.crop(box=(74, 157, 131, 214))
     crop_9th = img.crop(box=(132, 157, 189, 214))
     crop_0th = img.crop(box=(74, 215, 131, 272))
+    # img.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "keypad.png"))
+    # crop_5th.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "crop_5th.png"))
+    # crop_7th.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "crop_7th.png"))
+    # crop_8th.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "crop_8th.png"))
+    # crop_9th.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "crop_9th.png"))
+    # crop_0th.save(Path.joinpath(CURRENT_PACKAGE_DIR, "assets", "crop_0th.png"))
 
     crop_list = [crop_5th, crop_7th, crop_8th, crop_9th, crop_0th]
 
@@ -157,10 +175,8 @@ def _get_keypad_num_list(img):
     for idx, crop in enumerate(crop_list):
         for key, box in box_dict.items():
             try:
-                # diff = rmsdiff(crop, box)
-                # if diff < 62:
-                #     keypad_num_list += [key]
-                if ImageChops.difference(crop, box).getbbox() is None:
+                diff = rmsdiff(crop, box)
+                if diff < 5:
                     keypad_num_list += [key]
             except Exception as e:
                 print(e)
@@ -295,10 +311,9 @@ def get_transactions(
                     data=data,
                 )
                 soup = bs(r.text, "html.parser")
-                print(*soup.children)
-                assert soup.select("#pop_contents > table.tType02 > tbody > tr")
+                assert soup.select("#pop_contents > table.tType01 > tbody > tr")
 
-                transactions = soup.select("#pop_contents > table.tType02 > tbody > tr")
+                transactions = soup.select("#pop_contents > table.tType01 > tbody > tr")
                 if len(transactions) >= 200:
                     tdn = transactions[-2].select("td")
                     yes = tdn[0].text
