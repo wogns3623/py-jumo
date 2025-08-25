@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Sequence
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -35,8 +35,7 @@ def connect_payment_to_order():
     with Session(engine) as session:
         transaction_list = get_recent_bank_transactions()
         now = datetime.now()
-        yesterday = now.replace(day=now.day - 1)
-        before_10_minutes = now.replace(minute=now.minute - 10)
+        before_10_minutes = now - timedelta(minutes=10)
 
         exist_payments = session.exec(
             select(Payments).where(
