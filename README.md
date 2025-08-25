@@ -1,20 +1,48 @@
 # Full Stack FastAPI Template
 
+## 실행
+
+- .env.example 파일을 복사하여 .env 파일을 생성하고 필요한 값을 설정합니다.
+- Docker와 Docker Compose가 설치되어 있는지 확인합니다.
+- 다음 명령어로 Docker Compose를 사용하여 모든 서비스를 빌드하고 시작합니다.
+
+```
+docker compose watch
+```
+
+## 접속
+
+- Frontend: http://localhost:5173
+- Backend: http://localhost:8000
+  - API Docs: http://localhost:8000/docs
+  - ReDoc: http://localhost:8000/redoc
+- Adminer(db 관리툴): http://localhost:8080
+
+## 디버깅
+
+```
+docker compose stop backend
+cd backend
+
+uv run uvicorn app.main:app --reload
+# 또는 vscode F5
+```
+
 <a href="https://github.com/fastapi/full-stack-fastapi-template/actions?query=workflow%3ATest" target="_blank"><img src="https://github.com/fastapi/full-stack-fastapi-template/workflows/Test/badge.svg" alt="Test"></a>
 <a href="https://coverage-badge.samuelcolvin.workers.dev/redirect/fastapi/full-stack-fastapi-template" target="_blank"><img src="https://coverage-badge.samuelcolvin.workers.dev/fastapi/full-stack-fastapi-template.svg" alt="Coverage"></a>
 
 ## Technology Stack and Features
 
 - ⚡ [**FastAPI**](https://fastapi.tiangolo.com) for the Python backend API.
-    - 🧰 [SQLModel](https://sqlmodel.tiangolo.com) for the Python SQL database interactions (ORM).
-    - 🔍 [Pydantic](https://docs.pydantic.dev), used by FastAPI, for the data validation and settings management.
-    - 💾 [PostgreSQL](https://www.postgresql.org) as the SQL database.
+  - 🧰 [SQLModel](https://sqlmodel.tiangolo.com) for the Python SQL database interactions (ORM).
+  - 🔍 [Pydantic](https://docs.pydantic.dev), used by FastAPI, for the data validation and settings management.
+  - 💾 [PostgreSQL](https://www.postgresql.org) as the SQL database.
 - 🚀 [React](https://react.dev) for the frontend.
-    - 💃 Using TypeScript, hooks, Vite, and other parts of a modern frontend stack.
-    - 🎨 [Chakra UI](https://chakra-ui.com) for the frontend components.
-    - 🤖 An automatically generated frontend client.
-    - 🧪 [Playwright](https://playwright.dev) for End-to-End testing.
-    - 🦇 Dark mode support.
+  - 💃 Using TypeScript, hooks, Vite, and other parts of a modern frontend stack.
+  - 🎨 [Chakra UI](https://chakra-ui.com) for the frontend components.
+  - 🤖 An automatically generated frontend client.
+  - 🧪 [Playwright](https://playwright.dev) for End-to-End testing.
+  - 🦇 Dark mode support.
 - 🐋 [Docker Compose](https://www.docker.com) for development and production.
 - 🔒 Secure password hashing by default.
 - 🔑 JWT (JSON Web Token) authentication.
