@@ -4,7 +4,6 @@ from typing import Sequence
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlmodel import Session, select, col
-from simple_bank_korea.kb import get_transactions
 
 from app.core.config import settings
 from app.models import (
@@ -13,6 +12,7 @@ from app.models import (
     BankTransaction,
 )
 from app.core.db import engine
+from app.lib.kb_fastlookup import get_transactions
 
 
 def get_recent_bank_transactions() -> Sequence[BankTransaction]:
@@ -24,9 +24,8 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         birthday=settings.BANK_ACCOUNT_BIRTHDAY,
         password=settings.BANK_ACCOUNT_PASSWORD,
         days=2,
-        # PHANTOM_PATH='/Users/beomi/bin/phantomjs', # Optional, default is 'phantomjs' only.
+        # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
         # LOG_PATH='/Users/beomi/phantom.log' # Optional, default is os.path.devnull (no log)
-        cache=True,
     )
 
     return [BankTransaction.model_validate(trs) for trs in transaction_list]
