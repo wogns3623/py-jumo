@@ -13,6 +13,8 @@ from app.core.config import settings
 from app.core.db import engine
 from app.models import TokenPayload, User, AdminUser, Restaurants
 
+from app.lib.kakao_alimtalk import KakaoAlimtalk
+
 get_admin_token = HTTPBearer()
 
 
@@ -57,3 +59,17 @@ def get_default_restaurant(session: SessionDep) -> Restaurants:
 
 
 DefaultRestaurant = Annotated[Restaurants, Depends(get_default_restaurant)]
+
+# from functools import lru_cache
+
+
+# @lru_cache()
+def get_kakao_alimtalk() -> KakaoAlimtalk:
+    return KakaoAlimtalk(
+        service_id=settings.KAKAO_SERVICE_ID,
+        access_key=settings.KAKAO_ACCESS_KEY,
+        secret_key=settings.KAKAO_SECRET_KEY,
+    )
+
+
+KakaoAlimtalkDep = Annotated[KakaoAlimtalk, Depends()]

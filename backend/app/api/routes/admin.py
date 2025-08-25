@@ -1,15 +1,17 @@
 from datetime import timedelta
 import uuid
-from typing import Sequence
+from typing import Union, Sequence
 
 
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
-from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant
+from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant, KakaoAlimtalkDep
 from app.core import security
 from app.core.config import settings
 from app.models import *
+
+from app.lib.kakao_alimtalk import KakaoAlimtalkRequest, KakaoAlimtalkRequestMessage
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -66,6 +68,92 @@ def update_menu(
     session.refresh(menu)
 
     return menu
+
+
+@router.get("/tables/", tags=["tables"])
+def read_tables(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    status: Union[TableStatus, AllFilter] = AllFilter.all,
+) -> Sequence[Tables]:
+    statement = select(Tables).where(Tables.restaurant_id == restaurant.id)
+    if status != AllFilter.all:
+        statement = statement.where(Tables.status == status)
+
+    tables = session.exec(statement.order_by(col(Tables.no).asc())).all()
+    return tables
+
+
+@router.patch("/tables/{table_id}", tags=["tables"])
+def update_table(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    table_id: uuid.UUID,
+    table_data: TableUpdate,
+) -> Tables:
+    table = session.get(Tables, {"id": table_id, "restaurant_id": restaurant.id})
+    if not table:
+        raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
+    table_data_dict = table_data.model_dump(exclude_unset=True)
+    table.sqlmodel_update(table_data_dict)
+    session.add(table)
+    session.commit()
+    session.refresh(table)
+
+    return table
+
+
+@router.patch(
+    "/waitings/dequeue",
+    tags=["waitings"],
+    response_description="입장 처리된 웨이팅 목록",
+)
+def dequeue_waitings(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    alimtalk: KakaoAlimtalkDep,
+    restaurant: DefaultRestaurant,
+    dequeue_count: int = 1,
+) -> Sequence[Waitings]:
+    # 가장 오래된 웨이팅 중 팀이 배정되지 않은 웨이팅을 입장 처리
+    waitings_to_be_processed = session.exec(
+        select(Waitings)
+        .where(Waitings.restaurant_id == restaurant.id, Waitings.entered_at == None)
+        .order_by(col(Waitings.created_at).asc())
+        .limit(dequeue_count)
+    ).all()
+
+    if waitings_to_be_processed:
+        now = datetime.now(timezone.utc)
+        for waiting in waitings_to_be_processed:
+            waiting.entered_at = now
+            session.add(waiting)
+
+            # TODO: 템플릿 만들면 그거대로 수정
+            alimtalk.send_message(
+                {
+                    "plusFriendId": "@acorn_soft",
+                    "templateCode": "waiting_available",
+                    "messages": [
+                        {
+                            "to": waiting.phone,
+                            "content": f"{restaurant.name}에 입장하실 수 있습니다.\n감사합니다.",
+                            "useSmsFailover": True,
+                            "failoverConfig": {
+                                "type": "LMS",
+                                "from_": "01047563191",
+                                "subject": "입장이 가능합니다",
+                                "content": f"{restaurant.name}에 입장하실 수 있습니다.\n감사합니다.",
+                            },
+                        }
+                    ],
+                }
+            )
+        session.commit()
+
+    return waitings_to_be_processed
 
 
 @router.get("/orders/", tags=["orders"])
@@ -200,38 +288,3 @@ def reject_menu_order(
     session.commit()
 
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
-
-
-@router.get("/tables/", tags=["tables"])
-def read_tables(
-    session: SessionDep,
-    admin: CurrentAdmin,
-    restaurant: DefaultRestaurant,
-    status: Union[TableStatus, AllFilter] = AllFilter.all,
-) -> Sequence[Tables]:
-    statement = select(Tables).where(Tables.restaurant_id == restaurant.id)
-    if status != AllFilter.all:
-        statement = statement.where(Tables.status == status)
-
-    tables = session.exec(statement.order_by(col(Tables.no).asc())).all()
-    return tables
-
-
-@router.patch("/tables/{table_id}", tags=["tables"])
-def update_table(
-    session: SessionDep,
-    admin: CurrentAdmin,
-    restaurant: DefaultRestaurant,
-    table_id: uuid.UUID,
-    table_data: TableUpdate,
-) -> Tables:
-    table = session.get(Tables, {"id": table_id, "restaurant_id": restaurant.id})
-    if not table:
-        raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
-    table_data_dict = table_data.model_dump(exclude_unset=True)
-    table.sqlmodel_update(table_data_dict)
-    session.add(table)
-    session.commit()
-    session.refresh(table)
-
-    return table
