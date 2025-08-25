@@ -1,6 +1,6 @@
 import secrets
 import warnings
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Optional
 
 from pydantic import (
     AnyUrl,
@@ -14,6 +14,8 @@ from pydantic import (
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing_extensions import Self
+
+from app.lib.kakao_alimtalk import KakaoAlimtalk
 
 
 def parse_cors(v: Any) -> list[str] | str:
@@ -70,7 +72,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = ""
     POSTGRES_DB: str = ""
 
-    SENTRY_DSN: HttpUrl | None = None
+    SENTRY_DSN: Optional[HttpUrl] = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -84,7 +86,7 @@ class Settings(BaseSettings):
             path=self.POSTGRES_DB,
         )
 
-    def _check_default_secret(self, var_name: str, value: str | None) -> None:
+    def _check_default_secret(self, var_name: str, value: Optional[str]) -> None:
         if value == "changethis":
             message = (
                 f'The value of {var_name} is "changethis", '
@@ -102,6 +104,20 @@ class Settings(BaseSettings):
         self._check_default_secret("ADMIN_PASSWORD", self.ADMIN_PASSWORD)
 
         return self
+
+    __alimtalk: Optional[KakaoAlimtalk] = None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def alimtalk(self) -> KakaoAlimtalk:
+        if self.__alimtalk is None:
+            self.__alimtalk = KakaoAlimtalk(
+                service_id=self.KAKAO_SERVICE_ID,
+                access_key=self.KAKAO_ACCESS_KEY,
+                secret_key=self.KAKAO_SECRET_KEY,
+            )
+
+        return self.__alimtalk
 
 
 settings = Settings()  # type: ignore

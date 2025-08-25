@@ -6,12 +6,11 @@ from typing import Union, Sequence
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
-from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant, KakaoAlimtalkDep
+from app.api.deps import SessionDep, CurrentAdmin, DefaultRestaurant
 from app.core import security
 from app.core.config import settings
 from app.models import *
 
-from app.lib.kakao_alimtalk import KakaoAlimtalkRequest, KakaoAlimtalkRequestMessage
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -113,7 +112,6 @@ def update_table(
 def dequeue_waitings(
     session: SessionDep,
     admin: CurrentAdmin,
-    alimtalk: KakaoAlimtalkDep,
     restaurant: DefaultRestaurant,
     dequeue_count: int = 1,
 ) -> Sequence[Waitings]:
@@ -132,7 +130,7 @@ def dequeue_waitings(
             session.add(waiting)
 
             # TODO: 템플릿 만들면 그거대로 수정
-            alimtalk.send_message(
+            settings.alimtalk.send_message(
                 {
                     "plusFriendId": "@acorn_soft",
                     "templateCode": "waiting_available",
