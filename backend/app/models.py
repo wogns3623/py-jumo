@@ -60,6 +60,7 @@ class MenuBase(SQLModel):
     desc: Optional[str] = Field(default=None)
     price: int = Field(description="price in won")
     image: Optional[str] = Field(default=None)
+    category: Optional[str] = Field(default=None, index=True)
     no_stock: bool = Field(default=False)
 
 
