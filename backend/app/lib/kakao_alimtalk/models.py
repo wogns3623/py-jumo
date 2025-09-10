@@ -1,118 +1,6 @@
 from typing import TypedDict, NotRequired
 
 
-class KakaoAlimtalkRequestItemHighlight(TypedDict):
-    """아이템 하이라이트
-
-    Args:
-        title (str): 아이템 하이라이트 제목
-        description (str): 아이템 하이라이트 설명
-    """
-
-    title: str
-    description: str
-
-
-class KakaoAlimtalkRequestItemlistElement(TypedDict):
-    """아이템 리스트 요소
-
-    Args:
-        title (str): 아이템 리스트 제목
-        description (str): 아이템 리스트 설명
-    """
-
-    title: str
-    description: str
-
-
-class KakaoAlimtalkRequestItemSummary(TypedDict):
-    """아이템 요약 정보
-
-    Args:
-        title (str): 아이템 요약 제목
-        description (str): 아이템 요약 설명
-    """
-
-    title: str
-    description: str
-
-
-class KakaoAlimtalkRequestItem(TypedDict):
-    """아이템 리스트
-
-    Args:
-        list (list[KakaoAlimtalkItemlistElement]): 아이템 리스트
-        summary (NotRequired[KakaoAlimtalkItemSummary], optional): 아이템 요약 정보. Defaults to None.
-    """
-
-    list: list[KakaoAlimtalkRequestItemlistElement]
-    summary: NotRequired[KakaoAlimtalkRequestItemSummary]
-
-
-class KakaoAlimtalkRequestButton(TypedDict):
-    """알림톡 메시지 버튼
-
-    Args:
-        type (str): 버튼 Type
-        name (str): 버튼명
-        linkMobile (NotRequired[str], optional): 모바일 링크. Defaults to None.
-        linkPc (NotRequired[str], optional): PC 링크. Defaults to None.
-        schemeIos (NotRequired[str], optional): iOS 스킴. Defaults to None.
-        schemeAndroid (NotRequired[str], optional): Android 스킴. Defaults to None.
-    """
-
-    type: str
-    name: str
-    linkMobile: NotRequired[str]
-    linkPc: NotRequired[str]
-    schemeIos: NotRequired[str]
-    schemeAndroid: NotRequired[str]
-
-
-class KakaoAlimtalkButtonFailoverConfig(TypedDict):
-    """알림톡 메시지 버튼 Failover 설정
-
-    Args:
-        type (NotRequired[str], optional): Failover SMS 메시지 Type. Defaults to None.
-        from_ (NotRequired[str], optional): Failover SMS 발신번호. Defaults to None.
-        subject (NotRequired[str], optional): Failover SMS 제목. Defaults to None.
-        content (NotRequired[str], optional): Failover SMS 내용. Defaults to None.
-    """
-
-    type: NotRequired[str]
-    from_: NotRequired[str]
-    subject: NotRequired[str]
-    content: NotRequired[str]
-
-
-class KakaoAlimtalkRequestMessage(TypedDict):
-    """메시지 정보
-
-    Args:
-        countryCode (NotRequired[str], optional): 수신자 국가번호. Defaults to "82".
-        to (str): 수신자번호
-        title (NotRequired[str], optional): 알림톡 강조표시 내용. Defaults to None.
-        content (str): 알림톡 메시지 내용
-        headerContent (NotRequired[str], optional): 알림톡 헤더 내용. Defaults to None.
-        itemHighlight (NotRequired[KakaoAlimtalkItemHighlight], optional): 아이템 하이라이트. Defaults to None.
-        item (NotRequired[KakaoAlimtalkItem], optional): 아이템 리스트. Defaults to None.
-        buttons (NotRequired[list[KakaoAlimtalkButton]], optional): 알림톡 메시지 버튼. Defaults to None.
-        useSmsFailover (NotRequired[bool], optional): SMS Failover 사용 여부. Defaults to None.
-        failoverConfig (NotRequired[KakaoAlimtalkButtonFailoverConfig], optional): Failover 설정. Defaults to None.
-    """
-
-    countryCode: NotRequired[str]
-    to: str
-    title: NotRequired[str]
-    content: str
-    headerContent: NotRequired[str]
-    itemHighlight: NotRequired[KakaoAlimtalkRequestItemHighlight]
-    item: NotRequired[KakaoAlimtalkRequestItem]
-    buttons: NotRequired[list[KakaoAlimtalkRequestButton]]
-    useSmsFailover: NotRequired[bool]
-    failoverConfig: NotRequired[KakaoAlimtalkButtonFailoverConfig]
-
-
 class KakaoAlimtalkRequest(TypedDict):
     """카카오 알림톡 요청 모델
 
@@ -126,7 +14,7 @@ class KakaoAlimtalkRequest(TypedDict):
 
     plusFriendId: str
     templateCode: str
-    messages: list[KakaoAlimtalkRequestMessage]
+    messages: list[dict]
     reserveTime: NotRequired[str]
     reserveTimeZone: NotRequired[str]
 

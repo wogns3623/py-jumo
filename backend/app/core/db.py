@@ -1,4 +1,5 @@
 from sqlmodel import Session, create_engine, select
+from sqlalchemy import Engine
 
 from app.core.config import settings
 from app.models import Restaurants, Tables, Menus
@@ -116,3 +117,14 @@ def init_db(session: Session) -> None:
         ]
     )
     session.commit()
+
+
+def session_decor(engine: Engine):
+    def real_decor(func):
+        def wrapper(*args, **kwargs):
+            with Session(engine) as session:
+                return func(session, *args, **kwargs)
+
+        return wrapper
+
+    return real_decor

@@ -4,9 +4,10 @@ from typing import Union, Sequence
 
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select, col
+from sqlmodel import select, col, or_
 
 from app.api.deps import SessionDep, AdminLoginForm, CurrentAdmin, DefaultRestaurant
+from app.api.services.alimtalk import send_waiting_now_seated, send_waiting_one_left
 from app.core import security
 from app.core.config import settings
 from app.models import (
@@ -20,6 +21,7 @@ from app.models import (
     TableUpdate,
     AllFilter,
     Waitings,
+    WaitingStatus,
     Orders,
     OrderStatus,
     OrderUpdate,
@@ -122,10 +124,42 @@ def update_table(
     return table
 
 
+@router.get("/waitings/", tags=["waitings"])
+def read_waitings(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    status: Union[WaitingStatus, AllFilter] = AllFilter.all,
+) -> Sequence[Waitings]:
+    statement = select(Waitings).where(Waitings.restaurant_id == restaurant.id)
+    if status == AllFilter.all:
+        pass
+    elif status == "waiting":
+        statement = statement.where(
+            Waitings.entered_at == None,
+            Waitings.rejected_at == None,
+            Waitings.notified_at == None,
+        )
+    elif status == "notified":
+        statement = statement.where(
+            Waitings.notified_at != None,
+            Waitings.entered_at == None,
+            Waitings.rejected_at == None,
+        )
+    elif status == "rejected":
+        statement = statement.where(Waitings.rejected_at != None)
+    elif status == "entered":
+        statement = statement.where(Waitings.entered_at != None)
+
+    waitings = session.exec(statement.order_by(col(Waitings.created_at).asc())).all()
+
+    return waitings
+
+
 @router.patch(
     "/waitings/dequeue",
     tags=["waitings"],
-    response_description="입장 처리된 웨이팅 목록",
+    response_description="웨이팅 처리",
 )
 def dequeue_waitings(
     session: SessionDep,
@@ -136,40 +170,94 @@ def dequeue_waitings(
     # 가장 오래된 웨이팅 중 팀이 배정되지 않은 웨이팅을 입장 처리
     waitings_to_be_processed = session.exec(
         select(Waitings)
-        .where(Waitings.restaurant_id == restaurant.id, Waitings.entered_at == None)
+        .where(
+            Waitings.restaurant_id == restaurant.id,
+            Waitings.entered_at == None,
+            Waitings.rejected_at == None,
+            Waitings.notified_at == None,
+        )
         .order_by(col(Waitings.created_at).asc())
-        .limit(dequeue_count)
+        .limit(dequeue_count + 1)
     ).all()
 
-    if waitings_to_be_processed:
-        now = datetime.now(timezone.utc)
-        for waiting in waitings_to_be_processed:
-            waiting.entered_at = now
-            session.add(waiting)
+    if not waitings_to_be_processed:
+        return []
 
-            # TODO: 템플릿 만들면 그거대로 수정
-            settings.alimtalk.send_message(
-                {
-                    "plusFriendId": "@acorn_soft",
-                    "templateCode": "waiting_available",
-                    "messages": [
-                        {
-                            "to": waiting.phone,
-                            "content": f"{restaurant.name}에 입장하실 수 있습니다.\n감사합니다.",
-                            "useSmsFailover": True,
-                            "failoverConfig": {
-                                "type": "LMS",
-                                "from_": "01047563191",
-                                "subject": "입장이 가능합니다",
-                                "content": f"{restaurant.name}에 입장하실 수 있습니다.\n감사합니다.",
-                            },
-                        }
-                    ],
-                }
-            )
-        session.commit()
+    one_left_waiting = None
+    if len(waitings_to_be_processed) == dequeue_count + 1:
+        one_left_waiting = waitings_to_be_processed[-1]
+        waitings_to_be_processed = waitings_to_be_processed[:-1]
+
+    now = datetime.now(timezone.utc)
+    for waiting in waitings_to_be_processed:
+        waiting.notified_at = now
+        session.add(waiting)
+        send_waiting_now_seated(restaurant, waiting)
+
+    if one_left_waiting is not None:
+        session.add(one_left_waiting)
+        send_waiting_one_left(restaurant, one_left_waiting)
+
+    session.commit()
 
     return waitings_to_be_processed
+
+
+@router.patch(
+    "/waitings/{waiting_id}/enter",
+    tags=["waitings"],
+    response_description="웨이팅 입장 처리",
+)
+def enter_waiting(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    waiting_id: uuid.UUID,
+) -> Waitings:
+    waiting = session.get(Waitings, {"id": waiting_id, "restaurant_id": restaurant.id})
+    if not waiting:
+        raise HTTPException(status_code=404, detail="웨이팅을 찾을 수 없습니다.")
+    if waiting.entered_at:
+        raise HTTPException(status_code=400, detail="이미 입장한 웨이팅입니다.")
+    if waiting.rejected_at:
+        raise HTTPException(
+            status_code=400, detail="이미 거절된 웨이팅은 입장이 불가능합니다."
+        )
+    waiting.entered_at = datetime.now(timezone.utc)
+    session.add(waiting)
+    session.commit()
+    session.refresh(waiting)
+
+    return waiting
+
+
+@router.delete(
+    "/waitings/{waiting_id}",
+    tags=["waitings"],
+    response_description="웨이팅 거절 처리",
+)
+def reject_waiting(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    waiting_id: uuid.UUID,
+    reason: str = "관리자에 의해 웨이팅이 거절되었습니다.",
+) -> dict:
+    waiting = session.get(Waitings, {"id": waiting_id, "restaurant_id": restaurant.id})
+    if not waiting:
+        raise HTTPException(status_code=404, detail="웨이팅을 찾을 수 없습니다.")
+    if waiting.rejected_at:
+        raise HTTPException(status_code=400, detail="이미 거절된 웨이팅입니다.")
+    if waiting.entered_at:
+        raise HTTPException(
+            status_code=400, detail="이미 입장한 웨이팅은 거절이 불가능합니다."
+        )
+    waiting.rejected_at = datetime.now(timezone.utc)
+    waiting.rejected_reason = reason
+    session.add(waiting)
+    session.commit()
+
+    return {"detail": "웨이팅이 거절되었습니다.", "reason": reason}
 
 
 @router.get("/orders/", tags=["orders"])
@@ -188,13 +276,15 @@ def read_orders(
         pass
     elif status == OrderStatus.ordered:
         statement = statement.where(
-            (Orders.payment_id == None)
-            & (Orders.finished_at == None)
-            & (Orders.reject_reason == None)
+            Orders.payment_id == None,
+            Orders.finished_at == None,
+            Orders.reject_reason == None,
         )
     elif status == OrderStatus.paid:
         statement = statement.where(
-            (Orders.payment_id != None) & (Orders.finished_at == None)
+            Orders.payment_id != None,
+            Orders.finished_at == None,
+            Orders.reject_reason == None,
         )
     elif status == OrderStatus.finished:
         statement = statement.where(Orders.finished_at != None)

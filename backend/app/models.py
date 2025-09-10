@@ -60,6 +60,7 @@ class MenuBase(SQLModel):
     desc: Optional[str] = Field(default=None)
     price: int = Field(description="price in won")
     image: Optional[str] = Field(default=None)
+    bg_color: Optional[str] = Field(default=None)
     category: Optional[str] = Field(default=None, index=True)
     no_stock: bool = Field(default=False)
 
@@ -107,12 +108,22 @@ class TableUpdate(SQLModel):
     status: TableStatus
 
 
+class WaitingStatus(str, enum.Enum):
+    waiting = "waiting"
+    notified = "notified"
+    entered = "entered"
+    rejected = "rejected"
+
+
 class Waitings(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
     name: str = Field(index=True)
     phone: str = Field(index=True)
+    notified_at: Optional[datetime] = Field(default=None)
     entered_at: Optional[datetime] = Field(default=None)
+    rejected_at: Optional[datetime] = Field(default=None)
+    rejected_reason: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="waitings")
@@ -124,15 +135,49 @@ class Waitings(SQLModel, table=True):
     def is_entered(self) -> bool:
         return self.entered_at is not None
 
+    @property
+    def status(self) -> WaitingStatus:
+        if self.entered_at is not None:
+            return WaitingStatus.entered
+        elif self.rejected_at is not None:
+            return WaitingStatus.rejected
+        elif self.notified_at is not None:
+            return WaitingStatus.notified
+        else:
+            return WaitingStatus.waiting
+
 
 class WaitingCreate(SQLModel):
     name: str
     phone: str
 
 
+class WaitingUpdate(SQLModel):
+    notified_at: Optional[datetime] = None
+    entered_at: Optional[datetime] = None
+    rejected_at: Optional[datetime] = None
+    rejected_reason: Optional[str] = None
+
+
 class WaitingFind(SQLModel):
     name: str
     phone: str
+
+
+class WaitingPublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    phone: str
+    notified_at: Optional[datetime]
+    entered_at: Optional[datetime]
+    rejected_at: Optional[datetime]
+    rejected_reason: Optional[str]
+    status: WaitingStatus
+    created_at: datetime
+    is_entered: bool
+
+    class Config:
+        from_attributes = True
 
 
 class Teams(SQLModel, table=True):
