@@ -2,8 +2,8 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search) => ({
-    redirect: (search.redirect as string) || "/",
+  validateSearch: (search: { redirect?: string }) => ({
+    redirect: search.redirect || "/",
   }),
   beforeLoad: ({ context, search }) => {
     // Redirect if already authenticated

@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { AdminService } from "@/client";
+import type { AdminAdminLoginData } from "@/client";
+import {
+  getTokenCookie,
+  setTokenCookie,
+  removeTokenCookie,
+} from "@/utils/cookies";
 
 interface User {
   username: string;
+  email?: string;
 }
 
 export interface AuthState {
@@ -20,27 +28,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Restore auth state on app load
   useEffect(() => {
-    const token = localStorage.getItem("auth-token");
+    const token = getTokenCookie();
     if (token) {
-      // Validate token with your API
-      fetch("/api/validate-token", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((response) => response.json())
-        .then((userData) => {
-          if (userData.valid) {
-            setUser(userData.user);
-            setIsAuthenticated(true);
-          } else {
-            localStorage.removeItem("auth-token");
-          }
-        })
-        .catch(() => {
-          localStorage.removeItem("auth-token");
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      // For JWT tokens, we can decode the username from the token payload
+      // or we can set a basic user object and validate on first API call
+      try {
+        // Decode JWT payload (basic decode without verification for username)
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const username = payload.sub;
+
+        if (username) {
+          setUser({ username, email: username }); // Using username as email placeholder
+          setIsAuthenticated(true);
+        } else {
+          removeTokenCookie();
+        }
+      } catch (error) {
+        // If token is invalid, clear it
+        removeTokenCookie();
+      }
+
+      setIsLoading(false);
     } else {
       setIsLoading(false);
     }
@@ -56,20 +64,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = async (username: string, password: string) => {
-    // Replace with your authentication logic
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    try {
+      // Use AdminService to login with form data
+      const loginData: AdminAdminLoginData = {
+        formData: {
+          username,
+          password,
+          grant_type: "password",
+        },
+      };
 
-    if (response.ok) {
-      const userData = await response.json();
-      setUser(userData);
+      const response = await AdminService.adminLogin(loginData);
+      const token = response.access_token;
+
+      // Store token in cookie for automatic transmission (OpenAPI.TOKEN is already configured in main.tsx)
+      setTokenCookie(token);
+
+      // Set user info
+      setUser({ username, email: username }); // Using username as email placeholder
       setIsAuthenticated(true);
-      // Store token for persistence
-      localStorage.setItem("auth-token", userData.token);
-    } else {
+    } catch (error) {
       throw new Error("Authentication failed");
     }
   };
@@ -77,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem("auth-token");
+    removeTokenCookie();
   };
 
   return (
