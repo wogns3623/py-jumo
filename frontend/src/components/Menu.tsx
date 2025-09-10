@@ -18,15 +18,18 @@ interface CartItem {
 
 // Canvas API를 사용한 동적 색상 추출 컴포넌트
 // maybe use https://perso.crans.org/frenoy/matlab2012/seamcarving.pdf?
-function ImageWithDynamicBackground({
+function ImageWithBackground({
   src,
   alt,
   className,
-  useEdgeBackground = true, // 생성된 배경 사용 여부
+  bgColor, // 동적 배경 사용 여부
+  useEdgeBackground = true,
 }: {
   src: string;
   alt: string;
   className?: string;
+  bgColor?: string;
+  useDynamicBackground?: boolean;
   useEdgeBackground?: boolean;
 }) {
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
@@ -368,7 +371,7 @@ function ImageWithDynamicBackground({
             }
           : {
               // 단일 색상 배경 사용
-              backgroundColor: dominantColor,
+              backgroundColor: bgColor ?? dominantColor,
             }
       }
     >
@@ -444,10 +447,11 @@ function MenuCard({
         {/* 메뉴 이미지 영역 */}
         <div className="w-full h-[120px] bg-gray-300 opacity-80 rounded-t-2xl overflow-hidden">
           {menu.image ? (
-            <ImageWithDynamicBackground
+            <ImageWithBackground
               src={menu.image}
               alt={menu.name}
               className="w-full h-full object-contain"
+              bgColor={menu.bg_color || undefined}
               useEdgeBackground={false} // true: 생성된 배경, false: 단일 색상
             />
           ) : (
@@ -529,7 +533,7 @@ function MenuSection({
 
   return (
     <div className={cn("w-full bg-white rounded-xl p-2 mb-3", className)}>
-      <h2 className="text-2xl font-black font-inter mb-5">{title}</h2>
+      <h2 className="text-2xl font-black font-inter mb-2 pl-2">{title}</h2>
 
       <div className="flex flex-col gap-3">
         {menus.map((menu) => {
@@ -653,6 +657,15 @@ export function MenuPage() {
               className={group.className || ""}
             />
           ))}
+        </div>
+
+        {/*  */}
+        <div>
+          <img
+            src="/assets/images/menu_bottom.png"
+            alt="Bottom Decoration"
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 

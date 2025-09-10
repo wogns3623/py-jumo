@@ -37,6 +37,7 @@ export type Menus = {
      */
     price: number;
     image?: (string | null);
+    bg_color?: (string | null);
     category?: (string | null);
     no_stock?: boolean;
     id?: string;
