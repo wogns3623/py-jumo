@@ -222,6 +222,7 @@ class Orders(OrderBase, table=True):
     payment_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="payments.id", index=True
     )
+    # op.execute(sa.schema.CreateSequence(sa.schema.Sequence('orders_no_seq', increment=1, minvalue=0, start=0, cycle=True)))
     orders_no_seq: ClassVar = Sequence(
         "orders_no_seq", increment=1, minvalue=0, start=0, cycle=True
     )

@@ -47,8 +47,6 @@ def send_waiting_now_seated(restaurant: Restaurants, waiting: Waitings):
                             "schemeAndroid": "",
                         }
                     ],
-                    "imageName": "pogi-1.png",
-                    "imageUrl": "https://mud-kage.kakao.com/dn/XVUb0/btsQooKvVsg/BZODGf4DtCEIZhju1vOzcK/img_l.jpg",
                     "useSmsFailover": False,
                 }
             ],
@@ -79,8 +77,6 @@ def send_waiting_one_left(restaurant: Restaurants, waiting: Waitings):
                             "schemeAndroid": "",
                         }
                     ],
-                    "imageName": "pogi-1.png",
-                    "imageUrl": "https://mud-kage.kakao.com/dn/XVUb0/btsQooKvVsg/BZODGf4DtCEIZhju1vOzcK/img_l.jpg",
                     "useSmsFailover": False,
                 }
             ],
@@ -99,8 +95,6 @@ def send_waiting_calcelled(restaurant: Restaurants, waiting: Waitings):
                     "countryCode": "82",
                     "to": waiting.phone,
                     "content": content,
-                    "imageName": "pogi-1.png",
-                    "imageUrl": "https://mud-kage.kakao.com/dn/XVUb0/btsQooKvVsg/BZODGf4DtCEIZhju1vOzcK/img_l.jpg",
                     "useSmsFailover": False,
                 }
             ],

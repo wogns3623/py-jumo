@@ -11,19 +11,67 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as WaitingsImport } from './routes/waitings'
 import { Route as MenusImport } from './routes/menus'
+import { Route as LoginImport } from './routes/login'
+import { Route as AdminImport } from './routes/admin'
 import { Route as IndexImport } from './routes/index'
+import { Route as AdminWaitingsImport } from './routes/admin/waitings'
+import { Route as AdminPaymentsImport } from './routes/admin/payments'
+import { Route as AdminOrdersImport } from './routes/admin/orders'
+import { Route as AdminMenusImport } from './routes/admin/menus'
+import { Route as AdminDashboardImport } from './routes/admin/dashboard'
 
 // Create/Update Routes
+
+const WaitingsRoute = WaitingsImport.update({
+  path: '/waitings',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const MenusRoute = MenusImport.update({
   path: '/menus',
   getParentRoute: () => rootRoute,
 } as any)
 
+const LoginRoute = LoginImport.update({
+  path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const AdminRoute = AdminImport.update({
+  path: '/admin',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const IndexRoute = IndexImport.update({
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AdminWaitingsRoute = AdminWaitingsImport.update({
+  path: '/waitings',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminPaymentsRoute = AdminPaymentsImport.update({
+  path: '/payments',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminOrdersRoute = AdminOrdersImport.update({
+  path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminMenusRoute = AdminMenusImport.update({
+  path: '/menus',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminDashboardRoute = AdminDashboardImport.update({
+  path: '/dashboard',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -34,15 +82,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/admin': {
+      preLoaderRoute: typeof AdminImport
+      parentRoute: typeof rootRoute
+    }
+    '/login': {
+      preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
     '/menus': {
       preLoaderRoute: typeof MenusImport
       parentRoute: typeof rootRoute
+    }
+    '/waitings': {
+      preLoaderRoute: typeof WaitingsImport
+      parentRoute: typeof rootRoute
+    }
+    '/admin/dashboard': {
+      preLoaderRoute: typeof AdminDashboardImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/menus': {
+      preLoaderRoute: typeof AdminMenusImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/orders': {
+      preLoaderRoute: typeof AdminOrdersImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/payments': {
+      preLoaderRoute: typeof AdminPaymentsImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/waitings': {
+      preLoaderRoute: typeof AdminWaitingsImport
+      parentRoute: typeof AdminImport
     }
   }
 }
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([IndexRoute, MenusRoute])
+export const routeTree = rootRoute.addChildren([
+  IndexRoute,
+  AdminRoute.addChildren([
+    AdminDashboardRoute,
+    AdminMenusRoute,
+    AdminOrdersRoute,
+    AdminPaymentsRoute,
+    AdminWaitingsRoute,
+  ]),
+  LoginRoute,
+  MenusRoute,
+  WaitingsRoute,
+])
 
 /* prettier-ignore-end */

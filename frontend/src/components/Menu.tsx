@@ -17,6 +17,7 @@ interface CartItem {
 }
 
 // Canvas API를 사용한 동적 색상 추출 컴포넌트
+// maybe use https://perso.crans.org/frenoy/matlab2012/seamcarving.pdf?
 function ImageWithDynamicBackground({
   src,
   alt,

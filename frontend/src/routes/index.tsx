@@ -51,7 +51,7 @@ function HomePage() {
                   size="lg"
                   className="border-blue-600 text-blue-600 hover:bg-blue-50"
                 >
-                  <Link to="/admin">관리자 페이지</Link>
+                  <Link to="/admin/dashboard">관리자 페이지</Link>
                 </Button>
               </div>
             </div>
