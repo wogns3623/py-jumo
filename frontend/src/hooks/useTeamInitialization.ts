@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
+
 import { TeamsService } from "@/client";
-import { teamUtils } from "@/utils/storage";
+
+const uuidRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // 팀 초기화 및 관리 로직을 담당하는 훅
 export function useTeamInitialization(tableId: string | null) {
-  const [teamId, setTeamId] = useState<string | null>(null);
+  const [teamId, setTeamId] = useLocalStorage<string>("teamId", "");
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [createTeamError, setCreateTeamError] = useState<Error | null>(null);
@@ -21,17 +25,13 @@ export function useTeamInitialization(tableId: string | null) {
 
       hasInitialized.current = true;
 
-      if (!tableId) {
+      if (!tableId || !uuidRegex.test(tableId)) {
         setIsInitialized(true);
         return;
       }
 
       // 기존 팀 ID 확인
-      const existingTeamId = teamUtils.getTeamId();
-
-      if (existingTeamId) {
-        // TODO: 기존 팀 유효성 검증 로직 추가
-        setTeamId(existingTeamId);
+      if (teamId) {
         setIsInitialized(true);
         return;
       }
@@ -44,12 +44,11 @@ export function useTeamInitialization(tableId: string | null) {
         const response = await TeamsService.createTeam({
           requestBody: {
             table_id: tableId,
-            waiting_id: null,
+            // waiting_id: null,
           },
         });
 
         // 생성된 팀 ID를 로컬 스토리지에 저장
-        teamUtils.setTeamId(response.id!);
         setTeamId(response.id!);
       } catch (error) {
         console.error("Failed to create team:", error);

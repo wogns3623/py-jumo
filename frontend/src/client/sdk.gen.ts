@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -112,10 +112,30 @@ export class AdminService {
     }
     
     /**
+     * Read Waitings
+     * @param data The data for the request.
+     * @param data.status
+     * @returns Waitings Successful Response
+     * @throws ApiError
+     */
+    public static readWaitings(data: AdminReadWaitingsData = {}): CancelablePromise<AdminReadWaitingsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/waitings/',
+            query: {
+                status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Dequeue Waitings
      * @param data The data for the request.
      * @param data.dequeueCount
-     * @returns Waitings 입장 처리된 웨이팅 목록
+     * @returns Waitings 웨이팅 처리
      * @throws ApiError
      */
     public static dequeueWaitings(data: AdminDequeueWaitingsData = {}): CancelablePromise<AdminDequeueWaitingsResponse> {
@@ -124,6 +144,50 @@ export class AdminService {
             url: '/api/v1/admin/waitings/dequeue',
             query: {
                 dequeue_count: data.dequeueCount
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Enter Waiting
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @returns Waitings 웨이팅 입장 처리
+     * @throws ApiError
+     */
+    public static enterWaiting(data: AdminEnterWaitingData): CancelablePromise<AdminEnterWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/admin/waitings/{waiting_id}/enter',
+            path: {
+                waiting_id: data.waitingId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Reject Waiting
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @param data.reason
+     * @returns unknown 웨이팅 거절 처리
+     * @throws ApiError
+     */
+    public static rejectWaiting(data: AdminRejectWaitingData): CancelablePromise<AdminRejectWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/admin/waitings/{waiting_id}',
+            path: {
+                waiting_id: data.waitingId
+            },
+            query: {
+                reason: data.reason
             },
             errors: {
                 422: 'Validation Error'
@@ -489,7 +553,7 @@ export class OrdersService {
      * @param data The data for the request.
      * @param data.teamId
      * @param data.requestBody
-     * @returns OrderWithPaymentMethod Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static teamsCreateOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
@@ -652,7 +716,7 @@ export class TeamsService {
      * @param data The data for the request.
      * @param data.teamId
      * @param data.requestBody
-     * @returns OrderWithPaymentMethod Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static createOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
@@ -689,10 +753,30 @@ export class UtilsService {
 
 export class WaitingsService {
     /**
+     * Read Waitings
+     * @param data The data for the request.
+     * @param data.status
+     * @returns Waitings Successful Response
+     * @throws ApiError
+     */
+    public static adminReadWaitings(data: AdminReadWaitingsData = {}): CancelablePromise<AdminReadWaitingsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/waitings/',
+            query: {
+                status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Dequeue Waitings
      * @param data The data for the request.
      * @param data.dequeueCount
-     * @returns Waitings 입장 처리된 웨이팅 목록
+     * @returns Waitings 웨이팅 처리
      * @throws ApiError
      */
     public static adminDequeueWaitings(data: AdminDequeueWaitingsData = {}): CancelablePromise<AdminDequeueWaitingsResponse> {
@@ -701,6 +785,50 @@ export class WaitingsService {
             url: '/api/v1/admin/waitings/dequeue',
             query: {
                 dequeue_count: data.dequeueCount
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Enter Waiting
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @returns Waitings 웨이팅 입장 처리
+     * @throws ApiError
+     */
+    public static adminEnterWaiting(data: AdminEnterWaitingData): CancelablePromise<AdminEnterWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/admin/waitings/{waiting_id}/enter',
+            path: {
+                waiting_id: data.waitingId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Reject Waiting
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @param data.reason
+     * @returns unknown 웨이팅 거절 처리
+     * @throws ApiError
+     */
+    public static adminRejectWaiting(data: AdminRejectWaitingData): CancelablePromise<AdminRejectWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/admin/waitings/{waiting_id}',
+            path: {
+                waiting_id: data.waitingId
+            },
+            query: {
+                reason: data.reason
             },
             errors: {
                 422: 'Validation Error'
@@ -718,6 +846,25 @@ export class WaitingsService {
     public static readWatings(data: WaitingsReadWatingsData): CancelablePromise<WaitingsReadWatingsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
+            url: '/api/v1/waitings/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Cancel Waiting
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static cancelWaiting(data: WaitingsCancelWaitingData): CancelablePromise<WaitingsCancelWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
             url: '/api/v1/waitings/',
             body: data.requestBody,
             mediaType: 'application/json',

@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 
 import NotFound from "@/components/Common/NotFound";
 import { AuthState } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/sonner";
 
 interface MyRouterContext {
   auth: AuthState;
@@ -30,9 +31,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <>
       <Outlet />
-      <Suspense>
+      {/* <Suspense>
         <TanStackDevtools />
-      </Suspense>
+      </Suspense> */}
+      <Toaster position="top-center" />
     </>
   ),
   notFoundComponent: () => <NotFound />,

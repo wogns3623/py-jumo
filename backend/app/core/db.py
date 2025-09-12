@@ -55,7 +55,8 @@ def init_db(session: Session) -> None:
         [
             Menus(
                 restaurant_id=restaurant.id,
-                name="에겐 대하 : 안녕하새우",
+                # name="에겐 대하 : 안녕하새우",
+                name="대하",
                 desc="엄청난 대하가 몇 마리 ? 20마리 !",
                 image="/assets/images/menus/shrimp.png",
                 bg_color="#D9D9D9",
@@ -64,7 +65,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="테토 장어 : 왜 불러.",
+                # name="테토 장어 : 왜 불러.",
+                name="장어",
                 desc="비키거라. 대하에 꿀리지 않는 테토 장어 두 마리 나가신다.",
                 image="/assets/images/menus/eel.png",
                 bg_color="#000000",
@@ -82,7 +84,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="코카콜라 : 선택을 못 할땐 노래를 불러봐 !",
+                # name="코카콜라 : 선택을 못 할땐 노래를 불러봐 !",
+                name="코카콜라",
                 desc="코카콜라 맛있다 맛있으면 또 먹어 딩동댕동 다음은 뭐게?",
                 image="/assets/images/menus/coke.png",
                 bg_color="#DF0A1C",
@@ -91,7 +94,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="펩시제로라임 : 제로의 근본은 나지.",
+                # name="펩시제로라임 : 제로의 근본은 나지.",
+                name="펩시제로라임",
                 desc="반박시 코카콜라 말이 맞음.",
                 image="/assets/images/menus/pepsi.png",
                 bg_color="#141108",
@@ -100,7 +104,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="스프라이트 : 속이 답답할 떈 스프라이트가 필요한 법",
+                # name="스프라이트 : 속이 답답할 떈 스프라이트가 필요한 법",
+                name="스프라이트",
                 desc="법 언제 생기는지는 나도 모름.",
                 image="/assets/images/menus/sprite.png",
                 bg_color="#2DB24C",
@@ -109,7 +114,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="환타 : 달달함을 맡고 있지",
+                # name="환타 : 달달함을 맡고 있지",
+                name="환타",
                 desc="나보다 달달한 음료 없을 걸?",
                 image="/assets/images/menus/fanta.png",
                 bg_color="#FE8002",
@@ -118,7 +124,8 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="건방진 생수 : 난 너의 생명수 (500ml)",
+                # name="건방진 생수 : 난 너의 생명수 (500ml)",
+                name="생수 (500ml)",
                 desc="긴말 필요 없음",
                 image="/assets/images/menus/water.png",
                 bg_color="#E0F7FA",

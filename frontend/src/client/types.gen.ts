@@ -25,6 +25,7 @@ export type MenuPublic = {
      */
     price: number;
     image?: (string | null);
+    bg_color?: (string | null);
     category?: (string | null);
     no_stock?: boolean;
 };
@@ -93,8 +94,10 @@ export type OrderPublic = {
     no: number;
     status: OrderStatus;
     total_price: number;
+    final_price: number;
     ordered_menus: Array<OrderedMenuPublic>;
     payment: (Payments | null);
+    payment_info?: (PaymentInfo | null);
 };
 
 export type Orders = {
@@ -116,8 +119,21 @@ export type OrderUpdate = {
     reject_reason?: (string | null);
 };
 
-export type OrderWithPaymentMethod = {
-    order: OrderPublic;
+export type OrderWithPaymentInfo = {
+    reject_reason?: (string | null);
+    finished_at?: (string | null);
+    created_at?: string;
+    id: string;
+    no: number;
+    status: OrderStatus;
+    total_price: number;
+    final_price: number;
+    ordered_menus: Array<OrderedMenuPublic>;
+    payment: (Payments | null);
+    payment_info: PaymentInfo;
+};
+
+export type PaymentInfo = {
     bank_name: string;
     bank_account_no: string;
 };
@@ -198,9 +214,14 @@ export type Waitings = {
     restaurant_id: string;
     name: string;
     phone: string;
+    notified_at?: (string | null);
     entered_at?: (string | null);
+    rejected_at?: (string | null);
+    rejected_reason?: (string | null);
     created_at?: string;
 };
+
+export type WaitingStatus = 'waiting' | 'notified' | 'entered' | 'rejected';
 
 export type AdminAdminLoginData = {
     formData: Body_admin_admin_login;
@@ -234,11 +255,32 @@ export type AdminUpdateTableData = {
 
 export type AdminUpdateTableResponse = (Tables);
 
+export type AdminReadWaitingsData = {
+    status?: (WaitingStatus | AllFilter);
+};
+
+export type AdminReadWaitingsResponse = (Array<Waitings>);
+
 export type AdminDequeueWaitingsData = {
     dequeueCount?: number;
 };
 
 export type AdminDequeueWaitingsResponse = (Array<Waitings>);
+
+export type AdminEnterWaitingData = {
+    waitingId: string;
+};
+
+export type AdminEnterWaitingResponse = (Waitings);
+
+export type AdminRejectWaitingData = {
+    reason?: string;
+    waitingId: string;
+};
+
+export type AdminRejectWaitingResponse = ({
+    [key: string]: unknown;
+});
 
 export type AdminReadOrdersData = {
     status?: (OrderStatus | AllFilter);
@@ -301,7 +343,7 @@ export type TeamsCreateOrderData = {
     teamId: string;
 };
 
-export type TeamsCreateOrderResponse = (OrderWithPaymentMethod);
+export type TeamsCreateOrderResponse = (OrderWithPaymentInfo);
 
 export type RestaurantsReadRestaurantsResponse = (Restaurants);
 
@@ -318,3 +360,9 @@ export type WaitingsReadWatingsData = {
 };
 
 export type WaitingsReadWatingsResponse = (Array<Waitings>);
+
+export type WaitingsCancelWaitingData = {
+    requestBody: WaitingFind;
+};
+
+export type WaitingsCancelWaitingResponse = (unknown);

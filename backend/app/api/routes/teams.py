@@ -2,7 +2,7 @@ from typing import Sequence
 import uuid
 
 from fastapi import APIRouter
-from sqlmodel import select
+from sqlmodel import select, col
 
 from app.api.deps import SessionDep, DefaultRestaurant
 from app.core.config import settings
@@ -11,9 +11,10 @@ from app.models import (
     TeamCreate,
     Orders,
     OrderCreate,
+    PaymentInfo,
     OrderPublic,
     OrderedMenus,
-    OrderWithPaymentMethod,
+    OrderWithPaymentInfo,
 )
 
 router = APIRouter(prefix="/teams", tags=["teams"])
@@ -40,12 +41,22 @@ def read_orders_by_team(
     team_id: uuid.UUID,
 ):
     orders = session.exec(
-        select(Orders).where(
-            Orders.restaurant_id == restaurant.id, Orders.team_id == team_id
-        )
+        select(Orders)
+        .where(Orders.restaurant_id == restaurant.id, Orders.team_id == team_id)
+        .order_by(col(Orders.created_at).desc())
     ).all()
 
-    return orders
+    return [
+        OrderPublic.model_validate(
+            order,
+            update={
+                "payment_info": PaymentInfo(
+                    bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+                )
+            },
+        )
+        for order in orders
+    ]
 
 
 @router.post("/{team_id}/orders/", tags=["orders"])
@@ -54,7 +65,7 @@ def create_order(
     restaurant: DefaultRestaurant,
     team_id: uuid.UUID,
     order_data: OrderCreate,
-) -> OrderWithPaymentMethod:
+) -> OrderWithPaymentInfo:
     order = Orders(team_id=team_id, restaurant_id=restaurant.id)
     session.add(order)
     session.commit()
@@ -71,8 +82,11 @@ def create_order(
     session.commit()
     session.refresh(order)
 
-    return OrderWithPaymentMethod(
-        order=order,
-        bank_name="국민은행",
-        bank_account_no=settings.BANK_ACCOUNT_NO,
+    return OrderWithPaymentInfo.model_validate(
+        order,
+        update={
+            "payment_info": PaymentInfo(
+                bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+            )
+        },
     )

@@ -34,9 +34,7 @@ function HomePage() {
                   size="lg"
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  <Link to="/menus" search={{ table: "1" }}>
-                    메뉴 보기 (테스트)
-                  </Link>
+                  <Link to="/menus">메뉴 보기 (테스트)</Link>
                 </Button>
               </div>
 

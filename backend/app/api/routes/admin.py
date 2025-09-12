@@ -372,6 +372,14 @@ def update_menu_order(
     session.commit()
     session.refresh(ordered_menu)
 
+    if all(
+        om.status == MenuOrderStatus.served or om.status == MenuOrderStatus.rejected
+        for om in ordered_menu.order.ordered_menus
+    ):
+        ordered_menu.order.finished_at = datetime.now(timezone.utc)
+        session.add(ordered_menu.order)
+        session.commit()
+
     return ordered_menu
 
 

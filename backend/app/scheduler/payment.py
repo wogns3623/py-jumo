@@ -27,12 +27,22 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
     )
 
-    return [BankTransaction.model_validate(trs) for trs in transaction_list]
+    # injected = BankTransaction(
+    #     transaction_by="김재훈",
+    #     date=datetime.now(),
+    #     amount=31997,
+    #     balance=0,
+    # )
+    return [
+        # injected,
+        *[BankTransaction.model_validate(trs) for trs in transaction_list],
+    ]
 
 
 @session_decor(engine)
 def connect_payment_to_order(session: Session) -> None:
     transaction_list = get_recent_bank_transactions()
+    print("transaction_list: ", transaction_list)
     now = datetime.now()
     before_10_minutes = now - timedelta(minutes=10)
 
@@ -68,7 +78,7 @@ def connect_payment_to_order(session: Session) -> None:
     session.commit()
 
     orders_without_payment = {
-        order.id: OrderPublic.model_validate(order)
+        order.id: order
         for order in session.exec(select(Orders).where(Orders.payment_id == None)).all()
     }
 
@@ -77,7 +87,7 @@ def connect_payment_to_order(session: Session) -> None:
 
         for order in orders_without_payment.values():
             if (
-                order.no % 100 == expected_order_no
+                order.no % 100 == expected_order_no  # type: ignore
                 and order.total_price == payment.amount + expected_order_no
             ):
                 order.payment_id = payment.id

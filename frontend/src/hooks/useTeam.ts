@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { TeamsService } from "@/client";
 import type { TeamsCreateTeamData } from "@/client";
+import { useCallback } from "react";
 
 // 팀 생성 훅
 export function useCreateTeam() {
@@ -25,5 +26,14 @@ export function useTeamOrders(teamId: string) {
       return response;
     },
     enabled: !!teamId,
+    refetchInterval: 5000, // 5초마다 자동 갱신
   });
+}
+
+export function useTeamOrdersInvalidate(teamId: string) {
+  const queryClient = useQueryClient();
+
+  return useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["team-orders", teamId] });
+  }, [queryClient, teamId]);
 }

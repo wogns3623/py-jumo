@@ -1,12 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 import { TeamsService } from "@/client";
-import type { TeamsCreateOrderData } from "@/client";
+import type { OrderCreate } from "@/client";
 
 // 주문 생성 훅
-export function useCreateOrder() {
+export function useCreateOrder(teamId: string) {
   return useMutation({
-    mutationFn: async (data: TeamsCreateOrderData) => {
-      const response = await TeamsService.createOrder(data);
+    mutationKey: ["create-order", teamId],
+    mutationFn: async (data: OrderCreate) => {
+      const response = await TeamsService.createOrder({
+        teamId,
+        requestBody: data,
+      });
       return response;
     },
   });

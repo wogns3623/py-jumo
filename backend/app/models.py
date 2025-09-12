@@ -255,6 +255,13 @@ class Orders(OrderBase, table=True):
             for menu_order in self.ordered_menus
         )
 
+    @property
+    def final_price(self) -> Optional[int]:
+        """총 결제 금액 (총액 + 주문번호 뒷 2자리)"""
+        if self.no is None:
+            return None
+        return self.total_price - (self.no % 100)
+
 
 class OrderCreate(SQLModel):
     ordered_menus: list["OrderedMenuCreate"]
@@ -266,23 +273,28 @@ class OrderUpdate(SQLModel):
     reject_reason: Optional[str] = None
 
 
+class PaymentInfo(SQLModel):
+    bank_name: str
+    bank_account_no: str
+
+
 class OrderPublic(OrderBase):
     id: uuid.UUID
     no: int
     status: OrderStatus
     total_price: int
+    final_price: int
 
     ordered_menus: list["OrderedMenuPublic"]
     payment: Optional["Payments"]
+    payment_info: Optional[PaymentInfo] = None
 
     class Config:
         from_attributes = True
 
 
-class OrderWithPaymentMethod(SQLModel):
-    order: OrderPublic
-    bank_name: str
-    bank_account_no: str
+class OrderWithPaymentInfo(OrderPublic):
+    payment_info: PaymentInfo
 
 
 class MenuOrderStatus(str, enum.Enum):
