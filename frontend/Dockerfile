@@ -10,6 +10,7 @@ RUN npm install
 COPY ./ /app/
 
 ARG VITE_API_URL=${VITE_API_URL}
+ARG VITE_USE_DEVTOOLS=${VITE_USE_DEVTOOLS}
 
 RUN npm run build
 

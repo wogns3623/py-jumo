@@ -1,11 +1,11 @@
-import { MenuPage } from "@/components/Menu";
-import { createFileRoute } from "@tanstack/react-router";
+import { MenuPage } from "@/components/Menu/MenuPage";
+import { createFileRoute, SearchSchemaInput } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/menus")({
   component: Menus,
-  validateSearch: (search?: { table?: string }) => {
+  validateSearch: (search: { table?: string } & SearchSchemaInput) => {
     return {
-      table: search?.table || null,
+      table: search.table || null,
     };
   },
 });

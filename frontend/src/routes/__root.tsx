@@ -26,7 +26,7 @@ const loadDevtools = () =>
 
 const TanStackDevtools =
   process.env.NODE_ENV === "production" ||
-  process.env.VITE_USE_DEVTOOLS === "false"
+  import.meta.env.VITE_USE_DEVTOOLS === "false"
     ? () => null
     : React.lazy(loadDevtools);
 
