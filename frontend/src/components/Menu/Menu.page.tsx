@@ -150,7 +150,7 @@ function MenuSection({
   );
 }
 
-function MenuPageInner({ teamId }: { teamId: string | null }) {
+export function MenuPageInner({ teamId }: { teamId: string | null }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useLocalStorage<CartItem[]>("cart", []);
 

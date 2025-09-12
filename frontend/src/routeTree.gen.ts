@@ -16,7 +16,10 @@ import { Route as MenusImport } from './routes/menus'
 import { Route as LoginImport } from './routes/login'
 import { Route as AdminImport } from './routes/admin'
 import { Route as IndexImport } from './routes/index'
+import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as AdminWaitingsImport } from './routes/admin/waitings'
+import { Route as AdminTablesImport } from './routes/admin/tables'
+import { Route as AdminSettingsImport } from './routes/admin/settings'
 import { Route as AdminPaymentsImport } from './routes/admin/payments'
 import { Route as AdminOrdersImport } from './routes/admin/orders'
 import { Route as AdminMenusImport } from './routes/admin/menus'
@@ -49,8 +52,23 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const AdminIndexRoute = AdminIndexImport.update({
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+
 const AdminWaitingsRoute = AdminWaitingsImport.update({
   path: '/waitings',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminTablesRoute = AdminTablesImport.update({
+  path: '/tables',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminSettingsRoute = AdminSettingsImport.update({
+  path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -114,8 +132,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPaymentsImport
       parentRoute: typeof AdminImport
     }
+    '/admin/settings': {
+      preLoaderRoute: typeof AdminSettingsImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/tables': {
+      preLoaderRoute: typeof AdminTablesImport
+      parentRoute: typeof AdminImport
+    }
     '/admin/waitings': {
       preLoaderRoute: typeof AdminWaitingsImport
+      parentRoute: typeof AdminImport
+    }
+    '/admin/': {
+      preLoaderRoute: typeof AdminIndexImport
       parentRoute: typeof AdminImport
     }
   }
@@ -130,7 +160,10 @@ export const routeTree = rootRoute.addChildren([
     AdminMenusRoute,
     AdminOrdersRoute,
     AdminPaymentsRoute,
+    AdminSettingsRoute,
+    AdminTablesRoute,
     AdminWaitingsRoute,
+    AdminIndexRoute,
   ]),
   LoginRoute,
   MenusRoute,

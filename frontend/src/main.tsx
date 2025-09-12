@@ -47,6 +47,7 @@ declare module "@tanstack/react-router" {
 }
 
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { SidebarProvider } from "./components/ui/sidebar";
 
 function InnerApp() {
   const auth = useAuth();
@@ -56,7 +57,16 @@ function InnerApp() {
 function App() {
   return (
     <AuthProvider>
-      <InnerApp />
+      <SidebarProvider
+        style={
+          {
+            "--sidebar-width": "calc(var(--spacing) * 72)",
+            "--header-height": "calc(var(--spacing) * 12)",
+          } as React.CSSProperties
+        }
+      >
+        <InnerApp />
+      </SidebarProvider>
     </AuthProvider>
   );
 }
@@ -68,5 +78,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <App />
     </QueryClientProvider>
-  </StrictMode>,
+  </StrictMode>
 );
