@@ -314,7 +314,7 @@ class OrderedMenuBase(SQLModel):
 class OrderedMenus(OrderedMenuBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    order_id: uuid.UUID = Field(foreign_key="orders.id", index=True)
+    order_id: uuid.UUID = Field(foreign_key="orders.id", index=True, ondelete="CASCADE")
     menu_id: uuid.UUID = Field(foreign_key="menus.id", index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

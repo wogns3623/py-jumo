@@ -291,24 +291,25 @@ function OrderBottomBar({
 
   useEffect(() => {
     if (!lastOrder) return;
-    if (!storedLastOrder) {
+    if (!storedLastOrder || storedLastOrder.id !== lastOrder.id) {
       setStoredLastOrder(lastOrder);
       return;
     }
 
-    if (storedLastOrder.id !== lastOrder.id) return;
-    if (storedLastOrder.status === lastOrder.status) return;
-    console.log("lastOrder status changed:", lastOrder.status);
+    if (storedLastOrder.status !== lastOrder.status) {
+      console.log("lastOrder status changed:", lastOrder.status);
 
-    if (lastOrder.status === "paid") {
-      toast.success("결제가 완료되었습니다! 조리중입니다.");
-    } else if (lastOrder.status === "finished") {
-      toast.success("주문이 완료되었습니다! 맛있게 드세요.");
-    } else if (lastOrder.status === "rejected") {
-      toast.error(
-        `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`
-      );
+      if (lastOrder.status === "paid") {
+        toast.success("결제가 완료되었습니다! 조리중입니다.");
+      } else if (lastOrder.status === "finished") {
+        toast.success("주문이 완료되었습니다! 맛있게 드세요.");
+      } else if (lastOrder.status === "rejected") {
+        toast.error(
+          `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`
+        );
+      }
     }
+
     setStoredLastOrder(lastOrder);
   }, [lastOrder, storedLastOrder]);
 
@@ -339,17 +340,10 @@ function OrderBottomBar({
   );
 }
 
-function LastOrderPaymentInfoBottomBar({
-  teamId,
-  order,
-}: {
-  teamId: string;
-  order: OrderWithPaymentInfo;
-}) {
-  const openPaymentUrl = useCallback(() => {
-    const paymentUrl = `supertoss://send?amount=${order.final_price}&bank=${order.payment_info.bank_name}&accountNo=${order.payment_info.bank_account_no}&origin=qr`;
-    window.location.href = paymentUrl;
+function requestPayment(order: OrderWithPaymentInfo) {
+  const paymentUrl = `supertoss://send?amount=${order.final_price}&bank=${order.payment_info.bank_name}&accountNo=${order.payment_info.bank_account_no}&origin=qr`;
 
+  setTimeout(() => {
     document.execCommand(
       "copy",
       false,
@@ -358,8 +352,18 @@ function LastOrderPaymentInfoBottomBar({
     toast.success(
       "계좌번호 복사 완료! 이체 앱으로 이동하여 결제를 완료해주세요."
     );
-  }, [teamId, order.id]);
+  }, 100);
 
+  window.location.href = paymentUrl;
+}
+
+function LastOrderPaymentInfoBottomBar({
+  teamId,
+  order,
+}: {
+  teamId: string;
+  order: OrderWithPaymentInfo;
+}) {
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full h-[73px] bg-white border-t border-gray-200 flex items-center px-4 z-10">
       <div className="flex items-center gap-2">
@@ -385,7 +389,7 @@ function LastOrderPaymentInfoBottomBar({
             className="ml-4"
             size="sm"
             variant="outline"
-            onClick={openPaymentUrl}
+            onClick={() => requestPayment(order)}
           >
             이체하기
           </Button>
@@ -433,6 +437,7 @@ function ConfirmOrderBottomBar({
       console.log("주문 및 결제 정보:", order);
       invalidateOrders();
       toast.success("주문이 완료되었습니다!");
+      requestPayment(order);
     } catch (error) {
       console.error("주문 실패:", error);
       toast.error("주문 처리 중 오류가 발생했습니다.");
