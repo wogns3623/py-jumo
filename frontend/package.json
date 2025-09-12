@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
-    "@hey-api/openapi-ts": "^0.57.0",
+    "@hey-api/openapi-ts": "^0.83.1",
     "@playwright/test": "^1.52.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@tailwindcss/vite": "^4.1.12",
