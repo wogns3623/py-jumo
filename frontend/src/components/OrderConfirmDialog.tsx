@@ -1,3 +1,5 @@
+import { MenuImage, QuantityControl } from "@/components/shared";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { QuantityControl, MenuImage } from "@/components/shared";
 import type { CartItem } from "@/types/cart";
 
 interface OrderConfirmDialogProps {
@@ -89,13 +89,13 @@ export function OrderConfirmDialog({
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.menu.price * item.quantity,
-    0
+    0,
   );
 
   // 수량 변경 핸들러
   const updateQuantity = (menuId: string, newQuantity: number) => {
     const newCart = cart.map((item) =>
-      item.menuId === menuId ? { ...item, quantity: newQuantity } : item
+      item.menuId === menuId ? { ...item, quantity: newQuantity } : item,
     );
     onCartChange(newCart);
   };

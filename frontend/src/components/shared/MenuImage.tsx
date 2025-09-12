@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface MenuImageProps {
   src: string;
@@ -76,7 +76,7 @@ export function MenuImage({
         // 배경에 가장자리 픽셀들을 확장해서 그리기
         const bgImageData = bgCtx.createImageData(
           bgCanvas.width,
-          bgCanvas.height
+          bgCanvas.height,
         );
         const bgPixels = bgImageData.data;
 
@@ -118,7 +118,7 @@ export function MenuImage({
         const rgbToHsl = (
           r: number,
           g: number,
-          b: number
+          b: number,
         ): [number, number, number] => {
           r /= 255;
           g /= 255;
@@ -212,7 +212,7 @@ export function MenuImage({
 
           colorGroupFrequency.set(
             leftGroup,
-            (colorGroupFrequency.get(leftGroup) || 0) + 1
+            (colorGroupFrequency.get(leftGroup) || 0) + 1,
           );
           if (!colorGroupPixels.has(leftGroup)) {
             colorGroupPixels.set(leftGroup, []);
@@ -227,7 +227,7 @@ export function MenuImage({
 
           colorGroupFrequency.set(
             rightGroup,
-            (colorGroupFrequency.get(rightGroup) || 0) + 1
+            (colorGroupFrequency.get(rightGroup) || 0) + 1,
           );
           if (!colorGroupPixels.has(rightGroup)) {
             colorGroupPixels.set(rightGroup, []);
@@ -237,7 +237,7 @@ export function MenuImage({
 
         // 색상 계열 다양성 검사 (개선된 버전)
         const sortedColorGroups = Array.from(
-          colorGroupFrequency.entries()
+          colorGroupFrequency.entries(),
         ).sort((a, b) => b[1] - a[1]);
 
         // console.log("색상 계열 분석:", sortedColorGroups); // 디버깅용
@@ -258,7 +258,7 @@ export function MenuImage({
           // 1위가 전체의 80% 이상을 차지하면 생성된 배경 사용
           const totalPixels = Array.from(colorGroupFrequency.values()).reduce(
             (sum, count) => sum + count,
-            0
+            0,
           );
           const dominanceRatio = first[1] / totalPixels;
 
@@ -300,7 +300,7 @@ export function MenuImage({
             const colorKey = `${r},${g},${b}`;
             pixelFrequency.set(
               colorKey,
-              (pixelFrequency.get(colorKey) || 0) + 1
+              (pixelFrequency.get(colorKey) || 0) + 1,
             );
           });
 
@@ -346,7 +346,7 @@ export function MenuImage({
     <div
       className={cn(
         "w-full h-full flex items-center justify-center transition-all duration-300",
-        className
+        className,
       )}
       style={
         useEdgeBackground

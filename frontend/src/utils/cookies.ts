@@ -13,7 +13,7 @@ export interface CookieOptions {
 export function setCookie(
   name: string,
   value: string,
-  options: CookieOptions = {}
+  options: CookieOptions = {},
 ): void {
   let cookieString = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
 
@@ -34,7 +34,7 @@ export function setCookie(
   }
 
   if (options.secure) {
-    cookieString += `; secure`;
+    cookieString += "; secure";
   }
 
   if (options.sameSite) {
@@ -48,7 +48,7 @@ export function setCookie(
 }
 
 export function getCookie(name: string): string | null {
-  const nameEQ = encodeURIComponent(name) + "=";
+  const nameEQ = `${encodeURIComponent(name)}=`;
   const ca = document.cookie.split(";");
 
   for (let i = 0; i < ca.length; i++) {
@@ -64,11 +64,7 @@ export function getCookie(name: string): string | null {
   return null;
 }
 
-export function removeCookie(
-  name: string,
-  path: string = "/",
-  domain?: string
-): void {
+export function removeCookie(name: string, path = "/", domain?: string): void {
   const options: CookieOptions = {
     expires: new Date(0),
     path,

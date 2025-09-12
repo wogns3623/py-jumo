@@ -1,5 +1,5 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { MenusService } from "@/client";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
 // 메뉴 목록 조회 훅
 export function useMenus() {

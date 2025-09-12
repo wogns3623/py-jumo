@@ -6,6 +6,7 @@
   "files": {
     "ignore": [
       "node_modules",
+      "src/client",
       "src/routeTree.gen.ts",
       "playwright.config.ts",
       "playwright-report"
@@ -30,7 +31,7 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "double",
-      "semicolons": "asNeeded"
+      "semicolons": "always"
     }
   }
 }

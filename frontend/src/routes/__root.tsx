@@ -2,8 +2,8 @@ import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 import React, { Suspense } from "react";
 
 import NotFound from "@/components/Common/NotFound";
-import { AuthState } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
+import type { AuthState } from "@/hooks/useAuth";
 
 interface MyRouterContext {
   auth: AuthState;
@@ -25,15 +25,18 @@ const loadDevtools = () =>
   });
 
 const TanStackDevtools =
-  process.env.NODE_ENV === "production" ? () => null : React.lazy(loadDevtools);
+  process.env.NODE_ENV === "production" ||
+  process.env.VITE_USE_DEVTOOLS === "false"
+    ? () => null
+    : React.lazy(loadDevtools);
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <>
       <Outlet />
-      {/* <Suspense>
+      <Suspense>
         <TanStackDevtools />
-      </Suspense> */}
+      </Suspense>
       <Toaster position="top-center" />
     </>
   ),

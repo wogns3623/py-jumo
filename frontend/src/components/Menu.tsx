@@ -1,6 +1,6 @@
-import { useSearch } from "@tanstack/react-router";
-import { Fragment, Suspense, useCallback, useEffect, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
+import { Fragment, Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
@@ -32,7 +32,7 @@ function MenuCard({
     <Card
       className={cn(
         "w-full bg-[#F5F7F6] rounded-2xl border-none text-black",
-        menu.no_stock && "opacity-50"
+        menu.no_stock && "opacity-50",
       )}
     >
       <CardContent className="p-0">
@@ -103,9 +103,9 @@ function MenuSection({
     const menu = menus.find((m) => m.id === menuId);
     if (!menu) return;
 
-    let newCart = [...cart];
+    const newCart = [...cart];
     const existingItemIndex = newCart.findIndex(
-      (item) => item.menuId === menuId
+      (item) => item.menuId === menuId,
     );
 
     if (newQuantity === 0) {
@@ -305,7 +305,7 @@ function OrderBottomBar({
         toast.success("주문이 완료되었습니다! 맛있게 드세요.");
       } else if (lastOrder.status === "rejected") {
         toast.error(
-          `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`
+          `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`,
         );
       }
     }
@@ -329,7 +329,6 @@ function OrderBottomBar({
     // 결제 정보 보여줌
     return (
       <LastOrderPaymentInfoBottomBar
-        teamId={teamId}
         order={lastOrder as OrderWithPaymentInfo}
       />
     );
@@ -347,10 +346,10 @@ function requestPayment(order: OrderWithPaymentInfo) {
     document.execCommand(
       "copy",
       false,
-      `${order.payment_info.bank_name} ${order.payment_info.bank_account_no} ${order.final_price}원`
+      `${order.payment_info.bank_name} ${order.payment_info.bank_account_no} ${order.final_price}원`,
     );
     toast.success(
-      "계좌번호 복사 완료! 이체 앱으로 이동하여 결제를 완료해주세요."
+      "계좌번호 복사 완료! 이체 앱으로 이동하여 결제를 완료해주세요.",
     );
   }, 100);
 
@@ -358,10 +357,8 @@ function requestPayment(order: OrderWithPaymentInfo) {
 }
 
 function LastOrderPaymentInfoBottomBar({
-  teamId,
   order,
 }: {
-  teamId: string;
   order: OrderWithPaymentInfo;
 }) {
   return (
@@ -376,7 +373,7 @@ function LastOrderPaymentInfoBottomBar({
         <span className="text-[15px] font-sf-pro">
           총 {order.final_price.toLocaleString()}원
         </span>
-        {order.total_price != order.final_price && (
+        {order.total_price !== order.final_price && (
           <p className="text-xs text-gray-500 mt-0.5">{`(${
             order.total_price - order.final_price
           }원 빼드렸어요!)`}</p>
@@ -417,7 +414,7 @@ function ConfirmOrderBottomBar({
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.menu.price * item.quantity,
-    0
+    0,
   );
 
   const createOrder = useCreateOrder(teamId);
