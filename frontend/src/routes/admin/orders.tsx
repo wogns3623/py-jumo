@@ -24,7 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
-import type { OrderStatus } from "@/client/types.gen";
+import type { OrderStatus, MenuOrderStatus } from "@/client/types.gen";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/admin/orders")({
@@ -75,6 +75,69 @@ function Page() {
     },
   });
 
+  // 주문 메뉴 상태 업데이트
+  const updateMenuOrderMutation = useMutation({
+    mutationFn: async ({
+      orderId,
+      menuId,
+      status,
+    }: {
+      orderId: string;
+      menuId: string;
+      status: MenuOrderStatus;
+    }) => {
+      const now = new Date().toISOString();
+      const updateData: any = {};
+
+      if (status === "cooking") {
+        updateData.cook_started_at = now;
+      } else if (status === "served") {
+        updateData.served_at = now;
+      }
+
+      return await AdminService.updateMenuOrder({
+        orderId,
+        menuId,
+        requestBody: updateData,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+      toast.success("메뉴 상태가 업데이트되었습니다.");
+    },
+    onError: (error) => {
+      toast.error("메뉴 상태 업데이트에 실패했습니다.");
+      console.error("Menu order update error:", error);
+    },
+  });
+
+  // 주문 메뉴 거절
+  const rejectMenuOrderMutation = useMutation({
+    mutationFn: async ({
+      orderId,
+      menuId,
+      reason,
+    }: {
+      orderId: string;
+      menuId: string;
+      reason: string;
+    }) => {
+      return await AdminService.rejectMenuOrder({
+        orderId,
+        menuId,
+        reason,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
+      toast.success("메뉴가 거절되었습니다.");
+    },
+    onError: (error) => {
+      toast.error("메뉴 거절에 실패했습니다.");
+      console.error("Menu order reject error:", error);
+    },
+  });
+
   const toggleOrderExpansion = (orderId: string) => {
     const newExpanded = new Set(expandedOrders);
     if (newExpanded.has(orderId)) {
@@ -115,6 +178,36 @@ function Page() {
     }
   };
 
+  const getMenuStatusLabel = (status: MenuOrderStatus) => {
+    switch (status) {
+      case "ordered":
+        return "주문접수";
+      case "cooking":
+        return "조리중";
+      case "served":
+        return "완료";
+      case "rejected":
+        return "거절";
+      default:
+        return status;
+    }
+  };
+
+  const getMenuStatusBadgeVariant = (status: MenuOrderStatus) => {
+    switch (status) {
+      case "ordered":
+        return "outline";
+      case "cooking":
+        return "secondary";
+      case "served":
+        return "default";
+      case "rejected":
+        return "destructive";
+      default:
+        return "outline";
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ko-KR").format(price) + "원";
   };
@@ -126,7 +219,7 @@ function Page() {
         <div className="flex flex-1 flex-col items-center justify-center">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="text-center text-red-600">
+              <p className="text-center text-destructive">
                 주문 목록을 불러오는데 실패했습니다.
               </p>
               <Button
@@ -196,10 +289,13 @@ function Page() {
             <div className="block lg:hidden space-y-4">
               {orders?.map((order) => (
                 <Card key={order.id} className="overflow-hidden">
-                  <CardContent className="p-4">
+                  <CardContent className="p-0">
                     <div className="space-y-3">
-                      {/* 헤더 */}
-                      <div className="flex items-center justify-between">
+                      {/* 헤더 - 클릭 가능한 영역 */}
+                      <div
+                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => toggleOrderExpansion(order.id!)}
+                      >
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-lg">
                             #{order.no}
@@ -211,21 +307,17 @@ function Page() {
                             {getStatusLabel(order.status)}
                           </Badge>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleOrderExpansion(order.id!)}
-                        >
+                        <div className="flex items-center">
                           {expandedOrders.has(order.id!) ? (
                             <ChevronDown className="h-4 w-4" />
                           ) : (
                             <ChevronRight className="h-4 w-4" />
                           )}
-                        </Button>
+                        </div>
                       </div>
 
                       {/* 기본 정보 */}
-                      <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="grid grid-cols-2 gap-2 text-sm px-4">
                         <div>
                           <span className="text-muted-foreground">
                             생성일시:
@@ -255,17 +347,19 @@ function Page() {
                       </div>
 
                       {/* 액션 */}
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2 px-4 pb-4">
                         {order.status === "ordered" && (
                           <Button
-                            variant="outline"
+                            variant="destructive"
                             size="sm"
-                            onClick={() =>
+                            className="font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               rejectOrderMutation.mutate({
                                 orderId: order.id!,
                                 reason: "관리자 거절",
-                              })
-                            }
+                              });
+                            }}
                             disabled={rejectOrderMutation.isPending}
                           >
                             거절
@@ -280,7 +374,7 @@ function Page() {
 
                       {/* 확장된 상세 정보 */}
                       {expandedOrders.has(order.id!) && (
-                        <div className="mt-4 pt-4 border-t bg-gray-50 -mx-4 px-4 pb-4">
+                        <div className="mt-4 pt-4 border-t bg-muted -mx-4 px-4 pb-4">
                           <h4 className="font-medium mb-3 text-sm">
                             주문 상세 정보
                           </h4>
@@ -305,22 +399,91 @@ function Page() {
                                         수량: {orderedMenu.amount}
                                       </span>
                                       <Badge
-                                        variant={
-                                          orderedMenu.status === "served"
-                                            ? "default"
-                                            : "outline"
-                                        }
+                                        variant={getMenuStatusBadgeVariant(
+                                          orderedMenu.status
+                                        )}
                                         className="text-xs"
                                       >
-                                        {orderedMenu.status === "served"
-                                          ? "완료"
-                                          : orderedMenu.status === "cooking"
-                                          ? "조리중"
-                                          : orderedMenu.status === "rejected"
-                                          ? "거절"
-                                          : "대기"}
+                                        {getMenuStatusLabel(orderedMenu.status)}
                                       </Badge>
                                     </div>
+
+                                    {/* 상태 변경 버튼들 (모바일) */}
+                                    {order.status !== "rejected" &&
+                                      orderedMenu.status !== "rejected" &&
+                                      orderedMenu.status !== "served" && (
+                                        <div className="flex gap-1 mt-2">
+                                          {orderedMenu.status === "ordered" && (
+                                            <>
+                                              <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                className="text-xs px-2 py-1 h-auto font-medium"
+                                                onClick={() =>
+                                                  updateMenuOrderMutation.mutate(
+                                                    {
+                                                      orderId: order.id!,
+                                                      menuId:
+                                                        orderedMenu.menu.id!,
+                                                      status: "cooking",
+                                                    }
+                                                  )
+                                                }
+                                                disabled={
+                                                  updateMenuOrderMutation.isPending
+                                                }
+                                              >
+                                                조리시작
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                className="text-xs px-2 py-1 h-auto font-medium"
+                                                onClick={() =>
+                                                  rejectMenuOrderMutation.mutate(
+                                                    {
+                                                      orderId: order.id!,
+                                                      menuId:
+                                                        orderedMenu.menu.id!,
+                                                      reason: "재료 부족",
+                                                    }
+                                                  )
+                                                }
+                                                disabled={
+                                                  rejectMenuOrderMutation.isPending
+                                                }
+                                              >
+                                                거절
+                                              </Button>
+                                            </>
+                                          )}
+                                          {orderedMenu.status === "cooking" && (
+                                            <Button
+                                              size="sm"
+                                              variant="default"
+                                              className="text-xs px-2 py-1 h-auto font-medium"
+                                              onClick={() =>
+                                                updateMenuOrderMutation.mutate({
+                                                  orderId: order.id!,
+                                                  menuId: orderedMenu.menu.id!,
+                                                  status: "served",
+                                                })
+                                              }
+                                              disabled={
+                                                updateMenuOrderMutation.isPending
+                                              }
+                                            >
+                                              서빙완료
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+
+                                    {orderedMenu.reject_reason && (
+                                      <div className="text-xs text-destructive mt-1">
+                                        거절 사유: {orderedMenu.reject_reason}
+                                      </div>
+                                    )}
                                   </div>
                                   <span className="font-medium">
                                     {formatPrice(
@@ -389,19 +552,19 @@ function Page() {
                   <TableBody>
                     {orders?.map((order) => (
                       <>
-                        <TableRow key={order.id}>
+                        <TableRow
+                          key={order.id}
+                          className="cursor-pointer hover:bg-accent/50 transition-colors"
+                          onClick={() => toggleOrderExpansion(order.id!)}
+                        >
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleOrderExpansion(order.id!)}
-                            >
+                            <div className="flex items-center justify-center">
                               {expandedOrders.has(order.id!) ? (
                                 <ChevronDown className="h-4 w-4" />
                               ) : (
                                 <ChevronRight className="h-4 w-4" />
                               )}
-                            </Button>
+                            </div>
                           </TableCell>
                           <TableCell className="font-medium">
                             #{order.no}
@@ -425,11 +588,15 @@ function Page() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
+                            <div
+                              className="flex items-center gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {order.status === "ordered" && (
                                 <Button
-                                  variant="outline"
+                                  variant="destructive"
                                   size="sm"
+                                  className="font-medium"
                                   onClick={() =>
                                     rejectOrderMutation.mutate({
                                       orderId: order.id!,
@@ -453,7 +620,7 @@ function Page() {
                         {expandedOrders.has(order.id!) && (
                           <TableRow>
                             <TableCell colSpan={7}>
-                              <div className="p-4 bg-gray-50 rounded-lg">
+                              <div className="p-4 bg-muted rounded-lg">
                                 <h4 className="font-medium mb-3">
                                   주문 상세 정보
                                 </h4>
@@ -470,31 +637,116 @@ function Page() {
                                           key={index}
                                           className="flex justify-between items-center py-2 px-3 bg-white rounded border"
                                         >
-                                          <div>
-                                            <span className="font-medium">
-                                              {orderedMenu.menu.name}
-                                            </span>
-                                            <span className="text-sm text-muted-foreground ml-2">
-                                              x {orderedMenu.amount}
-                                            </span>
-                                            <Badge
-                                              variant={
-                                                orderedMenu.status === "served"
-                                                  ? "default"
-                                                  : "outline"
-                                              }
-                                              className="ml-2"
-                                            >
-                                              {orderedMenu.status === "served"
-                                                ? "완료"
-                                                : orderedMenu.status ===
-                                                  "cooking"
-                                                ? "조리중"
-                                                : orderedMenu.status ===
-                                                  "rejected"
-                                                ? "거절"
-                                                : "대기"}
-                                            </Badge>
+                                          <div className="flex-1">
+                                            <div className="flex items-center gap-3">
+                                              <span className="font-medium">
+                                                {orderedMenu.menu.name}
+                                              </span>
+                                              <span className="text-sm text-muted-foreground">
+                                                x {orderedMenu.amount}
+                                              </span>
+                                              <Badge
+                                                variant={getMenuStatusBadgeVariant(
+                                                  orderedMenu.status
+                                                )}
+                                                className="text-xs"
+                                              >
+                                                {getMenuStatusLabel(
+                                                  orderedMenu.status
+                                                )}
+                                              </Badge>
+                                            </div>
+
+                                            {/* 상태 변경 버튼들 (데스크톱) */}
+                                            {order.status !== "rejected" &&
+                                              orderedMenu.status !==
+                                                "rejected" &&
+                                              orderedMenu.status !==
+                                                "served" && (
+                                                <div className="flex gap-2 mt-2">
+                                                  {orderedMenu.status ===
+                                                    "ordered" && (
+                                                    <>
+                                                      <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        className="font-medium"
+                                                        onClick={() =>
+                                                          updateMenuOrderMutation.mutate(
+                                                            {
+                                                              orderId:
+                                                                order.id!,
+                                                              menuId:
+                                                                orderedMenu.menu
+                                                                  .id!,
+                                                              status: "cooking",
+                                                            }
+                                                          )
+                                                        }
+                                                        disabled={
+                                                          updateMenuOrderMutation.isPending
+                                                        }
+                                                      >
+                                                        조리시작
+                                                      </Button>
+                                                      <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        className="font-medium"
+                                                        onClick={() =>
+                                                          rejectMenuOrderMutation.mutate(
+                                                            {
+                                                              orderId:
+                                                                order.id!,
+                                                              menuId:
+                                                                orderedMenu.menu
+                                                                  .id!,
+                                                              reason:
+                                                                "재료 부족",
+                                                            }
+                                                          )
+                                                        }
+                                                        disabled={
+                                                          rejectMenuOrderMutation.isPending
+                                                        }
+                                                      >
+                                                        거절
+                                                      </Button>
+                                                    </>
+                                                  )}
+                                                  {orderedMenu.status ===
+                                                    "cooking" && (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="default"
+                                                      className="font-medium"
+                                                      onClick={() =>
+                                                        updateMenuOrderMutation.mutate(
+                                                          {
+                                                            orderId: order.id!,
+                                                            menuId:
+                                                              orderedMenu.menu
+                                                                .id!,
+                                                            status: "served",
+                                                          }
+                                                        )
+                                                      }
+                                                      disabled={
+                                                        updateMenuOrderMutation.isPending
+                                                      }
+                                                    >
+                                                      서빙완료
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              )}
+
+                                            {orderedMenu.reject_reason && (
+                                              <div className="text-sm text-destructive mt-1">
+                                                거절 사유:{" "}
+                                                {orderedMenu.reject_reason}
+                                              </div>
+                                            )}
                                           </div>
                                           <span className="font-medium">
                                             {formatPrice(
@@ -598,7 +850,7 @@ function Page() {
                                           <span className="text-sm text-muted-foreground">
                                             할인 금액:
                                           </span>
-                                          <p className="font-medium text-red-600">
+                                          <p className="font-medium text-destructive">
                                             -
                                             {formatPrice(
                                               order.total_price -
@@ -624,7 +876,7 @@ function Page() {
                                           <span className="text-sm text-muted-foreground">
                                             거절 사유:
                                           </span>
-                                          <p className="font-medium text-red-600">
+                                          <p className="font-medium text-destructive">
                                             {order.reject_reason}
                                           </p>
                                         </div>

@@ -30,7 +30,7 @@ export function MenuCard({
   return (
     <Card
       className={cn(
-        "w-full bg-[#F5F7F6] rounded-2xl border-none text-black relative transition-all duration-200",
+        "p-0 w-full bg-[#F5F7F6] rounded-2xl border-none text-black relative transition-all duration-200",
         menu.no_stock && "bg-gray-100 cursor-not-allowed"
       )}
       onClick={menu.no_stock ? handleSoldOutClick : undefined}

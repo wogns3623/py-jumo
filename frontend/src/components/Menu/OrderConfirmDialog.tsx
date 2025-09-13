@@ -24,7 +24,7 @@ function OrderItem({
   onRemove: () => void;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
+    <div className="flex items-start gap-3 bg-gray-50 rounded-lg border border-gray-100">
       {/* 메뉴 이미지 - 더 컴팩트한 크기 */}
       <div className="h-16 w-36 bg-white rounded-lg">
         {item.menu.image && (
@@ -127,7 +127,7 @@ export function OrderConfirmDialog({
       ) : (
         <div className="flex flex-col flex-1 min-h-0 space-y-4">
           {/* 주문 목록 */}
-          <ScrollArea className="h-96">
+          <ScrollArea className="h-80">
             <div className="space-y-2 w-full">
               {cart.map((item) => (
                 <OrderItem

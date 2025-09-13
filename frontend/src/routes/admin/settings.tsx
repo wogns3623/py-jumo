@@ -87,7 +87,7 @@ function Page() {
         <div className="flex flex-1 flex-col items-center justify-center">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="text-center text-red-600">
+              <p className="text-center text-destructive">
                 레스토랑 정보를 불러오는데 실패했습니다.
               </p>
               <Button
@@ -298,7 +298,7 @@ function Page() {
         </Card>
 
         {/* 추가 설정 안내 */}
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
             <CardTitle className="text-lg sm:text-xl">추가 설정</CardTitle>
           </CardHeader>

@@ -32,8 +32,8 @@ export function ConfirmModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-gray-50 flex flex-col">
-        <DialogHeader className="-m-6 p-6 mb-0 rounded-t-lg flex-shrink-0">
+      <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-gray-50 p-6 flex flex-col">
+        <DialogHeader className="mb-0 rounded-t-lg flex-shrink-0">
           <DialogTitle className="text-gray-900">{title}</DialogTitle>
           {titleDescription && (
             <DialogDescription className="text-gray-600">
@@ -46,7 +46,7 @@ export function ConfirmModal({
           {children}
         </div>
 
-        <DialogFooter className="gap-2 -m-6 p-6 mt-0 rounded-b-lg flex-shrink-0">
+        <DialogFooter className="gap-2 mt-0 rounded-b-lg flex-shrink-0">
           {confirm && (
             <Button
               variant="outline"

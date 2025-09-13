@@ -106,13 +106,13 @@ function Page() {
   const getStatusColor = (status?: TableStatus) => {
     switch (status) {
       case "idle":
-        return "bg-green-100 border-green-300 hover:bg-green-200";
+        return "bg-primary/10 border-primary/30 hover:bg-primary/20 text-primary";
       case "in_use":
-        return "bg-red-100 border-red-300 hover:bg-red-200";
+        return "bg-destructive/10 border-destructive/30 hover:bg-destructive/20 text-destructive";
       case "reserved":
-        return "bg-yellow-100 border-yellow-300 hover:bg-yellow-200";
+        return "bg-secondary border-secondary-foreground/20 hover:bg-secondary/80 text-secondary-foreground";
       default:
-        return "bg-gray-100 border-gray-300 hover:bg-gray-200";
+        return "bg-muted border-border hover:bg-muted/80 text-muted-foreground";
     }
   };
 
@@ -123,7 +123,7 @@ function Page() {
         <div className="flex flex-1 flex-col items-center justify-center">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="text-center text-red-600">
+              <p className="text-center text-destructive">
                 테이블 목록을 불러오는데 실패했습니다.
               </p>
               <Button
@@ -284,7 +284,7 @@ function Page() {
 
         {/* 선택된 테이블 제어 패널 */}
         {selectedTable && (
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader className="px-4 py-4 sm:px-6">
               <CardTitle className="text-lg sm:text-xl">
                 테이블 {selectedTable.no} 상태 변경

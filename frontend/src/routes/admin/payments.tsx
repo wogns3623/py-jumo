@@ -68,7 +68,7 @@ function Page() {
         <div className="flex flex-1 flex-col items-center justify-center">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="text-center text-red-600">
+              <p className="text-center text-destructive">
                 결제 목록을 불러오는데 실패했습니다.
               </p>
               <Button
@@ -168,7 +168,7 @@ function Page() {
                             <span className="text-muted-foreground">
                               환불일시:
                             </span>
-                            <p className="font-medium text-red-600">
+                            <p className="font-medium text-destructive">
                               {new Date(payment.refunded_at).toLocaleString()}
                             </p>
                           </div>
