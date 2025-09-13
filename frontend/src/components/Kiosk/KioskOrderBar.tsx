@@ -92,6 +92,16 @@ function ConfirmOrderBottomBar({
         주문하기
       </Button>
 
+      <Button
+        className="ml-2"
+        size="sm"
+        variant="ghost"
+        disabled={totalItems === 0}
+        onClick={() => setCart([])}
+      >
+        전체 취소
+      </Button>
+
       {/* 주문 확인 다이얼로그 */}
       <OrderConfirmDialog
         open={isOrderDialogOpen}
