@@ -27,6 +27,10 @@ const data = {
       url: "/admin/serving",
     },
     {
+      title: "웨이팅 관리",
+      url: "/admin/waitings",
+    },
+    {
       title: "결제 관리",
       url: "/admin/payments",
     },
