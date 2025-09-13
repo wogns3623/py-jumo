@@ -58,10 +58,6 @@ export type MenuUpdate = {
     no_stock?: (boolean | null);
 };
 
-export type OrderCreate = {
-    ordered_menus: Array<OrderedMenuCreate>;
-};
-
 export type OrderedMenuCreate = {
     menu_id: string;
     amount: number;
@@ -140,20 +136,6 @@ export type OrderUpdate = {
     reject_reason?: (string | null);
 };
 
-export type OrderWithPaymentInfo = {
-    reject_reason?: (string | null);
-    finished_at?: (string | null);
-    created_at?: string;
-    id: string;
-    no: number;
-    status: OrderStatus;
-    total_price: number;
-    final_price: number;
-    ordered_menus: Array<OrderedMenuPublic>;
-    payment: (Payments | null);
-    payment_info: PaymentInfo;
-};
-
 /**
  * 주문과 팀 정보를 함께 반환하는 모델
  */
@@ -221,10 +203,6 @@ export type TableStatus = 'idle' | 'in_use' | 'reserved';
 
 export type TableUpdate = {
     status: TableStatus;
-};
-
-export type TeamCreate = {
-    table_id: string;
 };
 
 export type TeamPublic = {
@@ -326,7 +304,7 @@ export type AdminCreateKioskOrderData = {
     requestBody: KioskOrderCreate;
 };
 
-export type AdminCreateKioskOrderResponse = (OrderWithPaymentInfo);
+export type AdminCreateKioskOrderResponse = (OrderWithTeamInfo);
 
 export type AdminReadOrdersData = {
     status?: (OrderStatus | AllFilter);
@@ -404,26 +382,7 @@ export type OrdersReadOrdersByTableData = {
 
 export type OrdersReadOrdersByTableResponse = (Array<Orders>);
 
-export type TeamsReadOrdersByTeamData = {
-    teamId: string;
-};
-
-export type TeamsReadOrdersByTeamResponse = (Array<OrderPublic>);
-
-export type TeamsCreateOrderData = {
-    requestBody: OrderCreate;
-    teamId: string;
-};
-
-export type TeamsCreateOrderResponse = (OrderWithPaymentInfo);
-
 export type RestaurantsReadRestaurantsResponse = (Restaurants);
-
-export type TeamsCreateTeamData = {
-    requestBody: TeamCreate;
-};
-
-export type TeamsCreateTeamResponse = (TeamPublic);
 
 export type UtilsHealthCheckResponse = (boolean);
 

@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminServeOrderedMenuData, AdminServeOrderedMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminServeOrderedMenuData, AdminServeOrderedMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, RestaurantsReadRestaurantsResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -179,7 +179,7 @@ export class AdminService {
      * Create Kiosk Order
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns OrderWithPaymentInfo Successful Response
+     * @returns OrderWithTeamInfo Successful Response
      * @throws ApiError
      */
     public static createKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
@@ -466,7 +466,7 @@ export class OrdersService {
      * Create Kiosk Order
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns OrderWithPaymentInfo Successful Response
+     * @returns OrderWithTeamInfo Successful Response
      * @throws ApiError
      */
     public static adminCreateKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
@@ -660,49 +660,6 @@ export class OrdersService {
         });
     }
     
-    /**
-     * Read Orders By Team
-     * @param data The data for the request.
-     * @param data.teamId
-     * @returns OrderPublic Successful Response
-     * @throws ApiError
-     */
-    public static teamsReadOrdersByTeam(data: TeamsReadOrdersByTeamData): CancelablePromise<TeamsReadOrdersByTeamResponse> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/teams/{team_id}/orders',
-            path: {
-                team_id: data.teamId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Create Order
-     * @param data The data for the request.
-     * @param data.teamId
-     * @param data.requestBody
-     * @returns OrderWithPaymentInfo Successful Response
-     * @throws ApiError
-     */
-    public static teamsCreateOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/teams/{team_id}/orders',
-            path: {
-                team_id: data.teamId
-            },
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
 }
 
 export class PaymentsService {
@@ -828,71 +785,6 @@ export class TablesService {
             url: '/api/v1/admin/tables/{table_id}',
             path: {
                 table_id: data.tableId
-            },
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-}
-
-export class TeamsService {
-    /**
-     * Create Team
-     * @param data The data for the request.
-     * @param data.requestBody
-     * @returns TeamPublic Successful Response
-     * @throws ApiError
-     */
-    public static createTeam(data: TeamsCreateTeamData): CancelablePromise<TeamsCreateTeamResponse> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/teams',
-            body: data.requestBody,
-            mediaType: 'application/json',
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Read Orders By Team
-     * @param data The data for the request.
-     * @param data.teamId
-     * @returns OrderPublic Successful Response
-     * @throws ApiError
-     */
-    public static readOrdersByTeam(data: TeamsReadOrdersByTeamData): CancelablePromise<TeamsReadOrdersByTeamResponse> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/teams/{team_id}/orders',
-            path: {
-                team_id: data.teamId
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Create Order
-     * @param data The data for the request.
-     * @param data.teamId
-     * @param data.requestBody
-     * @returns OrderWithPaymentInfo Successful Response
-     * @throws ApiError
-     */
-    public static createOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/teams/{team_id}/orders',
-            path: {
-                team_id: data.teamId
             },
             body: data.requestBody,
             mediaType: 'application/json',
