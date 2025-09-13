@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 
-import { OrderWithPaymentInfo } from "@/client";
+import { OrderWithTeamInfo } from "@/client";
 import { getPaymentUrl } from "@/utils/payment";
 import { ConfirmModal } from "@/components/shared";
 import { useCancelKioskOrder, useOrder } from "@/hooks/useOrder";
@@ -12,7 +12,7 @@ export function PaymentAnnounceDialog({
   onConfirm,
   onCancel,
 }: {
-  order: OrderWithPaymentInfo;
+  order: OrderWithTeamInfo;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -96,7 +96,7 @@ export function PaymentAnnounceDialog({
   );
 }
 
-function PaymentQRCode({ order }: { order: OrderWithPaymentInfo }) {
+function PaymentQRCode({ order }: { order: OrderWithTeamInfo }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4">
       <QRCode
@@ -109,7 +109,7 @@ function PaymentQRCode({ order }: { order: OrderWithPaymentInfo }) {
   );
 }
 
-function PaymentInfoCard({ order }: { order: OrderWithPaymentInfo }) {
+function PaymentInfoCard({ order }: { order: OrderWithTeamInfo }) {
   return (
     <div className="p-4 space-y-2 bg-blue-50 rounded-lg border border-blue-100 flex-shrink-0">
       <div className="flex justify-between text-sm">

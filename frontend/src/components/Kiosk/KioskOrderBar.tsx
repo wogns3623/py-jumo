@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCountdown } from "usehooks-ts";
 
-import { OrderWithPaymentInfo } from "@/client";
+import { OrderWithTeamInfo } from "@/client";
 import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { useCreateKioskOrder } from "@/hooks/useOrder";
@@ -37,7 +37,7 @@ function ConfirmOrderBottomBar({
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isPhoneInputDialogOpen, setIsPhoneInputDialogOpen] = useState(false);
   const [isFinalConfirmOpen, setIsFinalConfirmOpen] = useState(false);
-  const [order, setOrder] = useState<OrderWithPaymentInfo | null>(null);
+  const [order, setOrder] = useState<OrderWithTeamInfo | null>(null);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
