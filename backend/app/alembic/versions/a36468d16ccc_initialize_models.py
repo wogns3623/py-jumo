@@ -1,8 +1,8 @@
 """initialize models
 
-Revision ID: 3c873bed0b5c
+Revision ID: a36468d16ccc
 Revises: 
-Create Date: 2025-09-11 00:08:49.821858
+Create Date: 2025-09-14 06:15:13.080200
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision = '3c873bed0b5c'
+revision = 'a36468d16ccc'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -40,7 +40,7 @@ def upgrade():
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('restaurant_id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_menus_category'), 'menus', ['category'], unique=False)
@@ -53,7 +53,7 @@ def upgrade():
     sa.Column('amount', sa.Integer(), nullable=False),
     sa.Column('refunded_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_payments_restaurant_id'), 'payments', ['restaurant_id'], unique=False)
@@ -63,7 +63,7 @@ def upgrade():
     sa.Column('no', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('idle', 'in_use', 'reserved', name='tablestatus'), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_tables_restaurant_id'), 'tables', ['restaurant_id'], unique=False)
@@ -78,7 +78,7 @@ def upgrade():
     sa.Column('rejected_at', sa.DateTime(), nullable=True),
     sa.Column('rejected_reason', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_waitings_name'), 'waitings', ['name'], unique=False)
@@ -87,12 +87,15 @@ def upgrade():
     op.create_table('teams',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('restaurant_id', sa.Uuid(), nullable=False),
-    sa.Column('table_id', sa.Uuid(), nullable=True),
+    sa.Column('table_id', sa.Uuid(), nullable=False),
+    sa.Column('phone', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('ended_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
-    sa.ForeignKeyConstraint(['table_id'], ['tables.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['table_id'], ['tables.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_index(op.f('ix_teams_phone'), 'teams', ['phone'], unique=False)
     op.create_index(op.f('ix_teams_restaurant_id'), 'teams', ['restaurant_id'], unique=False)
     op.create_index(op.f('ix_teams_table_id'), 'teams', ['table_id'], unique=False)
     op.execute(sa.schema.CreateSequence(sa.schema.Sequence('orders_no_seq', increment=1, minvalue=0, start=0, cycle=True)))
@@ -106,8 +109,8 @@ def upgrade():
     sa.Column('payment_id', sa.Uuid(), nullable=True),
     sa.Column('no', sa.Integer(), server_default=sa.text("nextval('orders_no_seq')"), nullable=True),
     sa.ForeignKeyConstraint(['payment_id'], ['payments.id'], ),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
-    sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['team_id'], ['teams.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_orders_payment_id'), 'orders', ['payment_id'], unique=False)
@@ -124,8 +127,8 @@ def upgrade():
     sa.Column('menu_id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['menu_id'], ['menus.id'], ),
-    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ),
-    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ),
+    sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['restaurant_id'], ['restaurants.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_orderedmenus_menu_id'), 'orderedmenus', ['menu_id'], unique=False)
@@ -146,6 +149,7 @@ def downgrade():
     op.drop_table('orders')
     op.drop_index(op.f('ix_teams_table_id'), table_name='teams')
     op.drop_index(op.f('ix_teams_restaurant_id'), table_name='teams')
+    op.drop_index(op.f('ix_teams_phone'), table_name='teams')
     op.drop_table('teams')
     op.drop_index(op.f('ix_waitings_restaurant_id'), table_name='waitings')
     op.drop_index(op.f('ix_waitings_phone'), table_name='waitings')

@@ -1,4 +1,4 @@
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, create_engine, select, SQLModel
 from sqlalchemy import Engine
 
 from app.core.config import settings
@@ -54,6 +54,10 @@ def init_db(session: Session) -> None:
     # But if you don't want to use migrations, create
     # the tables un-commenting the next lines
     # from sqlmodel import SQLModel
+
+    # # drop exist database and create new
+    # SQLModel.metadata.drop_all(engine)
+    # print("Dropped all tables.")
 
     # This works because the models are already imported and registered from app.models
     # SQLModel.metadata.create_all(engine)
