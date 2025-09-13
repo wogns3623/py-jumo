@@ -67,7 +67,9 @@ class MenuBase(SQLModel):
 
 class Menus(MenuBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="menus")
@@ -97,7 +99,9 @@ class AllFilter(str, enum.Enum):
 
 class Tables(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
     no: int = Field()
     status: TableStatus = Field(
         sa_column=Column(Enum(TableStatus), index=True), default=TableStatus.idle
@@ -120,7 +124,9 @@ class WaitingStatus(str, enum.Enum):
 
 class Waitings(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
     name: str = Field(index=True)
     phone: str = Field(index=True)
     notified_at: Optional[datetime] = Field(default=None)
@@ -185,8 +191,12 @@ class WaitingPublic(SQLModel):
 
 class Teams(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    table_id: uuid.UUID = Field(default=None, foreign_key="tables.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
+    table_id: uuid.UUID = Field(
+        default=None, foreign_key="tables.id", index=True, ondelete="CASCADE"
+    )
     # waiting_id: Optional[uuid.UUID] = Field(
     #     default=None, foreign_key="waitings.id", index=True
     # )
@@ -230,8 +240,10 @@ class OrderBase(SQLModel):
 
 class Orders(OrderBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    team_id: uuid.UUID = Field(foreign_key="teams.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
+    team_id: uuid.UUID = Field(foreign_key="teams.id", index=True, ondelete="CASCADE")
     payment_id: Optional[uuid.UUID] = Field(
         default=None, foreign_key="payments.id", index=True
     )
@@ -326,7 +338,9 @@ class OrderedMenuBase(SQLModel):
 
 class OrderedMenus(OrderedMenuBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
     order_id: uuid.UUID = Field(foreign_key="orders.id", index=True, ondelete="CASCADE")
     menu_id: uuid.UUID = Field(foreign_key="menus.id", index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -368,7 +382,9 @@ class OrderedMenuPublic(OrderedMenuBase):
 
 class Payments(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
+    restaurant_id: uuid.UUID = Field(
+        foreign_key="restaurants.id", index=True, ondelete="CASCADE"
+    )
     transaction_by: Optional[str] = Field(default=None)
     amount: int = Field()
     refunded_at: Optional[datetime] = Field(default=None)
