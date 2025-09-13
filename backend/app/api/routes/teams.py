@@ -1,7 +1,7 @@
 from typing import Sequence
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlmodel import select, col
 
 from app.api.deps import SessionDep, DefaultRestaurant
@@ -16,6 +16,7 @@ from app.models import (
     OrderPublic,
     OrderedMenus,
     OrderWithPaymentInfo,
+    TableStatus,
 )
 
 router = APIRouter(prefix="/teams", tags=["teams"])
@@ -75,6 +76,13 @@ def create_order(
     team_id: uuid.UUID,
     order_data: OrderCreate,
 ) -> OrderWithPaymentInfo:
+    # 팀 조회 (테이블 정보 포함) - 활성 팀만
+    team = session.exec(
+        select(Teams).where(Teams.id == team_id, Teams.ended_at == None)
+    ).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Active team not found")
+    
     order = Orders(team_id=team_id, restaurant_id=restaurant.id)
     session.add(order)
     session.commit()
@@ -88,6 +96,12 @@ def create_order(
         for ordered_menu_data in order_data.ordered_menus
     ]
     session.add_all(ordered_menus)
+    
+    # 테이블이 idle 상태라면 in_use로 변경
+    if team.table.status == TableStatus.idle:
+        team.table.status = TableStatus.in_use
+        session.add(team.table)
+    
     session.commit()
     session.refresh(order)
 

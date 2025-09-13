@@ -19,6 +19,7 @@ from app.models import (
     Tables,
     TableStatus,
     TableUpdate,
+    Teams,
     AllFilter,
     Waitings,
     WaitingStatus,
@@ -131,8 +132,20 @@ def update_table(
     ).first()
     if not table:
         raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
+
+    old_status = table.status
     table_data_dict = table_data.model_dump(exclude_unset=True)
     table.sqlmodel_update(table_data_dict)
+
+    # If table status is being changed to idle, end any active team
+    if old_status == TableStatus.in_use and table.status == TableStatus.idle:
+        active_team = session.exec(
+            select(Teams).where(Teams.table_id == table_id, Teams.ended_at == None)
+        ).first()
+        if active_team:
+            active_team.ended_at = datetime.now()
+            session.add(active_team)
+
     session.add(table)
     session.commit()
     session.refresh(table)
@@ -506,6 +519,7 @@ def get_cooked_ordered_menus(
             OrderedMenus.cook_started_at != None,  # 조리 시작된 메뉴
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
+            Teams.ended_at == None,  # 활성 팀만
         )
         .order_by(
             col(Orders.created_at).asc()
