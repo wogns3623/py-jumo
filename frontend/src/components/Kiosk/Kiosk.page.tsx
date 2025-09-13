@@ -38,7 +38,7 @@ export function KioskPageInner({ tableId }: { tableId: string }) {
               menus={group.items}
               cart={cart}
               onCartChange={setCart}
-              className={group.className || ""}
+              className={group.className}
             />
           ))}
         </div>

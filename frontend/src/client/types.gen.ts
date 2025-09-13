@@ -34,6 +34,8 @@ export type MenuPublic = {
     bg_color?: (string | null);
     category?: (string | null);
     no_stock?: boolean;
+    id: string;
+    created_at: string;
 };
 
 export type Menus = {
@@ -299,6 +301,12 @@ export type AdminReadOrdersData = {
 
 export type AdminReadOrdersResponse = (Array<Orders>);
 
+export type AdminReadOrderData = {
+    orderId: string;
+};
+
+export type AdminReadOrderResponse = (OrderPublic);
+
 export type AdminUpdateOrderData = {
     orderId: string;
     requestBody: OrderUpdate;
@@ -341,7 +349,7 @@ export type AdminRefundPaymentData = {
 
 export type AdminRefundPaymentResponse = (Payments);
 
-export type MenusReadMenusResponse = (Array<Menus>);
+export type MenusReadMenusResponse = (Array<MenuPublic>);
 
 export type TeamsReadOrdersByTeamData = {
     teamId: string;

@@ -1,6 +1,20 @@
 import { AdminService, TeamsService } from "@/client";
 import type { KioskOrderCreate, OrderCreate } from "@/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, UseQueryOptions } from "@tanstack/react-query";
+
+export function useOrder(
+  orderId: string,
+  options?: Omit<UseQueryOptions, "queryKey" | "queryFn">
+) {
+  return useQuery({
+    queryKey: ["order", orderId],
+    queryFn: async () => {
+      const response = await AdminService.readOrder({ orderId });
+      return response;
+    },
+    ...(options as {}),
+  });
+}
 
 // 주문 생성 훅
 export function useCreateOrder(teamId: string) {
@@ -24,6 +38,15 @@ export function useCreateKioskOrder() {
         requestBody: data,
       });
       return response;
+    },
+  });
+}
+
+export function useCancelKioskOrder() {
+  return useMutation({
+    mutationKey: ["cancel-order"],
+    mutationFn: async (orderId: string) => {
+      await AdminService.rejectOrder({ orderId, reason: "사용자 취소" });
     },
   });
 }

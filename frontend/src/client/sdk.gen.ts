@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -78,7 +78,7 @@ export class AdminService {
     public static readTables(data: AdminReadTablesData = {}): CancelablePromise<AdminReadTablesResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/tables/',
+            url: '/api/v1/admin/tables',
             query: {
                 status: data.status
             },
@@ -121,7 +121,7 @@ export class AdminService {
     public static readWaitings(data: AdminReadWaitingsData = {}): CancelablePromise<AdminReadWaitingsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/waitings/',
+            url: '/api/v1/admin/waitings',
             query: {
                 status: data.status
             },
@@ -224,9 +224,29 @@ export class AdminService {
     public static readOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/orders/',
+            url: '/api/v1/admin/orders',
             query: {
                 status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Order
+     * @param data The data for the request.
+     * @param data.orderId
+     * @returns OrderPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOrder(data: AdminReadOrderData): CancelablePromise<AdminReadOrderResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/orders/{order_id}',
+            path: {
+                order_id: data.orderId
             },
             errors: {
                 422: 'Validation Error'
@@ -340,7 +360,7 @@ export class AdminService {
     public static readPayments(): CancelablePromise<AdminReadPaymentsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/payments/'
+            url: '/api/v1/admin/payments'
         });
     }
     
@@ -415,14 +435,13 @@ export class MenusService {
     
     /**
      * Read Menus
-     * Retrieve menus.
-     * @returns Menus Successful Response
+     * @returns MenuPublic Successful Response
      * @throws ApiError
      */
     public static readMenus(): CancelablePromise<MenusReadMenusResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/menus/'
+            url: '/api/v1/menus'
         });
     }
     
@@ -458,9 +477,29 @@ export class OrdersService {
     public static adminReadOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/orders/',
+            url: '/api/v1/admin/orders',
             query: {
                 status: data.status
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Order
+     * @param data The data for the request.
+     * @param data.orderId
+     * @returns OrderPublic Successful Response
+     * @throws ApiError
+     */
+    public static adminReadOrder(data: AdminReadOrderData): CancelablePromise<AdminReadOrderResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/orders/{order_id}',
+            path: {
+                order_id: data.orderId
             },
             errors: {
                 422: 'Validation Error'
@@ -576,7 +615,7 @@ export class OrdersService {
     public static teamsReadOrdersByTeam(data: TeamsReadOrdersByTeamData): CancelablePromise<TeamsReadOrdersByTeamResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/teams/{team_id}/orders/',
+            url: '/api/v1/teams/{team_id}/orders',
             path: {
                 team_id: data.teamId
             },
@@ -597,7 +636,7 @@ export class OrdersService {
     public static teamsCreateOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/teams/{team_id}/orders/',
+            url: '/api/v1/teams/{team_id}/orders',
             path: {
                 team_id: data.teamId
             },
@@ -620,7 +659,7 @@ export class PaymentsService {
     public static adminReadPayments(): CancelablePromise<AdminReadPaymentsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/payments/'
+            url: '/api/v1/admin/payments'
         });
     }
     
@@ -656,7 +695,7 @@ export class RestaurantsService {
     public static readRestaurants(): CancelablePromise<RestaurantsReadRestaurantsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/restaurants/'
+            url: '/api/v1/restaurants'
         });
     }
     
@@ -673,7 +712,7 @@ export class TablesService {
     public static adminReadTables(data: AdminReadTablesData = {}): CancelablePromise<AdminReadTablesResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/tables/',
+            url: '/api/v1/admin/tables',
             query: {
                 status: data.status
             },
@@ -719,7 +758,7 @@ export class TeamsService {
     public static createTeam(data: TeamsCreateTeamData): CancelablePromise<TeamsCreateTeamResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/teams/',
+            url: '/api/v1/teams',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {
@@ -738,7 +777,7 @@ export class TeamsService {
     public static readOrdersByTeam(data: TeamsReadOrdersByTeamData): CancelablePromise<TeamsReadOrdersByTeamResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/teams/{team_id}/orders/',
+            url: '/api/v1/teams/{team_id}/orders',
             path: {
                 team_id: data.teamId
             },
@@ -759,7 +798,7 @@ export class TeamsService {
     public static createOrder(data: TeamsCreateOrderData): CancelablePromise<TeamsCreateOrderResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/teams/{team_id}/orders/',
+            url: '/api/v1/teams/{team_id}/orders',
             path: {
                 team_id: data.teamId
             },
@@ -782,7 +821,7 @@ export class UtilsService {
     public static healthCheck(): CancelablePromise<UtilsHealthCheckResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/utils/health-check/'
+            url: '/api/v1/utils/health-check'
         });
     }
     
@@ -799,7 +838,7 @@ export class WaitingsService {
     public static adminReadWaitings(data: AdminReadWaitingsData = {}): CancelablePromise<AdminReadWaitingsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/admin/waitings/',
+            url: '/api/v1/admin/waitings',
             query: {
                 status: data.status
             },
@@ -883,7 +922,7 @@ export class WaitingsService {
     public static readWatings(data: WaitingsReadWatingsData): CancelablePromise<WaitingsReadWatingsResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/waitings/',
+            url: '/api/v1/waitings',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {
@@ -902,7 +941,7 @@ export class WaitingsService {
     public static cancelWaiting(data: WaitingsCancelWaitingData): CancelablePromise<WaitingsCancelWaitingResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/waitings/',
+            url: '/api/v1/waitings',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {

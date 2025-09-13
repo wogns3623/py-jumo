@@ -27,14 +27,14 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
     )
 
-    # injected = BankTransaction(
-    #     transaction_by="김재훈",
-    #     date=datetime.now(timezone.utc),
-    #     amount=31992,
-    #     balance=0,
-    # )
+    injected = BankTransaction(
+        transaction_by="김재훈",
+        date=datetime.now(timezone.utc),
+        amount=31966,
+        balance=0,
+    )
     return [
-        # injected,
+        injected,
         *[BankTransaction.model_validate(trs) for trs in transaction_list],
     ]
 
@@ -79,15 +79,19 @@ def connect_payment_to_order(session: Session) -> None:
 
     orders_without_payment = {
         order.id: order
-        for order in session.exec(select(Orders).where(Orders.payment_id == None)).all()
+        for order in session.exec(
+            select(Orders).where(
+                Orders.payment_id == None, Orders.reject_reason == None
+            )
+        ).all()
     }
 
     for payment in non_exist_payments:
         expected_order_no = 100 - payment.amount % 100
-
         for order in orders_without_payment.values():
             if (
-                order.no % 100 == expected_order_no  # type: ignore
+                order.created_at < payment.created_at
+                and order.no % 100 == expected_order_no  # type: ignore
                 and order.total_price == payment.amount + expected_order_no
             ):
                 order.payment_id = payment.id

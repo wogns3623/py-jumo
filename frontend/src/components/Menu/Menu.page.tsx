@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
-import type { Menus } from "@/client";
+import type { MenuPublic } from "@/client";
 import { MenuImage, QuantityControl } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ export function MenuCard({
   quantity,
   onQuantityChange,
 }: {
-  menu: Menus;
+  menu: MenuPublic;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }) {
@@ -86,7 +86,7 @@ export function MenuSection({
   className,
 }: {
   title: string;
-  menus: Menus[];
+  menus: MenuPublic[];
   cart: CartItem[];
   onCartChange: (cart: CartItem[]) => void;
   className?: string;

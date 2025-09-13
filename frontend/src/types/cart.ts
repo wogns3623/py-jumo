@@ -1,7 +1,7 @@
-import type { Menus } from "@/client";
+import type { MenuPublic } from "@/client";
 
 export interface CartItem {
   menuId: string;
-  menu: Menus;
+  menu: MenuPublic;
   quantity: number;
 }

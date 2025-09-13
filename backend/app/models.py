@@ -78,6 +78,9 @@ class MenuUpdate(SQLModel):
 
 
 class MenuPublic(MenuBase):
+    id: uuid.UUID
+    created_at: datetime
+
     class Config:
         from_attributes = True
 

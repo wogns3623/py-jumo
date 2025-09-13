@@ -1,13 +1,4 @@
-import { MenuImage, QuantityControl } from "@/components/shared";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { MenuImage, QuantityControl, ConfirmModal } from "@/components/shared";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { CartItem } from "@/types/cart";
@@ -109,91 +100,65 @@ export function OrderConfirmDialog({
   };
 
   // 주문 확인 핸들러
-  const handleConfirmOrder = () => {
+  const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);
   };
 
+  const handleCancel = () => {
+    if (isSubmitting) return;
+    onCancel?.();
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog
+    <ConfirmModal
+      title="주문 확인"
+      titleDescription="선택하신 메뉴를 확인하고 주문을 완료해주세요."
       open={open}
-      onOpenChange={(isOpen: boolean) => {
-        if (isSubmitting) return;
-        if (!isOpen) onCancel?.();
-        onOpenChange(isOpen);
-      }}
+      onOpenChange={onOpenChange}
+      confirm={{ text: "주문하기", onClick: handleConfirm }}
+      cancel={{ text: "돌아가기", onClick: handleCancel }}
     >
-      <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-white flex flex-col">
-        <DialogHeader className="bg-gray-50 -m-6 p-6 mb-0 rounded-t-lg flex-shrink-0">
-          <DialogTitle className="text-gray-900">주문 확인</DialogTitle>
-          <DialogDescription className="text-gray-600">
-            선택하신 메뉴를 확인하고 주문을 완료해주세요.
-          </DialogDescription>
-        </DialogHeader>
+      {cart.length === 0 ? (
+        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg mx-6 my-4">
+          장바구니가 비어있습니다.
+        </div>
+      ) : (
+        <div className="flex flex-col flex-1 min-h-0 space-y-4">
+          {/* 주문 목록 */}
+          <ScrollArea className="h-96">
+            <div className="space-y-2 w-full">
+              {cart.map((item) => (
+                <OrderItem
+                  key={item.menuId}
+                  item={item}
+                  onQuantityChange={(quantity) =>
+                    updateQuantity(item.menuId, quantity)
+                  }
+                  onRemove={() => removeItem(item.menuId)}
+                />
+              ))}
+            </div>
+          </ScrollArea>
 
-        {cart.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg mx-6 my-4">
-            장바구니가 비어있습니다.
-          </div>
-        ) : (
-          <div className="flex flex-col flex-1 min-h-0 space-y-4">
-            {/* 주문 목록 */}
-            <ScrollArea className="h-96">
-              <div className="space-y-2 w-full">
-                {cart.map((item) => (
-                  <OrderItem
-                    key={item.menuId}
-                    item={item}
-                    onQuantityChange={(quantity) =>
-                      updateQuantity(item.menuId, quantity)
-                    }
-                    onRemove={() => removeItem(item.menuId)}
-                  />
-                ))}
-              </div>
-            </ScrollArea>
+          <Separator className="bg-gray-200" />
 
-            <Separator className="bg-gray-200" />
-
-            {/* 주문 요약 */}
-            <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-100 flex-shrink-0">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-700">총 수량</span>
-                <span className="font-medium text-gray-900">
-                  {totalItems}개
-                </span>
-              </div>
-              <div className="flex justify-between text-base font-semibold">
-                <span className="text-gray-900">총 금액</span>
-                <span className="text-lg text-blue-600">
-                  {totalPrice.toLocaleString()}원
-                </span>
-              </div>
+          {/* 주문 요약 */}
+          <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-100 flex-shrink-0">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-700">총 수량</span>
+              <span className="font-medium text-gray-900">{totalItems}개</span>
+            </div>
+            <div className="flex justify-between text-base font-semibold">
+              <span className="text-gray-900">총 금액</span>
+              <span className="text-lg text-blue-600">
+                {totalPrice.toLocaleString()}원
+              </span>
             </div>
           </div>
-        )}
-
-        <DialogFooter className="gap-2 bg-gray-50 -m-6 p-6 mt-0 rounded-b-lg flex-shrink-0">
-          <Button
-            variant="outline"
-            onClick={() => {
-              onCancel?.();
-              onOpenChange(false);
-            }}
-            disabled={isSubmitting}
-            className="bg-white hover:bg-gray-50"
-          >
-            돌아가기
-          </Button>
-          <Button
-            onClick={handleConfirmOrder}
-            disabled={cart.length === 0 || isSubmitting}
-            className="min-w-[100px] bg-blue-600 hover:bg-blue-700"
-          >
-            {isSubmitting ? "주문 중..." : "주문하기"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      )}
+    </ConfirmModal>
   );
 }

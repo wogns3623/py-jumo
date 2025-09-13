@@ -1,22 +1,15 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import QRCode from "react-qr-code";
+import { useCountdown } from "usehooks-ts";
 
+import { OrderWithPaymentInfo } from "@/client";
 import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { useCreateKioskOrder } from "@/hooks/useOrder";
 import type { CartItem } from "@/types/cart";
+import { PaymentAnnounceDialog } from "./PaymentAnnounceDialog";
 import { PhoneInputDialog } from "./PhoneInputDialog";
-import { getPaymentUrl } from "@/utils/payment";
-import { OrderWithPaymentInfo } from "@/client";
+import { ConfirmModal } from "../shared";
 
 export function KioskOrderBottomBar({
   tableId,
@@ -43,7 +36,7 @@ function ConfirmOrderBottomBar({
 }) {
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isPhoneInputDialogOpen, setIsPhoneInputDialogOpen] = useState(false);
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [isFinalConfirmOpen, setIsFinalConfirmOpen] = useState(false);
   const [order, setOrder] = useState<OrderWithPaymentInfo | null>(null);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -69,7 +62,6 @@ function ConfirmOrderBottomBar({
 
       console.log("주문 및 결제 정보:", order);
       setOrder(order);
-      setIsPaymentDialogOpen(true);
     } catch (error) {
       console.error("주문 실패:", error);
       toast.error("주문 처리 중 오류가 발생했습니다.");
@@ -107,7 +99,6 @@ function ConfirmOrderBottomBar({
         cart={cart}
         onCartChange={setCart}
         onConfirm={() => setIsPhoneInputDialogOpen(true)}
-        isSubmitting={createOrder.isPending}
       />
 
       <PhoneInputDialog
@@ -115,62 +106,71 @@ function ConfirmOrderBottomBar({
         onOpenChange={setIsPhoneInputDialogOpen}
         onConfirm={(phone) => handleConfirmOrder(phone)}
         onCancel={() => setIsOrderDialogOpen(true)}
-        isSubmitting={false}
+        isSubmitting={createOrder.isPending}
       />
 
-      <Dialog open={isPaymentDialogOpen}>
-        {/* show qr code */}
-        <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-white flex flex-col">
-          <DialogHeader className="bg-gray-50 -m-6 p-6 mb-0 rounded-t-lg flex-shrink-0">
-            <DialogTitle className="text-gray-900">결제</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              QR 코드를 스캔하거나 화면의 계좌번호로 입금해주세요.
-            </DialogDescription>
-            <DialogTrigger />
-          </DialogHeader>
+      {order && (
+        <PaymentAnnounceDialog
+          order={order}
+          onConfirm={() => {
+            setIsFinalConfirmOpen(true);
+            setOrder(null);
+          }}
+          onCancel={() => {
+            setOrder(null);
+          }}
+        />
+      )}
 
-          {order && (
-            <div className="flex flex-col flex-1 min-h-0 space-y-4">
-              {/* 계좌 정보 */}
-              <div className="p-4 space-y-2 bg-blue-50 rounded-lg border border-blue-100 flex-shrink-0">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">은행</span>
-                  <span className="font-medium text-gray-900">
-                    {order.payment_info.bank_name}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-700">계좌번호</span>
-                  <span className="font-medium text-gray-900">
-                    {order.payment_info.bank_account_no}
-                  </span>
-                </div>
-                <div>
-                  <div className="flex justify-between text-base font-semibold">
-                    <span className="text-gray-900">입금액</span>
-                    <span className="text-lg text-blue-600">
-                      {order.final_price.toLocaleString()}원
-                    </span>
-                  </div>
-                  <p className="text-right text-xs text-gray-500">
-                    ({order.total_price - order.final_price}원 할인해드렸어요!)
-                  </p>
-                </div>
-              </div>
-
-              {/* QR코드 */}
-              <div className="flex-1 flex flex-col items-center justify-center p-4">
-                <QRCode
-                  size={256}
-                  style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                  value={encodeURI(getPaymentUrl(order))}
-                  viewBox={`0 0 256 256`}
-                />
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <FinalConfirmModal
+        open={isFinalConfirmOpen}
+        onOpenChange={setIsFinalConfirmOpen}
+      />
     </div>
+  );
+}
+
+function FinalConfirmModal({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [timer, controller] = useCountdown({
+    countStart: 15,
+    intervalMs: 1000,
+  });
+
+  useEffect(() => {
+    if (open) controller.startCountdown();
+  }, [open]);
+
+  useEffect(() => {
+    if (timer === 0) {
+      controller.resetCountdown();
+      controller.stopCountdown();
+    }
+  }, [timer]);
+
+  return (
+    <ConfirmModal
+      title="결제 완료!"
+      open={open}
+      onOpenChange={onOpenChange}
+      confirm={{ text: "확인" }}
+    >
+      <div className="flex flex-col items-center justify-center gap-4 py-4">
+        <h2 className="text-lg font-semibold">결제가 완료되었습니다!</h2>
+        <p className="text-center text-sm text-gray-600">
+          조리가 완료되면 카카오 알림톡을 보내드려요!
+        </p>
+
+        <p className="text-center text-sm text-gray-600">
+          창이 <span className="font-semibold">{timer}</span>초 후에 자동으로
+          닫힙니다.
+        </p>
+      </div>
+    </ConfirmModal>
   );
 }

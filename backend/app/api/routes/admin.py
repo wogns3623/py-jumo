@@ -25,6 +25,7 @@ from app.models import (
     Orders,
     OrderStatus,
     OrderUpdate,
+    OrderPublic,
     OrderWithPaymentInfo,
     PaymentInfo,
     OrderedMenus,
@@ -79,8 +80,12 @@ def update_menu(
     menu_id: uuid.UUID,
     menu_data: MenuUpdate,
 ) -> Menus:
-
-    menu = session.get(Menus, {"id": menu_id, "restaurant_id": restaurant.id})
+    menu = session.exec(
+        select(Menus).where(
+            Menus.id == menu_id,
+            Menus.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not menu:
         raise HTTPException(status_code=404, detail="메뉴를 찾을 수 없습니다.")
 
@@ -116,7 +121,12 @@ def update_table(
     table_id: uuid.UUID,
     table_data: TableUpdate,
 ) -> Tables:
-    table = session.get(Tables, {"id": table_id, "restaurant_id": restaurant.id})
+    table = session.exec(
+        select(Tables).where(
+            Tables.id == table_id,
+            Tables.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not table:
         raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
     table_data_dict = table_data.model_dump(exclude_unset=True)
@@ -218,7 +228,12 @@ def enter_waiting(
     restaurant: DefaultRestaurant,
     waiting_id: uuid.UUID,
 ) -> Waitings:
-    waiting = session.get(Waitings, {"id": waiting_id, "restaurant_id": restaurant.id})
+    waiting = session.exec(
+        select(Waitings).where(
+            Waitings.id == waiting_id,
+            Waitings.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not waiting:
         raise HTTPException(status_code=404, detail="웨이팅을 찾을 수 없습니다.")
     if waiting.entered_at:
@@ -247,7 +262,12 @@ def reject_waiting(
     waiting_id: uuid.UUID,
     reason: str = "관리자에 의해 웨이팅이 거절되었습니다.",
 ) -> dict:
-    waiting = session.get(Waitings, {"id": waiting_id, "restaurant_id": restaurant.id})
+    waiting = session.exec(
+        select(Waitings).where(
+            Waitings.id == waiting_id,
+            Waitings.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not waiting:
         raise HTTPException(status_code=404, detail="웨이팅을 찾을 수 없습니다.")
     if waiting.rejected_at:
@@ -349,6 +369,31 @@ def read_orders(
     return [order for order, _ in orders]
 
 
+@router.get("/orders/{order_id}", tags=["orders"], response_model=OrderPublic)
+def read_order(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    order_id: uuid.UUID,
+):
+    data = session.exec(
+        select(Orders, Payments)
+        .join(Payments, isouter=True)
+        .where(
+            Orders.id == order_id,
+            Orders.restaurant_id == restaurant.id,
+        )
+    ).first()
+    if not data:
+        raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
+
+    order, payment = data
+    if payment and order.payment_id == payment.id:
+        order.payment = payment
+
+    return order
+
+
 @router.patch("/orders/{order_id}", tags=["orders"])
 def update_order(
     session: SessionDep,
@@ -357,8 +402,12 @@ def update_order(
     order_id: uuid.UUID,
     order_data: OrderUpdate,
 ) -> Orders:
-
-    order = session.get(Orders, {"id": order_id, "restaurant_id": restaurant.id})
+    order = session.exec(
+        select(Orders).where(
+            Orders.id == order_id,
+            Orders.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     order_data_dict = order_data.model_dump(exclude_unset=True)
@@ -378,8 +427,12 @@ def reject_order(
     order_id: uuid.UUID,
     reason: str = "관리자에 의해 주문이 거절되었습니다.",
 ) -> dict:
-
-    order = session.get(Orders, {"id": order_id, "restaurant_id": restaurant.id})
+    order = session.exec(
+        select(Orders).where(
+            Orders.id == order_id,
+            Orders.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     if order.status == OrderStatus.rejected:
@@ -408,11 +461,13 @@ def update_menu_order(
     menu_id: uuid.UUID,
     order_data: OrderedMenuUpdate,
 ) -> OrderedMenus:
-
-    ordered_menu = session.get(
-        OrderedMenus,
-        {"order_id": order_id, "menu_id": menu_id, "restaurant_id": restaurant.id},
-    )
+    ordered_menu = session.exec(
+        select(OrderedMenus).where(
+            OrderedMenus.order_id == order_id,
+            OrderedMenus.menu_id == menu_id,
+            OrderedMenus.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not ordered_menu:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
     order_data_dict = order_data.model_dump(exclude_unset=True)
@@ -441,11 +496,13 @@ def reject_menu_order(
     menu_id: uuid.UUID,
     reason: str = "관리자에 의해 메뉴 주문이 거절되었습니다.",
 ) -> dict:
-
-    ordered_menu = session.get(
-        OrderedMenus,
-        {"order_id": order_id, "menu_id": menu_id, "restaurant_id": restaurant.id},
-    )
+    ordered_menu = session.exec(
+        select(OrderedMenus).where(
+            OrderedMenus.order_id == order_id,
+            OrderedMenus.menu_id == menu_id,
+            OrderedMenus.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not ordered_menu:
         raise HTTPException(status_code=404, detail="메뉴 주문을 찾을 수 없습니다.")
     if ordered_menu.status is MenuOrderStatus.rejected:
@@ -483,8 +540,12 @@ def refund_payment(
     restaurant: DefaultRestaurant,
     payment_id: uuid.UUID,
 ) -> Payments:
-
-    payment = session.get(Payments, {"id": payment_id, "restaurant_id": restaurant.id})
+    payment = session.exec(
+        select(Payments).where(
+            Payments.id == payment_id,
+            Payments.restaurant_id == restaurant.id,
+        )
+    ).first()
     if not payment:
         raise HTTPException(status_code=404, detail="결제 내역을 찾을 수 없습니다.")
     if payment.refunded_at:
