@@ -2,7 +2,7 @@ from typing import Sequence
 import uuid
 
 from fastapi import APIRouter, HTTPException
-from sqlmodel import select
+from sqlmodel import select, col
 
 from app.api.deps import SessionDep, DefaultRestaurant
 from app.core.config import settings
@@ -27,16 +27,18 @@ def create_order(
     order_data: TableOrderCreate,
 ) -> OrderWithTeamInfo:
     """테이블 ID로 직접 주문 생성 (필요시 팀도 함께 생성)"""
-    
+
     # 1. 해당 테이블에 활성 팀이 있는지 확인 (동시성 제어)
     existing_team = session.exec(
-        select(Teams).where(
+        select(Teams)
+        .where(
             Teams.restaurant_id == restaurant.id,
             Teams.table_id == order_data.table_id,
             Teams.ended_at == None,
-        ).with_for_update()
+        )
+        .with_for_update()
     ).first()
-    
+
     if existing_team:
         # 기존 활성 팀이 있으면 해당 팀 사용
         team = existing_team
@@ -48,12 +50,12 @@ def create_order(
         )
         session.add(team)
         session.flush()  # team.id 생성을 위해 flush
-    
+
     # 2. 주문 생성
     order = Orders(team_id=team.id, restaurant_id=restaurant.id)
     session.add(order)
     session.flush()  # order.id 생성을 위해 flush
-    
+
     # 3. 주문 메뉴들 생성
     ordered_menus = [
         OrderedMenus.model_validate(
@@ -63,26 +65,25 @@ def create_order(
         for menu_data in order_data.ordered_menus
     ]
     session.add_all(ordered_menus)
-    
+
     # 4. 테이블 상태 업데이트 (idle -> in_use)
     table = session.get(Tables, order_data.table_id)
     if table and table.status == TableStatus.idle:
         table.status = TableStatus.in_use
         session.add(table)
-    
+
     # 5. 모든 변경사항 커밋
     session.commit()
     session.refresh(order)
     session.refresh(team)
-    
+
     return OrderWithTeamInfo.model_validate(
         order,
         update={
             "team": team,
             "payment_info": PaymentInfo(
-                bank_name="KB국민은행",
-                bank_account_no=settings.BANK_ACCOUNT_NO
-            )
+                bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+            ),
         },
     )
 
@@ -94,7 +95,7 @@ def read_orders_by_table(
     table_id: uuid.UUID,
 ):
     """테이블의 모든 주문 내역 조회 (활성 팀의 주문들)"""
-    
+
     # 해당 테이블의 활성 팀 찾기
     active_team = session.exec(
         select(Teams).where(
@@ -103,18 +104,15 @@ def read_orders_by_table(
             Teams.ended_at == None,
         )
     ).first()
-    
+
     if not active_team:
         return []
-    
+
     # 팀의 주문들 조회
     orders = session.exec(
         select(Orders)
-        .where(
-            Orders.restaurant_id == restaurant.id,
-            Orders.team_id == active_team.id
-        )
-        .order_by(Orders.created_at.desc())
+        .where(Orders.restaurant_id == restaurant.id, Orders.team_id == active_team.id)
+        .order_by(col(Orders.created_at).desc())
     ).all()
-    
+
     return orders

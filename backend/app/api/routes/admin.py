@@ -27,11 +27,10 @@ from app.models import (
     OrderStatus,
     OrderUpdate,
     OrderPublic,
-    OrderWithPaymentInfo,
+    OrderWithTeamInfo,
     PaymentInfo,
     OrderedMenus,
     OrderedMenuUpdate,
-    OrderedMenuPublic,
     OrderedMenuForServing,
     MenuOrderStatus,
     Payments,
@@ -266,7 +265,7 @@ def reject_waiting(
     return {"detail": "웨이팅이 거절되었습니다.", "reason": reason}
 
 
-@router.post("/kiosk/orders", tags=["orders"], response_model=OrderWithPaymentInfo)
+@router.post("/kiosk/orders", tags=["orders"], response_model=OrderWithTeamInfo)
 def create_kiosk_order(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -296,18 +295,18 @@ def create_kiosk_order(
         for ordered_menu_data in kiosk_order_data.ordered_menus
     ]
     session.add_all(ordered_menus)
-    
+
     # 테이블 상태 업데이트 (idle -> in_use)
     table = session.get(Tables, kiosk_order_data.table_id)
     if table and table.status == TableStatus.idle:
         table.status = TableStatus.in_use
         session.add(table)
-    
+
     # 모든 변경사항 커밋
     session.commit()
     session.refresh(order)
 
-    return OrderWithPaymentInfo.model_validate(
+    return OrderWithTeamInfo.model_validate(
         order,
         update={
             "payment_info": PaymentInfo(

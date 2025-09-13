@@ -52,14 +52,17 @@ export function OrderBottomBar({
   if (lastOrder && lastOrder.status === "ordered" && lastOrder.payment_info) {
     // 결제 정보 보여줌
     return (
-      <LastOrderPaymentInfoBottomBar
-        order={lastOrder as OrderWithTeamInfo}
-      />
+      <LastOrderPaymentInfoBottomBar order={lastOrder as OrderWithTeamInfo} />
     );
   }
 
   return (
-    <ConfirmOrderBottomBar tableId={tableId} cart={cart} setCart={setCart} setLastOrder={setLastOrder} />
+    <ConfirmOrderBottomBar
+      tableId={tableId}
+      cart={cart}
+      setCart={setCart}
+      setLastOrder={setLastOrder}
+    />
   );
 }
 

@@ -154,19 +154,22 @@ export type OrderWithPaymentInfo = {
     payment_info: PaymentInfo;
 };
 
+/**
+ * 주문과 팀 정보를 함께 반환하는 모델
+ */
 export type OrderWithTeamInfo = {
+    reject_reason?: (string | null);
+    finished_at?: (string | null);
+    created_at?: string;
     id: string;
     no: number;
     status: OrderStatus;
     total_price: number;
     final_price: number;
-    team: TeamPublic;
-    payment_info: PaymentInfo;
     ordered_menus: Array<OrderedMenuPublic>;
-    payment?: (Payments | null);
-    reject_reason?: (string | null);
-    finished_at?: (string | null);
-    created_at: string;
+    payment: (Payments | null);
+    payment_info: PaymentInfo;
+    team: TeamPublic;
 };
 
 export type PaymentInfo = {
