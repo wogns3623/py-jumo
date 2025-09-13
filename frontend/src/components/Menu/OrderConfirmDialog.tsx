@@ -42,7 +42,7 @@ function OrderItem({
       {/* 메뉴 정보 */}
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-sm text-gray-900 truncate">
-          {item.menu.name}
+          {item.menu.name.split(" : ")[0]}
         </h4>
         <p className="text-xs text-gray-600 mt-0.5 w-36 break-keep">
           {item.menu.desc}
