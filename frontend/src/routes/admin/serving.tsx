@@ -1,19 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import React from "react";
 
 import { AdminSidebarHeader } from "@/components/Admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { toast } from "@/components/ui/sonner";
 import { MenuImage } from "@/components/shared/MenuImage";
 import { AdminService } from "@/client";
@@ -80,6 +74,44 @@ function Page() {
     return "text-green-600";
   };
 
+  // 주문별로 메뉴들을 그룹화
+  const groupedOrders = React.useMemo(() => {
+    if (!orderedMenus) return [];
+
+    const orderMap = new Map<
+      number,
+      {
+        order_no: number;
+        table_no: number;
+        menus: OrderedMenuForServing[];
+        earliestCookStarted: string;
+      }
+    >();
+
+    orderedMenus.forEach((menu) => {
+      if (!orderMap.has(menu.order_no)) {
+        orderMap.set(menu.order_no, {
+          order_no: menu.order_no,
+          table_no: menu.table_no,
+          menus: [],
+          earliestCookStarted: menu.cook_started_at!,
+        });
+      }
+
+      const order = orderMap.get(menu.order_no)!;
+      order.menus.push(menu);
+
+      // 가장 이른 조리 시작 시간 업데이트
+      if (
+        new Date(menu.cook_started_at!) < new Date(order.earliestCookStarted)
+      ) {
+        order.earliestCookStarted = menu.cook_started_at!;
+      }
+    });
+
+    return Array.from(orderMap.values());
+  }, [orderedMenus]);
+
   return (
     <>
       <AdminSidebarHeader title="서빙 관리" />
@@ -94,7 +126,8 @@ function Page() {
             </p>
           </div>
           <Badge variant="outline" className="text-sm whitespace-nowrap">
-            총 {orderedMenus?.length || 0}개 대기중
+            총 {groupedOrders?.length || 0}개 주문 / {orderedMenus?.length || 0}
+            개 메뉴 대기중
           </Badge>
         </div>
 
@@ -127,161 +160,170 @@ function Page() {
               </div>
             </CardContent>
           </Card>
-        ) : orderedMenus && orderedMenus.length > 0 ? (
+        ) : groupedOrders && groupedOrders.length > 0 ? (
           <>
             {/* 데스크톱 테이블 뷰 */}
-            <div className="hidden lg:block">
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16"></TableHead>
-                      <TableHead>메뉴</TableHead>
-                      <TableHead className="w-20">수량</TableHead>
-                      <TableHead className="w-24">테이블</TableHead>
-                      <TableHead className="w-20">주문번호</TableHead>
-                      <TableHead className="w-24">조리시작</TableHead>
-                      <TableHead className="w-24">대기시간</TableHead>
-                      <TableHead className="w-28">액션</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orderedMenus.map((orderedMenu) => {
-                      const waitingMinutes = getWaitingTime(
-                        orderedMenu.cook_started_at!
-                      );
-                      return (
-                        <TableRow
-                          key={orderedMenu.id}
-                          className="hover:bg-muted/50"
-                        >
-                          <TableCell>
+            <div className="hidden lg:block space-y-4">
+              {groupedOrders.map((order) => {
+                const waitingMinutes = getWaitingTime(
+                  order.earliestCookStarted
+                );
+                return (
+                  <Card key={order.order_no}>
+                    <CardContent className="p-0">
+                      {/* 주문 헤더 */}
+                      <div className="flex items-center justify-between p-4 bg-muted/30 border-b">
+                        <div className="flex items-center gap-4">
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-lg px-3 py-1"
+                          >
+                            주문 #{order.order_no}
+                          </Badge>
+                          <Badge variant="outline" className="font-mono">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {order.table_no}번 테이블
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            조리시작: {formatTime(order.earliestCookStarted)}
+                          </span>
+                          <span
+                            className={`text-sm font-medium ${getWaitingTimeColor(
+                              waitingMinutes
+                            )}`}
+                          >
+                            <Clock className="w-3 h-3 inline mr-1" />
+                            대기시간: {waitingMinutes}분
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {order.menus.length}개 메뉴
+                        </div>
+                      </div>
+
+                      {/* 메뉴 목록 */}
+                      <Table>
+                        <TableBody>
+                          {order.menus.map((orderedMenu) => (
+                            <TableRow
+                              key={orderedMenu.id}
+                              className="hover:bg-muted/50"
+                            >
+                              <TableCell className="w-16">
+                                <MenuImage
+                                  src={orderedMenu.menu.image || ""}
+                                  alt={orderedMenu.menu.name}
+                                  bgColor={
+                                    orderedMenu.menu.bg_color || undefined
+                                  }
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium">
+                                  {orderedMenu.menu.name}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {orderedMenu.menu.desc}
+                                </div>
+                              </TableCell>
+                              <TableCell className="w-20 font-medium">
+                                {orderedMenu.amount}개
+                              </TableCell>
+                              <TableCell className="w-28">
+                                <Button
+                                  onClick={() =>
+                                    serveMenuMutation.mutate(orderedMenu.id)
+                                  }
+                                  disabled={serveMenuMutation.isPending}
+                                  size="sm"
+                                  className="w-full"
+                                >
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  서빙완료
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            {/* 모바일 카드 리스트 뷰 */}
+            <div className="lg:hidden space-y-4">
+              {groupedOrders.map((order) => {
+                const waitingMinutes = getWaitingTime(
+                  order.earliestCookStarted
+                );
+                return (
+                  <Card key={order.order_no} className="overflow-hidden">
+                    <CardContent className="p-0">
+                      {/* 주문 헤더 */}
+                      <div className="p-4 bg-muted/30 border-b">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="font-mono">
+                            주문 #{order.order_no}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-mono"
+                          >
+                            <MapPin className="w-2 h-2 mr-1" />
+                            {order.table_no}번
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{formatTime(order.earliestCookStarted)}</span>
+                          <span
+                            className={`font-medium ${getWaitingTimeColor(
+                              waitingMinutes
+                            )}`}
+                          >
+                            <Clock className="w-2 h-2 inline mr-1" />
+                            {waitingMinutes}분
+                          </span>
+                          <span>{order.menus.length}개 메뉴</span>
+                        </div>
+                      </div>
+
+                      {/* 메뉴 목록 */}
+                      <div className="p-4 space-y-3">
+                        {order.menus.map((orderedMenu) => (
+                          <div
+                            key={orderedMenu.id}
+                            className="flex items-center gap-4"
+                          >
                             <MenuImage
                               src={orderedMenu.menu.image || ""}
                               alt={orderedMenu.menu.name}
                               bgColor={orderedMenu.menu.bg_color || undefined}
-                              className="w-12 h-12 object-cover rounded"
+                              className="w-12 h-12 object-cover rounded flex-shrink-0"
                             />
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">
-                              {orderedMenu.menu.name}
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium truncate">
+                                {orderedMenu.menu.name}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                수량: {orderedMenu.amount}개
+                              </p>
                             </div>
-                            <div className="text-sm text-muted-foreground">
-                              {orderedMenu.menu.desc}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {orderedMenu.amount}개
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="font-mono">
-                              <MapPin className="w-3 h-3 mr-1" />
-                              {orderedMenu.table_no}번
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            #{orderedMenu.order_no}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {formatTime(orderedMenu.cook_started_at!)}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`text-sm font-medium ${getWaitingTimeColor(
-                                waitingMinutes
-                              )}`}
-                            >
-                              <Clock className="w-3 h-3 inline mr-1" />
-                              {waitingMinutes}분
-                            </span>
-                          </TableCell>
-                          <TableCell>
                             <Button
                               onClick={() =>
                                 serveMenuMutation.mutate(orderedMenu.id)
                               }
                               disabled={serveMenuMutation.isPending}
                               size="sm"
-                              className="w-full"
+                              className="flex-shrink-0"
                             >
                               <CheckCircle className="w-3 h-3 mr-1" />
                               서빙완료
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </Card>
-            </div>
-
-            {/* 모바일 카드 리스트 뷰 */}
-            <div className="lg:hidden space-y-3">
-              {orderedMenus.map((orderedMenu) => {
-                const waitingMinutes = getWaitingTime(
-                  orderedMenu.cook_started_at!
-                );
-                return (
-                  <Card key={orderedMenu.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        {/* 메뉴 이미지 */}
-                        <MenuImage
-                          src={orderedMenu.menu.image || ""}
-                          alt={orderedMenu.menu.name}
-                          bgColor={orderedMenu.menu.bg_color || undefined}
-                          className="w-16 h-16 object-cover rounded flex-shrink-0"
-                        />
-
-                        {/* 메뉴 정보 */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold truncate">
-                            {orderedMenu.menu.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              수량: {orderedMenu.amount}개
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className="text-xs font-mono"
-                            >
-                              <MapPin className="w-2 h-2 mr-1" />
-                              {orderedMenu.table_no}번
-                            </Badge>
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-muted-foreground">
-                              주문#{orderedMenu.order_no}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {formatTime(orderedMenu.cook_started_at!)}
-                            </span>
-                            <span
-                              className={`text-xs font-medium ${getWaitingTimeColor(
-                                waitingMinutes
-                              )}`}
-                            >
-                              <Clock className="w-2 h-2 inline mr-1" />
-                              {waitingMinutes}분
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* 서빙 버튼 */}
-                        <Button
-                          onClick={() =>
-                            serveMenuMutation.mutate(orderedMenu.id)
-                          }
-                          disabled={serveMenuMutation.isPending}
-                          size="sm"
-                          className="flex-shrink-0"
-                        >
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          서빙완료
-                        </Button>
+                        ))}
                       </div>
                     </CardContent>
                   </Card>

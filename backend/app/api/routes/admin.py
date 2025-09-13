@@ -531,16 +531,18 @@ def get_cooked_ordered_menus(
     # OrderedMenus와 관련 정보를 join하여 가져오기
     ordered_menus_data = session.exec(
         select(OrderedMenus, Orders, Teams, Tables)
-        .join(Orders, OrderedMenus.order_id == Orders.id)
-        .join(Teams, Orders.team_id == Teams.id)
-        .join(Tables, Teams.table_id == Tables.id)
+        .join(Orders, OrderedMenus.order_id == Orders.id)  # type: ignore
+        .join(Teams)
+        .join(Tables)
         .where(
             OrderedMenus.restaurant_id == restaurant.id,
             OrderedMenus.cook_started_at != None,  # 조리 시작된 메뉴
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
         )
-        .order_by(col(OrderedMenus.cook_started_at).asc())  # 조리 시작 시간 순으로
+        .order_by(
+            col(Orders.created_at).asc()
+        )  # 주문 생성 시간 순으로 (오래된 주문 먼저)
     ).all()
 
     # 데이터 변환
