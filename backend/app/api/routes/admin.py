@@ -329,18 +329,14 @@ def create_kiosk_order(
     )
 
 
-@router.get("/orders", tags=["orders"])
+@router.get("/orders", tags=["orders"], response_model=Sequence[OrderPublic])
 def read_orders(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     status: Union[OrderStatus, AllFilter] = AllFilter.all,
-) -> Sequence[Orders]:
-    statement = (
-        select(Orders, Payments)
-        .join(Payments, isouter=True)
-        .where(Orders.restaurant_id == restaurant.id)
-    )
+):
+    statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
     if status == AllFilter.all:
         pass
     elif status == OrderStatus.ordered:
@@ -361,12 +357,13 @@ def read_orders(
         statement = statement.where(Orders.reject_reason != None)
 
     orders = session.exec(statement.order_by(col(Orders.created_at).desc())).all()
+    return orders
 
-    for order, payment in orders:
-        if payment and order.payment_id == payment.id:
-            order.payment = payment
+    # for order, payment in orders:
+    #     if payment and order.payment_id == payment.id:
+    #         order.payment = payment
 
-    return [order for order, _ in orders]
+    # return [order for order, _ in orders]
 
 
 @router.get("/orders/{order_id}", tags=["orders"], response_model=OrderPublic)

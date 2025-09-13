@@ -79,7 +79,7 @@ function MenuPage() {
             }}
           >
             <Suspense fallback={onLoadComponent}>
-              <MenuPageInner teamId={team.id} />
+              <MenuPageInner teamId={team?.id} />
             </Suspense>
           </ErrorBoundary>
         )}

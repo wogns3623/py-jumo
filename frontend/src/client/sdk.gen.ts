@@ -218,7 +218,7 @@ export class AdminService {
      * Read Orders
      * @param data The data for the request.
      * @param data.status
-     * @returns Orders Successful Response
+     * @returns OrderPublic Successful Response
      * @throws ApiError
      */
     public static readOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {
@@ -471,7 +471,7 @@ export class OrdersService {
      * Read Orders
      * @param data The data for the request.
      * @param data.status
-     * @returns Orders Successful Response
+     * @returns OrderPublic Successful Response
      * @throws ApiError
      */
     public static adminReadOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {

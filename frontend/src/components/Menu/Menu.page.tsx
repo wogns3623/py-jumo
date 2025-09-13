@@ -6,6 +6,7 @@ import { MenuImage, QuantityControl } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMenusSuspense } from "@/hooks/useMenu";
+import useCustomToast from "@/hooks/useCustomToast";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
 import { OrderBottomBar } from "./OrderBar";
@@ -20,16 +21,28 @@ export function MenuCard({
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }) {
+  const { showErrorToast } = useCustomToast();
+
+  const handleSoldOutClick = () => {
+    showErrorToast(`${menu.name}은(는) 현재 품절입니다.`);
+  };
+
   return (
     <Card
       className={cn(
-        "w-full bg-[#F5F7F6] rounded-2xl border-none text-black",
-        menu.no_stock && "opacity-50"
+        "w-full bg-[#F5F7F6] rounded-2xl border-none text-black relative transition-all duration-200",
+        menu.no_stock && "bg-gray-100 cursor-not-allowed"
       )}
+      onClick={menu.no_stock ? handleSoldOutClick : undefined}
     >
       <CardContent className="p-0">
         {/* 메뉴 이미지 영역 */}
-        <div className="w-full h-[120px] bg-gray-300 opacity-80 rounded-t-2xl overflow-hidden">
+        <div
+          className={cn(
+            "w-full h-[120px] bg-gray-300 opacity-80 rounded-t-2xl overflow-hidden relative",
+            menu.no_stock && "opacity-40"
+          )}
+        >
           {menu.image ? (
             <MenuImage
               src={menu.image}
@@ -41,24 +54,51 @@ export function MenuCard({
           ) : (
             <div className="w-full h-full bg-gray-300" />
           )}
+
+          {/* 품절 오버레이 */}
+          {menu.no_stock && (
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center rounded-t-2xl">
+              <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                SOLD OUT
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 메뉴 정보 */}
         <div className="px-4 py-3">
-          <h3 className="text-base font-bold font-inter text-black mb-1">
+          <h3
+            className={cn(
+              "text-base font-bold font-inter mb-1",
+              menu.no_stock ? "text-gray-500 line-through" : "text-black"
+            )}
+          >
             {menu.name}
           </h3>
-          <p className="text-sm font-normal font-inter text-black mb-2 truncate">
+          <p
+            className={cn(
+              "text-sm font-normal font-inter mb-2 truncate",
+              menu.no_stock ? "text-gray-400" : "text-black"
+            )}
+          >
             {menu.desc}
           </p>
 
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold font-inter text-black/70">
+            <span
+              className={cn(
+                "text-sm font-bold font-inter",
+                menu.no_stock ? "text-gray-400" : "text-black/70"
+              )}
+            >
               {menu.price.toLocaleString()} ₩
             </span>
 
             {menu.no_stock ? (
-              <Badge variant="destructive" className="text-sm font-semibold">
+              <Badge
+                variant="destructive"
+                className="text-sm font-semibold bg-red-500 hover:bg-red-500"
+              >
                 품절
               </Badge>
             ) : (
@@ -94,6 +134,9 @@ export function MenuSection({
   const updateQuantity = (menuId: string, newQuantity: number) => {
     const menu = menus.find((m) => m.id === menuId);
     if (!menu) return;
+
+    // 품절된 메뉴는 수량 변경 불가
+    if (menu.no_stock) return;
 
     const newCart = [...cart];
     const existingItemIndex = newCart.findIndex(
@@ -145,6 +188,32 @@ export function MenuSection({
 export function MenuPageInner({ teamId }: { teamId: string | null }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useLocalStorage<CartItem[]>("cart", []);
+  const { showErrorToast } = useCustomToast();
+
+  // 품절된 메뉴를 장바구니에서 자동 제거
+  const validCart = cart.filter((item) => {
+    const menu = menus.find((m) => m.id === item.menuId);
+    return menu && !menu.no_stock;
+  });
+
+  // 장바구니가 변경되었으면 업데이트 및 알림
+  if (validCart.length !== cart.length) {
+    const removedItems = cart.filter((item) => {
+      const menu = menus.find((m) => m.id === item.menuId);
+      return menu && menu.no_stock;
+    });
+
+    if (removedItems.length > 0) {
+      const removedNames = removedItems
+        .map((item) => item.menu.name)
+        .join(", ");
+      showErrorToast(
+        `${removedNames}이(가) 품절되어 장바구니에서 제거되었습니다.`
+      );
+    }
+
+    setCart(validCart);
+  }
 
   // 메뉴를 카테고리별로 분류 (임시로 메인메뉴와 음료수로 구분)
   const menuGroups = [
@@ -173,7 +242,7 @@ export function MenuPageInner({ teamId }: { teamId: string | null }) {
               key={group.title}
               title={group.title}
               menus={group.items}
-              cart={cart}
+              cart={validCart}
               onCartChange={setCart}
               className={group.className || ""}
             />
@@ -192,7 +261,7 @@ export function MenuPageInner({ teamId }: { teamId: string | null }) {
 
       {/* 하단 주문 바 */}
       {teamId && (
-        <OrderBottomBar teamId={teamId} cart={cart} setCart={setCart} />
+        <OrderBottomBar teamId={teamId} cart={validCart} setCart={setCart} />
       )}
     </Fragment>
   );

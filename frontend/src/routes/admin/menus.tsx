@@ -89,19 +89,24 @@ function Page() {
   return (
     <>
       <AdminSidebarHeader title={"메뉴 관리"} />
-      <div className="flex flex-1 flex-col p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold tracking-tight">메뉴 목록</h2>
-          <Badge variant="outline" className="text-sm">
+      <div className="flex flex-1 flex-col p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+            메뉴 목록
+          </h2>
+          <Badge
+            variant="outline"
+            className="text-sm self-start sm:self-center"
+          >
             총 {menus?.length || 0}개 메뉴
           </Badge>
         </div>
 
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
-                <Skeleton className="h-48 w-full rounded-t-lg" />
+                <Skeleton className="h-32 sm:h-48 w-full rounded-t-lg" />
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-6 w-16" />
@@ -120,11 +125,11 @@ function Page() {
             ))}
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {menus?.map((menu) => (
               <Card key={menu.id} className="relative overflow-hidden">
                 {/* 메뉴 이미지 */}
-                <div className="relative h-48 w-full">
+                <div className="relative h-32 sm:h-48 w-full">
                   {menu.image ? (
                     <MenuImage
                       src={menu.image}
@@ -152,18 +157,18 @@ function Page() {
                   )}
                 </div>
 
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-3 sm:px-6">
+                  <CardTitle className="text-base sm:text-lg font-medium truncate">
                     {menu.name}
                   </CardTitle>
                   <Badge
                     variant={menu.no_stock ? "destructive" : "default"}
-                    className="text-xs"
+                    className="text-xs whitespace-nowrap ml-2"
                   >
                     {menu.no_stock ? "품절" : "판매중"}
                   </Badge>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-3 sm:px-6">
                   <div className="space-y-3">
                     {menu.desc && (
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -171,12 +176,15 @@ function Page() {
                       </p>
                     )}
 
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg font-semibold">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <span className="text-base sm:text-lg font-semibold">
                         {menu.price.toLocaleString()}원
                       </span>
                       {menu.category && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="text-xs self-start sm:self-center"
+                        >
                           {menu.category}
                         </Badge>
                       )}
@@ -203,7 +211,7 @@ function Page() {
         )}
 
         {menus && menus.length === 0 && (
-          <Card className="py-12">
+          <Card className="py-8 sm:py-12">
             <CardContent className="text-center">
               <p className="text-muted-foreground">등록된 메뉴가 없습니다.</p>
             </CardContent>

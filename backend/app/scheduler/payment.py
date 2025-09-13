@@ -27,14 +27,14 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
         # start_date = '20220701' #optional, you must use 'yyyymmdd' style.
     )
 
-    injected = BankTransaction(
-        transaction_by="김재훈",
-        date=datetime.now(timezone.utc),
-        amount=31966,
-        balance=0,
-    )
+    # injected = BankTransaction(
+    #     transaction_by="김재훈",
+    #     date=datetime.now(timezone.utc),
+    #     amount=31966,
+    #     balance=0,
+    # )
     return [
-        injected,
+        # injected,
         *[BankTransaction.model_validate(trs) for trs in transaction_list],
     ]
 

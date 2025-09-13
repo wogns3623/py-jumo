@@ -299,7 +299,7 @@ export type AdminReadOrdersData = {
     status?: (OrderStatus | AllFilter);
 };
 
-export type AdminReadOrdersResponse = (Array<Orders>);
+export type AdminReadOrdersResponse = (Array<OrderPublic>);
 
 export type AdminReadOrderData = {
     orderId: string;

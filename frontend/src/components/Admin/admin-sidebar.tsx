@@ -15,16 +15,16 @@ const data = {
       url: "/admin/dashboard",
     },
     {
+      title: "메뉴 관리",
+      url: "/admin/menus",
+    },
+    {
       title: "주문 관리",
       url: "/admin/orders",
     },
     {
       title: "결제 관리",
       url: "/admin/payments",
-    },
-    {
-      title: "메뉴 관리",
-      url: "/admin/menus",
     },
     {
       title: "테이블 관리",
