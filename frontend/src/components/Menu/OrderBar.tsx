@@ -156,7 +156,17 @@ function ConfirmOrderBottomBar({
       requestPayment(order);
     } catch (error) {
       console.error("주문 실패:", error);
-      toast.error("주문 처리 중 오류가 발생했습니다.");
+      
+      // 404 오류인 경우 (팀이 종료되었거나 찾을 수 없는 경우)
+      if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+        toast.error("테이블 세션이 종료되었습니다. 새로 QR 코드를 스캔해주세요.");
+        // 로컬 스토리지의 팀 정보 삭제
+        localStorage.removeItem('team');
+        // 페이지 새로고침하여 새 팀 생성 유도
+        window.location.reload();
+      } else {
+        toast.error("주문 처리 중 오류가 발생했습니다.");
+      }
     }
   };
   return (

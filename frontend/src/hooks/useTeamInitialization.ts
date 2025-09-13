@@ -61,8 +61,8 @@ export function useTeamInitialization(
         return;
       }
 
-      // table 바뀌면 team 초기화
-      if (team && team.table?.id === tableId) {
+      // table 바뀌면 team 초기화, 또는 기존 팀이 종료된 경우도 초기화
+      if (team && team.table?.id === tableId && !team.ended_at) {
         setIsInitialized(true);
         return;
       }

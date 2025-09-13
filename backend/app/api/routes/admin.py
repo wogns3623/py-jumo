@@ -318,7 +318,20 @@ def read_orders(
     restaurant: DefaultRestaurant,
     status: Union[OrderStatus, AllFilter] = AllFilter.all,
 ):
-    statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
+    if status in [OrderStatus.ordered, OrderStatus.paid]:
+        # 진행 중인 주문들은 활성 팀만 조회
+        statement = (
+            select(Orders)
+            .join(Teams)
+            .where(
+                Orders.restaurant_id == restaurant.id,
+                Teams.ended_at == None,  # 활성 팀만
+            )
+        )
+    else:
+        # 완료/거절된 주문이나 전체 조회는 모든 팀 포함
+        statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
+    
     if status == AllFilter.all:
         pass
     elif status == OrderStatus.ordered:
@@ -356,17 +369,19 @@ def read_order(
     order_id: uuid.UUID,
 ):
     data = session.exec(
-        select(Orders, Payments)
+        select(Orders, Payments, Teams)
         .join(Payments, isouter=True)
+        .join(Teams)
         .where(
             Orders.id == order_id,
             Orders.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
     if not data:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
 
-    order, payment = data
+    order, payment, team = data
     if payment and order.payment_id == payment.id:
         order.payment = payment
 
@@ -382,9 +397,12 @@ def update_order(
     order_data: OrderUpdate,
 ) -> Orders:
     order = session.exec(
-        select(Orders).where(
+        select(Orders)
+        .join(Teams)
+        .where(
             Orders.id == order_id,
             Orders.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
     if not order:
@@ -407,9 +425,12 @@ def reject_order(
     reason: str = "관리자에 의해 주문이 거절되었습니다.",
 ) -> dict:
     order = session.exec(
-        select(Orders).where(
+        select(Orders)
+        .join(Teams)
+        .where(
             Orders.id == order_id,
             Orders.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
     if not order:
@@ -441,10 +462,14 @@ def update_menu_order(
     order_data: OrderedMenuUpdate,
 ) -> OrderedMenus:
     ordered_menu = session.exec(
-        select(OrderedMenus).where(
+        select(OrderedMenus)
+        .join(Orders)
+        .join(Teams)
+        .where(
             OrderedMenus.order_id == order_id,
             OrderedMenus.menu_id == menu_id,
             OrderedMenus.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
     if not ordered_menu:
@@ -476,10 +501,14 @@ def reject_menu_order(
     reason: str = "관리자에 의해 메뉴 주문이 거절되었습니다.",
 ) -> dict:
     ordered_menu = session.exec(
-        select(OrderedMenus).where(
+        select(OrderedMenus)
+        .join(Orders)
+        .join(Teams)
+        .where(
             OrderedMenus.order_id == order_id,
             OrderedMenus.menu_id == menu_id,
             OrderedMenus.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
     if not ordered_menu:
@@ -551,9 +580,13 @@ def serve_ordered_menu(
 ) -> OrderedMenus:
     """주문 메뉴 서빙 완료 처리"""
     ordered_menu = session.exec(
-        select(OrderedMenus).where(
+        select(OrderedMenus)
+        .join(Orders)
+        .join(Teams)
+        .where(
             OrderedMenus.id == ordered_menu_id,
             OrderedMenus.restaurant_id == restaurant.id,
+            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
 
