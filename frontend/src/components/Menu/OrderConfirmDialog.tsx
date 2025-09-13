@@ -17,7 +17,8 @@ interface OrderConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   cart: CartItem[];
   onCartChange: (cart: CartItem[]) => void;
-  onConfirmOrder: () => void;
+  onConfirm: () => void;
+  onCancel?: () => void;
   isSubmitting?: boolean;
 }
 
@@ -82,20 +83,21 @@ export function OrderConfirmDialog({
   onOpenChange,
   cart,
   onCartChange,
-  onConfirmOrder,
+  onConfirm,
+  onCancel,
   isSubmitting = false,
 }: OrderConfirmDialogProps) {
   // 장바구니 총계 계산
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.menu.price * item.quantity,
-    0,
+    0
   );
 
   // 수량 변경 핸들러
   const updateQuantity = (menuId: string, newQuantity: number) => {
     const newCart = cart.map((item) =>
-      item.menuId === menuId ? { ...item, quantity: newQuantity } : item,
+      item.menuId === menuId ? { ...item, quantity: newQuantity } : item
     );
     onCartChange(newCart);
   };
@@ -108,12 +110,19 @@ export function OrderConfirmDialog({
 
   // 주문 확인 핸들러
   const handleConfirmOrder = () => {
-    onConfirmOrder();
+    onConfirm();
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen: boolean) => {
+        if (isSubmitting) return;
+        if (!isOpen) onCancel?.();
+        onOpenChange(isOpen);
+      }}
+    >
       <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-white flex flex-col">
         <DialogHeader className="bg-gray-50 -m-6 p-6 mb-0 rounded-t-lg flex-shrink-0">
           <DialogTitle className="text-gray-900">주문 확인</DialogTitle>
@@ -167,7 +176,10 @@ export function OrderConfirmDialog({
         <DialogFooter className="gap-2 bg-gray-50 -m-6 p-6 mt-0 rounded-b-lg flex-shrink-0">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              onCancel?.();
+              onOpenChange(false);
+            }}
             disabled={isSubmitting}
             className="bg-white hover:bg-gray-50"
           >

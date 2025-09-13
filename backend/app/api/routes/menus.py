@@ -9,7 +9,7 @@ from app.models import Menus
 router = APIRouter(prefix="/menus", tags=["menus"])
 
 
-@router.get("/")
+@router.get("")
 def read_menus(
     session: SessionDep,
     restaurant: DefaultRestaurant,

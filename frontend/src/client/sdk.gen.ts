@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -189,6 +189,25 @@ export class AdminService {
             query: {
                 reason: data.reason
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Kiosk Order
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns OrderWithPaymentInfo Successful Response
+     * @throws ApiError
+     */
+    public static createKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/admin/kiosk/orders',
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
@@ -410,6 +429,25 @@ export class MenusService {
 }
 
 export class OrdersService {
+    /**
+     * Create Kiosk Order
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns OrderWithPaymentInfo Successful Response
+     * @throws ApiError
+     */
+    public static adminCreateKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/admin/kiosk/orders',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
     /**
      * Read Orders
      * @param data The data for the request.
@@ -673,10 +711,9 @@ export class TablesService {
 export class TeamsService {
     /**
      * Create Team
-     * Create new item.
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns Teams Successful Response
+     * @returns TeamPublic Successful Response
      * @throws ApiError
      */
     public static createTeam(data: TeamsCreateTeamData): CancelablePromise<TeamsCreateTeamResponse> {

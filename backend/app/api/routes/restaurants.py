@@ -6,7 +6,7 @@ from app.models import Restaurants
 router = APIRouter(prefix="/restaurants", tags=["restaurants"])
 
 
-@router.get("/")
+@router.get("")
 def read_restaurants(session: SessionDep, restaurant: DefaultRestaurant) -> Restaurants:
     """
     Retrieve restaurant information.

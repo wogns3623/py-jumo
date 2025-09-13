@@ -1,14 +1,45 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
-import { TeamsService } from "@/client";
+import { TeamPublic, TeamsService } from "@/client";
 
-const uuidRegex =
+export const uuidRegex =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+interface TeamInitializationResultBase {
+  team: TeamPublic | null;
+  isInitialized: boolean;
+  isCreatingTeam: boolean;
+  createTeamError: Error | null;
+}
+interface TeamInitializationResultSuccess extends TeamInitializationResultBase {
+  team: TeamPublic;
+  isInitialized: true;
+  isCreatingTeam: false;
+  createTeamError: null;
+}
+interface TeamInitializationResultFailure extends TeamInitializationResultBase {
+  team: null;
+  isInitialized: true;
+  isCreatingTeam: false;
+  createTeamError: Error;
+}
+interface TeamInitializationResultLoading extends TeamInitializationResultBase {
+  team: null;
+  isInitialized: false;
+  isCreatingTeam: true;
+  createTeamError: null;
+}
+type TeamInitializationResult =
+  | TeamInitializationResultSuccess
+  | TeamInitializationResultFailure
+  | TeamInitializationResultLoading;
+
 // 팀 초기화 및 관리 로직을 담당하는 훅
-export function useTeamInitialization(tableId: string | null) {
-  const [teamId, setTeamId] = useLocalStorage<string>("teamId", "");
+export function useTeamInitialization(
+  tableId: string | null
+): TeamInitializationResult {
+  const [team, setTeam] = useLocalStorage<TeamPublic | null>("team", null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
   const [createTeamError, setCreateTeamError] = useState<Error | null>(null);
@@ -30,8 +61,8 @@ export function useTeamInitialization(tableId: string | null) {
         return;
       }
 
-      // 기존 팀 ID 확인
-      if (teamId) {
+      // table 바뀌면 team 초기화
+      if (team && team.table?.id === tableId) {
         setIsInitialized(true);
         return;
       }
@@ -49,7 +80,7 @@ export function useTeamInitialization(tableId: string | null) {
         });
 
         // 생성된 팀 ID를 로컬 스토리지에 저장
-        setTeamId(response.id!);
+        setTeam(response!);
       } catch (error) {
         console.error("Failed to create team:", error);
         setCreateTeamError(error as Error);
@@ -65,9 +96,9 @@ export function useTeamInitialization(tableId: string | null) {
   }, [tableId]); // tableId만 의존성으로 사용
 
   return {
-    teamId,
+    team,
     isInitialized,
     isCreatingTeam,
     createTeamError,
-  };
+  } as TeamInitializationResult;
 }

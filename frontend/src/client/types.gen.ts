@@ -15,6 +15,12 @@ export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
+export type KioskOrderCreate = {
+    ordered_menus: Array<OrderedMenuCreate>;
+    table_id: string;
+    phone: string;
+};
+
 export type MenuOrderStatus = 'ordered' | 'rejected' | 'cooking' | 'served';
 
 export type MenuPublic = {
@@ -178,14 +184,13 @@ export type TableUpdate = {
 
 export type TeamCreate = {
     table_id: string;
-    waiting_id?: (string | null);
 };
 
-export type Teams = {
-    id?: string;
-    restaurant_id: string;
-    table_id?: (string | null);
-    created_at?: string;
+export type TeamPublic = {
+    id: string;
+    table: Tables;
+    ended_at?: (string | null);
+    created_at: string;
 };
 
 export type Token = {
@@ -282,6 +287,12 @@ export type AdminRejectWaitingResponse = ({
     [key: string]: unknown;
 });
 
+export type AdminCreateKioskOrderData = {
+    requestBody: KioskOrderCreate;
+};
+
+export type AdminCreateKioskOrderResponse = (OrderWithPaymentInfo);
+
 export type AdminReadOrdersData = {
     status?: (OrderStatus | AllFilter);
 };
@@ -351,7 +362,7 @@ export type TeamsCreateTeamData = {
     requestBody: TeamCreate;
 };
 
-export type TeamsCreateTeamResponse = (Teams);
+export type TeamsCreateTeamResponse = (TeamPublic);
 
 export type UtilsHealthCheckResponse = (boolean);
 

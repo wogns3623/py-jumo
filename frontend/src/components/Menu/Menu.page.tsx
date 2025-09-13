@@ -1,25 +1,17 @@
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { useSearch } from "@tanstack/react-router";
-import { Fragment, Suspense, useEffect, useState } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { toast } from "sonner";
+import { Fragment } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
-import type { Menus, OrderWithPaymentInfo } from "@/client";
-import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
+import type { Menus } from "@/client";
 import { MenuImage, QuantityControl } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMenusSuspense } from "@/hooks/useMenu";
-import { useCreateOrder } from "@/hooks/useOrder";
-import { useTeamOrders, useTeamOrdersInvalidate } from "@/hooks/useTeam";
-import { useTeamInitialization } from "@/hooks/useTeamInitialization";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
+import { OrderBottomBar } from "./OrderBar";
 
 // 메뉴 카드 컴포넌트
-function MenuCard({
+export function MenuCard({
   menu,
   quantity,
   onQuantityChange,
@@ -86,7 +78,7 @@ function MenuCard({
 }
 
 // 메뉴 섹션 컴포넌트
-function MenuSection({
+export function MenuSection({
   title,
   menus,
   cart,
@@ -203,277 +195,5 @@ export function MenuPageInner({ teamId }: { teamId: string | null }) {
         <OrderBottomBar teamId={teamId} cart={cart} setCart={setCart} />
       )}
     </Fragment>
-  );
-}
-
-export function MenuPage() {
-  const { table } = useSearch({ from: "/menus" });
-
-  const { teamId, isInitialized, isCreatingTeam, createTeamError } =
-    useTeamInitialization(table);
-
-  const onLoadComponent = (
-    <div className="flex flex-col items-center gap-4">
-      <h2 className="text-xl font-semibold">로딩 중...</h2>
-      <p>메뉴를 불러오고 있습니다...</p>
-    </div>
-  );
-
-  // 로딩 상태
-  if (!isInitialized || isCreatingTeam) {
-    return onLoadComponent;
-  }
-
-  // 테이블 ID가 없는 경우
-  if (createTeamError) {
-    return (
-      <div className="flex flex-col items-center gap-4">
-        <h2 className="text-xl font-semibold">잘못된 접근입니다</h2>
-        <p>QR 코드를 통해 접근해주세요.</p>
-      </div>
-    );
-  }
-
-  return (
-    <Fragment>
-      {/* 헤더 영역 */}
-      <div className="w-full bg-gray-300 opacity-80 rounded-b-2xl overflow-hidden mb-4">
-        <img
-          src="/assets/images/menu_header.png"
-          alt="Header Image"
-          className="w-full h-full object-contain"
-        />
-      </div>
-
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            fallbackRender={({ error, resetErrorBoundary }) => {
-              return (
-                <div className="flex flex-col items-center gap-4">
-                  <h2 className="text-xl font-semibold text-red-500">
-                    오류가 발생했습니다
-                  </h2>
-
-                  <p className="text-red-500">
-                    메뉴 로딩 실패: {error?.message}
-                  </p>
-
-                  <Button onClick={() => resetErrorBoundary()}>재시도</Button>
-                </div>
-              );
-            }}
-          >
-            <Suspense fallback={onLoadComponent}>
-              <MenuPageInner teamId={teamId} />
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
-    </Fragment>
-  );
-}
-
-function OrderBottomBar({
-  teamId,
-  cart,
-  setCart,
-}: {
-  teamId: string;
-  cart: CartItem[];
-  setCart: (cart: CartItem[]) => void;
-}) {
-  const orders = useTeamOrders(teamId);
-  const [storedLastOrder, setStoredLastOrder] =
-    useLocalStorage<OrderWithPaymentInfo | null>("last_order", null);
-  const [lastOrder, setLastOrder] = useState<OrderWithPaymentInfo | null>(null);
-
-  useEffect(() => {
-    if (!lastOrder) return;
-    if (!storedLastOrder || storedLastOrder.id !== lastOrder.id) {
-      console.log("New lastOrder detected:", lastOrder.id);
-      setStoredLastOrder(lastOrder);
-      return;
-    }
-
-    if (storedLastOrder.status !== lastOrder.status) {
-      console.log("lastOrder status changed:", lastOrder.status);
-
-      if (lastOrder.status === "paid") {
-        toast.success("결제가 완료되었습니다! 조리중입니다.");
-      } else if (lastOrder.status === "finished") {
-        toast.success("주문이 완료되었습니다! 맛있게 드세요.");
-      } else if (lastOrder.status === "rejected") {
-        toast.error(
-          `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`
-        );
-      }
-      setStoredLastOrder(lastOrder);
-    }
-  }, [lastOrder, storedLastOrder]);
-
-  useEffect(() => {
-    if (!orders.data) return;
-    // console.log("Orders data updated:", orders.data);
-
-    if (orders.data.length > 0) {
-      setLastOrder(orders.data[0] as OrderWithPaymentInfo);
-    } else {
-      setLastOrder(null);
-    }
-  }, [orders.data]);
-
-  if (orders.isLoading) return;
-
-  if (lastOrder && lastOrder.status === "ordered" && lastOrder.payment_info) {
-    // 결제 정보 보여줌
-    return (
-      <LastOrderPaymentInfoBottomBar
-        order={lastOrder as OrderWithPaymentInfo}
-      />
-    );
-  }
-
-  return (
-    <ConfirmOrderBottomBar teamId={teamId} cart={cart} setCart={setCart} />
-  );
-}
-
-function requestPayment(order: OrderWithPaymentInfo) {
-  const paymentUrl = `supertoss://send?amount=${order.final_price}&bank=${order.payment_info.bank_name}&accountNo=${order.payment_info.bank_account_no}&origin=qr`;
-
-  setTimeout(() => {
-    document.execCommand(
-      "copy",
-      false,
-      `${order.payment_info.bank_name} ${order.payment_info.bank_account_no} ${order.final_price}원`
-    );
-    toast.success(
-      "계좌번호 복사 완료! 이체 앱으로 이동하여 결제를 완료해주세요."
-    );
-  }, 100);
-
-  window.location.href = paymentUrl;
-}
-
-function LastOrderPaymentInfoBottomBar({
-  order,
-}: {
-  order: OrderWithPaymentInfo;
-}) {
-  return (
-    <div className="fixed bottom-0 left-0 right-0 w-full h-[73px] bg-white border-t border-gray-200 flex items-center px-4 z-10">
-      <div className="flex items-center gap-2">
-        <span className="text-[15px] font-sf-pro">주문 완료</span>
-      </div>
-
-      <div className="flex-1" />
-
-      <div className="flex-col items-center gap-2">
-        <span className="text-[15px] font-sf-pro">
-          총 {order.final_price.toLocaleString()}원
-        </span>
-        {order.total_price !== order.final_price && (
-          <p className="text-xs text-gray-500 mt-0.5">{`(${
-            order.total_price - order.final_price
-          }원 빼드렸어요!)`}</p>
-        )}
-      </div>
-
-      {order.status === "ordered" ? (
-        <>
-          <Button
-            className="ml-4"
-            size="sm"
-            variant="outline"
-            onClick={() => requestPayment(order)}
-          >
-            이체하기
-          </Button>
-        </>
-      ) : order.status === "paid" ? (
-        <Button className="ml-4" size="sm" variant="outline" disabled>
-          결제 완료! 조리중입니다
-        </Button>
-      ) : null}
-    </div>
-  );
-}
-
-function ConfirmOrderBottomBar({
-  teamId,
-  cart,
-  setCart,
-}: {
-  teamId: string;
-  cart: CartItem[];
-  setCart: (cart: CartItem[]) => void;
-}) {
-  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce(
-    (sum, item) => sum + item.menu.price * item.quantity,
-    0
-  );
-
-  const createOrder = useCreateOrder(teamId);
-  const invalidateOrders = useTeamOrdersInvalidate(teamId);
-
-  const handleConfirmOrder = async () => {
-    try {
-      const order = await createOrder.mutateAsync({
-        ordered_menus: cart.map((item) => ({
-          menu_id: item.menuId,
-          amount: item.quantity,
-        })),
-      });
-
-      setCart([]);
-
-      console.log("주문 및 결제 정보:", order);
-      invalidateOrders();
-      toast.success("주문이 완료되었습니다!");
-      requestPayment(order);
-    } catch (error) {
-      console.error("주문 실패:", error);
-      toast.error("주문 처리 중 오류가 발생했습니다.");
-    }
-  };
-  return (
-    <div className="fixed bottom-0 left-0 right-0 w-full h-[73px] bg-white border-t border-gray-200 flex items-center px-4 z-10">
-      <div className="flex items-center gap-2">
-        <span className="text-[15px] font-sf-pro">{totalItems}개</span>
-      </div>
-
-      <div className="flex-1" />
-
-      <div className="flex items-center gap-2">
-        <span className="text-[15px] font-sf-pro">
-          총 {totalPrice.toLocaleString()}원
-        </span>
-      </div>
-
-      <Button
-        className="ml-4"
-        size="sm"
-        variant="outline"
-        disabled={totalItems === 0}
-        onClick={() => setIsOrderDialogOpen(true)}
-      >
-        주문하기
-      </Button>
-
-      {/* 주문 확인 다이얼로그 */}
-      <OrderConfirmDialog
-        open={isOrderDialogOpen}
-        onOpenChange={setIsOrderDialogOpen}
-        cart={cart}
-        onCartChange={setCart}
-        onConfirmOrder={handleConfirmOrder}
-        isSubmitting={createOrder.isPending}
-      />
-    </div>
   );
 }

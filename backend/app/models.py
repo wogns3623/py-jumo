@@ -183,12 +183,12 @@ class WaitingPublic(SQLModel):
 class Teams(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     restaurant_id: uuid.UUID = Field(foreign_key="restaurants.id", index=True)
-    table_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="tables.id", index=True
-    )
+    table_id: uuid.UUID = Field(default=None, foreign_key="tables.id", index=True)
     # waiting_id: Optional[uuid.UUID] = Field(
     #     default=None, foreign_key="waitings.id", index=True
     # )
+    phone: Optional[str] = Field(index=True)
+    ended_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="teams")
@@ -199,7 +199,17 @@ class Teams(SQLModel, table=True):
 
 class TeamCreate(SQLModel):
     table_id: uuid.UUID
-    waiting_id: Optional[uuid.UUID] = None
+    # waiting_id: Optional[uuid.UUID] = None
+
+
+class TeamPublic(SQLModel):
+    id: uuid.UUID
+    table: Tables
+    ended_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class OrderStatus(str, enum.Enum):
@@ -379,3 +389,17 @@ class BankTransaction(SQLModel):
             "created_at": self.date,
             "transaction_by": self.transaction_by,
         }
+
+
+class KioskOrderCreate(OrderCreate):
+    table_id: uuid.UUID
+    phone: str
+
+
+class KioskTeamPublic(SQLModel):
+    id: uuid.UUID
+    phone: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

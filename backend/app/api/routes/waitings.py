@@ -12,7 +12,7 @@ from app.models import Waitings, WaitingCreate, WaitingFind
 router = APIRouter(prefix="/waitings", tags=["waitings"])
 
 
-@router.get("/")
+@router.get("")
 def enqueue_waitings(
     session: SessionDep, restaurant: DefaultRestaurant, waiting_data: WaitingCreate
 ) -> Waitings:
@@ -47,7 +47,7 @@ def enqueue_waitings(
     return waiting
 
 
-@router.get("/")
+@router.get("")
 def read_watings(
     session: SessionDep,
     restaurant: DefaultRestaurant,
@@ -65,7 +65,7 @@ def read_watings(
     return waitings
 
 
-@router.delete("/")
+@router.delete("")
 def cancel_waiting(
     session: SessionDep,
     restaurant: DefaultRestaurant,

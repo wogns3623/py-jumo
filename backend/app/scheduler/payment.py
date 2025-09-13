@@ -42,7 +42,7 @@ def get_recent_bank_transactions() -> Sequence[BankTransaction]:
 @session_decor(engine)
 def connect_payment_to_order(session: Session) -> None:
     transaction_list = get_recent_bank_transactions()
-    print("transaction_list:", transaction_list)
+    # print("transaction_list:", transaction_list)
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     before_10_minutes = now - timedelta(minutes=10)
 

@@ -47,7 +47,7 @@ def init_db(session: Session) -> None:
 
     # tables
     session.add_all(
-        [Tables(no=i, restaurant_id=restaurant.id) for i in range(1, 35)],
+        [Tables(no=i, restaurant_id=restaurant.id) for i in range(0, 35)],
     )
 
     # menus

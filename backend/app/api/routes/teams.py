@@ -8,6 +8,7 @@ from app.api.deps import SessionDep, DefaultRestaurant
 from app.core.config import settings
 from app.models import (
     Teams,
+    TeamPublic,
     TeamCreate,
     Orders,
     OrderCreate,
@@ -20,13 +21,21 @@ from app.models import (
 router = APIRouter(prefix="/teams", tags=["teams"])
 
 
-@router.post("/")
+@router.post("", response_model=TeamPublic)
 def create_team(
     session: SessionDep, restaurant: DefaultRestaurant, team_data: TeamCreate
-) -> Teams:
-    """
-    Create new item.
-    """
+):
+    exist_team = session.exec(
+        select(Teams).where(
+            Teams.restaurant_id == restaurant.id,
+            Teams.table_id == team_data.table_id,
+            Teams.ended_at == None,
+        )
+    ).first()
+
+    if exist_team:
+        return exist_team
+
     team = Teams.model_validate(team_data, update={"restaurant_id": restaurant.id})
     session.add(team)
     session.commit()
@@ -34,7 +43,7 @@ def create_team(
     return team
 
 
-@router.get("/{team_id}/orders/", tags=["orders"], response_model=Sequence[OrderPublic])
+@router.get("/{team_id}/orders", tags=["orders"], response_model=Sequence[OrderPublic])
 def read_orders_by_team(
     session: SessionDep,
     restaurant: DefaultRestaurant,
@@ -59,7 +68,7 @@ def read_orders_by_team(
     ]
 
 
-@router.post("/{team_id}/orders/", tags=["orders"])
+@router.post("/{team_id}/orders", tags=["orders"])
 def create_order(
     session: SessionDep,
     restaurant: DefaultRestaurant,

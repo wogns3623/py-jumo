@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as WaitingsImport } from './routes/waitings'
 import { Route as MenusImport } from './routes/menus'
 import { Route as LoginImport } from './routes/login'
+import { Route as KioskImport } from './routes/kiosk'
 import { Route as AdminImport } from './routes/admin'
 import { Route as IndexImport } from './routes/index'
 import { Route as AdminIndexImport } from './routes/admin/index'
@@ -39,6 +40,11 @@ const MenusRoute = MenusImport.update({
 
 const LoginRoute = LoginImport.update({
   path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const KioskRoute = KioskImport.update({
+  path: '/kiosk',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -104,6 +110,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminImport
       parentRoute: typeof rootRoute
     }
+    '/kiosk': {
+      preLoaderRoute: typeof KioskImport
+      parentRoute: typeof rootRoute
+    }
     '/login': {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
@@ -165,6 +175,7 @@ export const routeTree = rootRoute.addChildren([
     AdminWaitingsRoute,
     AdminIndexRoute,
   ]),
+  KioskRoute,
   LoginRoute,
   MenusRoute,
   WaitingsRoute,

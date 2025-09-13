@@ -1,29 +1,30 @@
-import { MenuPageInner } from "@/components/Menu/Menu.page";
+import { KioskPageInner } from "@/components/Kiosk/Kiosk.page";
 import { Button } from "@/components/ui/button";
-import { useTeamInitialization } from "@/hooks/useTeamInitialization";
+import { uuidRegex } from "@/hooks/useTeamInitialization";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import {
   createFileRoute,
+  redirect,
   SearchSchemaInput,
   useSearch,
 } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-export const Route = createFileRoute("/menus")({
-  component: MenuPage,
+export const Route = createFileRoute("/kiosk")({
+  beforeLoad: ({ context, location }) => {
+    if (!context.auth.isAuthenticated) {
+      throw redirect({ to: "/login", search: { redirect: location.href } });
+    }
+  },
+  component: KioskPage,
   validateSearch: (search: { table?: string } & SearchSchemaInput) => {
-    return {
-      table: search.table || null,
-    };
+    return { table: search.table || null };
   },
 });
 
-function MenuPage() {
-  const { table } = useSearch({ from: "/menus" });
-
-  const { team, isInitialized, isCreatingTeam, createTeamError } =
-    useTeamInitialization(table);
+function KioskPage() {
+  const { table: tableId } = useSearch({ from: "/kiosk" });
 
   const onLoadComponent = (
     <div className="flex flex-col items-center gap-4">
@@ -32,17 +33,11 @@ function MenuPage() {
     </div>
   );
 
-  // 로딩 상태
-  if (!isInitialized || isCreatingTeam) {
-    return onLoadComponent;
-  }
-
   // 테이블 ID가 없는 경우
-  if (createTeamError) {
+  if (tableId === null || !uuidRegex.test(tableId)) {
     return (
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold">잘못된 접근입니다</h2>
-        <p>QR 코드를 통해 접근해주세요.</p>
       </div>
     );
   }
@@ -79,7 +74,7 @@ function MenuPage() {
             }}
           >
             <Suspense fallback={onLoadComponent}>
-              <MenuPageInner teamId={team.id} />
+              <KioskPageInner tableId={tableId} />
             </Suspense>
           </ErrorBoundary>
         )}

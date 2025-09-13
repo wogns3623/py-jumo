@@ -25,10 +25,14 @@ from app.models import (
     Orders,
     OrderStatus,
     OrderUpdate,
+    OrderWithPaymentInfo,
+    PaymentInfo,
     OrderedMenus,
     OrderedMenuUpdate,
     MenuOrderStatus,
     Payments,
+    KioskOrderCreate,
+    Teams,
 )
 
 
@@ -89,7 +93,7 @@ def update_menu(
     return menu
 
 
-@router.get("/tables/", tags=["tables"])
+@router.get("/tables", tags=["tables"])
 def read_tables(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -124,7 +128,7 @@ def update_table(
     return table
 
 
-@router.get("/waitings/", tags=["waitings"])
+@router.get("/waitings", tags=["waitings"])
 def read_waitings(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -260,7 +264,52 @@ def reject_waiting(
     return {"detail": "웨이팅이 거절되었습니다.", "reason": reason}
 
 
-@router.get("/orders/", tags=["orders"])
+@router.post("/kiosk/orders", tags=["orders"], response_model=OrderWithPaymentInfo)
+def create_kiosk_order(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    kiosk_order_data: KioskOrderCreate,
+):
+    # create team for kiosk order
+    kiosk_team = Teams(
+        restaurant_id=restaurant.id,
+        table_id=kiosk_order_data.table_id,
+        phone=kiosk_order_data.phone,
+    )
+    session.add(kiosk_team)
+    session.commit()
+    session.refresh(kiosk_team)
+
+    # create order for kiosk order
+    order = Orders(team_id=kiosk_team.id, restaurant_id=restaurant.id)
+    session.add(order)
+    session.commit()
+    session.refresh(order)
+
+    # create ordered menus for kiosk order
+    ordered_menus = [
+        OrderedMenus.model_validate(
+            ordered_menu_data,
+            update={"order_id": order.id, "restaurant_id": restaurant.id},
+        )
+        for ordered_menu_data in kiosk_order_data.ordered_menus
+    ]
+    session.add_all(ordered_menus)
+    session.commit()
+    session.refresh(order)
+
+    return OrderWithPaymentInfo.model_validate(
+        order,
+        update={
+            "payment_info": PaymentInfo(
+                bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+            )
+        },
+    )
+
+
+@router.get("/orders", tags=["orders"])
 def read_orders(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -412,7 +461,7 @@ def reject_menu_order(
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
 
 
-@router.get("/payments/", tags=["payments"])
+@router.get("/payments", tags=["payments"])
 def read_payments(
     session: SessionDep,
     admin: CurrentAdmin,

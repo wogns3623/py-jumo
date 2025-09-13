@@ -31,6 +31,10 @@ const data = {
       url: "/admin/tables",
     },
     {
+      title: "키오스크 열기",
+      url: "/kiosk?table=70c60d6a-4f19-47ac-a218-b0cc30820c3c",
+    },
+    {
       title: "설정",
       url: "/admin/settings",
     },
