@@ -27,10 +27,15 @@ export function useTeamOrders(teamId: string) {
         return response;
       } catch (error) {
         // 404 오류인 경우 (팀이 종료되었거나 찾을 수 없는 경우)
-        if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
+        if (
+          error &&
+          typeof error === "object" &&
+          "status" in error &&
+          error.status === 404
+        ) {
           // 로컬 스토리지의 팀 정보 삭제
-          localStorage.removeItem('team');
-          throw new Error('팀 세션이 종료되었습니다.');
+          localStorage.removeItem("team");
+          throw new Error("팀 세션이 종료되었습니다.");
         }
         throw error;
       }

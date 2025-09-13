@@ -292,6 +292,12 @@ class OrderCreate(SQLModel):
     ordered_menus: list["OrderedMenuCreate"]
 
 
+class TableOrderCreate(SQLModel):
+    """테이블 ID로 직접 주문 생성 (팀도 함께 생성)"""
+    table_id: uuid.UUID
+    ordered_menus: list["OrderedMenuCreate"]
+
+
 class OrderUpdate(SQLModel):
     payment_id: Optional[uuid.UUID] = None
     finished_at: Optional[datetime] = None
@@ -319,6 +325,12 @@ class OrderPublic(OrderBase):
 
 
 class OrderWithPaymentInfo(OrderPublic):
+    payment_info: PaymentInfo
+
+
+class OrderWithTeamInfo(OrderPublic):
+    """주문과 팀 정보를 함께 반환하는 모델"""
+    team: "TeamPublic"
     payment_info: PaymentInfo
 
 
@@ -425,6 +437,30 @@ class BankTransaction(SQLModel):
 class KioskOrderCreate(OrderCreate):
     table_id: uuid.UUID
     phone: str
+
+
+# 새로운 DirectOrder 모델들
+class DirectOrderCreate(SQLModel):
+    table_id: uuid.UUID
+    ordered_menus: list[OrderedMenuCreate]
+
+
+class OrderWithTeamInfo(SQLModel):
+    id: uuid.UUID
+    no: int
+    status: OrderStatus
+    total_price: int
+    final_price: int
+    team: TeamPublic
+    payment_info: PaymentInfo
+    ordered_menus: list[OrderedMenuPublic]
+    payment: Optional["Payments"] = None
+    reject_reason: Optional[str] = None
+    finished_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class KioskTeamPublic(SQLModel):

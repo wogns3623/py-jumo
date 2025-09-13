@@ -2,27 +2,25 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 
-import type { OrderWithPaymentInfo } from "@/client";
+import type { OrderWithTeamInfo } from "@/client";
 import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
 import { Button } from "@/components/ui/button";
-import { useCreateOrder } from "@/hooks/useOrder";
-import { useTeamOrders, useTeamOrdersInvalidate } from "@/hooks/useTeam";
+import { useCreateTableOrder } from "@/hooks/useOrder";
 import type { CartItem } from "@/types/cart";
 import { requestPayment } from "@/utils/payment";
 
 export function OrderBottomBar({
-  teamId,
+  tableId,
   cart,
   setCart,
 }: {
-  teamId: string;
+  tableId: string;
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
 }) {
-  const orders = useTeamOrders(teamId);
   const [storedLastOrder, setStoredLastOrder] =
-    useLocalStorage<OrderWithPaymentInfo | null>("last_order", null);
-  const [lastOrder, setLastOrder] = useState<OrderWithPaymentInfo | null>(null);
+    useLocalStorage<OrderWithTeamInfo | null>("last_order", null);
+  const [lastOrder, setLastOrder] = useState<OrderWithTeamInfo | null>(null);
 
   useEffect(() => {
     if (!lastOrder) return;
@@ -46,39 +44,29 @@ export function OrderBottomBar({
       }
       setStoredLastOrder(lastOrder);
     }
-  }, [lastOrder, storedLastOrder]);
+  }, [lastOrder, storedLastOrder, setStoredLastOrder]);
 
-  useEffect(() => {
-    if (!orders.data) return;
-    // console.log("Orders data updated:", orders.data);
-
-    if (orders.data.length > 0) {
-      setLastOrder(orders.data[0] as OrderWithPaymentInfo);
-    } else {
-      setLastOrder(null);
-    }
-  }, [orders.data]);
-
-  if (orders.isLoading) return;
+  // 테이블 기반에서는 주문 조회 로직 제거
+  // 주문 후 응답으로 받은 정보만 사용
 
   if (lastOrder && lastOrder.status === "ordered" && lastOrder.payment_info) {
     // 결제 정보 보여줌
     return (
       <LastOrderPaymentInfoBottomBar
-        order={lastOrder as OrderWithPaymentInfo}
+        order={lastOrder as OrderWithTeamInfo}
       />
     );
   }
 
   return (
-    <ConfirmOrderBottomBar teamId={teamId} cart={cart} setCart={setCart} />
+    <ConfirmOrderBottomBar tableId={tableId} cart={cart} setCart={setCart} setLastOrder={setLastOrder} />
   );
 }
 
 function LastOrderPaymentInfoBottomBar({
   order,
 }: {
-  order: OrderWithPaymentInfo;
+  order: OrderWithTeamInfo;
 }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full h-[73px] bg-white border-t border-gray-200 flex items-center px-4 z-10">
@@ -105,7 +93,7 @@ function LastOrderPaymentInfoBottomBar({
             className="ml-4"
             size="sm"
             variant="outline"
-            onClick={() => requestPayment(order)}
+            onClick={() => requestPayment(order as any)}
           >
             이체하기
           </Button>
@@ -120,13 +108,15 @@ function LastOrderPaymentInfoBottomBar({
 }
 
 function ConfirmOrderBottomBar({
-  teamId,
+  tableId,
   cart,
   setCart,
+  setLastOrder,
 }: {
-  teamId: string;
+  tableId: string;
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
+  setLastOrder: (order: OrderWithTeamInfo | null) => void;
 }) {
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
 
@@ -136,12 +126,12 @@ function ConfirmOrderBottomBar({
     0
   );
 
-  const createOrder = useCreateOrder(teamId);
-  const invalidateOrders = useTeamOrdersInvalidate(teamId);
+  const createOrder = useCreateTableOrder();
 
   const handleConfirmOrder = async () => {
     try {
       const order = await createOrder.mutateAsync({
+        table_id: tableId,
         ordered_menus: cart.map((item) => ({
           menu_id: item.menuId,
           amount: item.quantity,
@@ -149,24 +139,15 @@ function ConfirmOrderBottomBar({
       });
 
       setCart([]);
+      setLastOrder(order);
 
       console.log("주문 및 결제 정보:", order);
-      invalidateOrders();
       toast.success("주문이 완료되었습니다!");
-      requestPayment(order);
+      requestPayment(order as any);
     } catch (error) {
       console.error("주문 실패:", error);
-      
-      // 404 오류인 경우 (팀이 종료되었거나 찾을 수 없는 경우)
-      if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
-        toast.error("테이블 세션이 종료되었습니다. 새로 QR 코드를 스캔해주세요.");
-        // 로컬 스토리지의 팀 정보 삭제
-        localStorage.removeItem('team');
-        // 페이지 새로고침하여 새 팀 생성 유도
-        window.location.reload();
-      } else {
-        toast.error("주문 처리 중 오류가 발생했습니다.");
-      }
+
+      toast.error("주문 처리 중 오류가 발생했습니다.");
     }
   };
   return (

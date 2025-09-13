@@ -82,7 +82,7 @@ def create_order(
     ).first()
     if not team:
         raise HTTPException(status_code=404, detail="Active team not found")
-    
+
     order = Orders(team_id=team_id, restaurant_id=restaurant.id)
     session.add(order)
     session.commit()
@@ -96,12 +96,12 @@ def create_order(
         for ordered_menu_data in order_data.ordered_menus
     ]
     session.add_all(ordered_menus)
-    
+
     # 테이블이 idle 상태라면 in_use로 변경
     if team.table.status == TableStatus.idle:
         team.table.status = TableStatus.in_use
         session.add(team.table)
-    
+
     session.commit()
     session.refresh(order)
 

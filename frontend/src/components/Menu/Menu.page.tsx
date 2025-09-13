@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import type { MenuPublic } from "@/client";
@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMenusSuspense } from "@/hooks/useMenu";
 import useCustomToast from "@/hooks/useCustomToast";
-import { useTeamOrders } from "@/hooks/useTeam";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
 import { OrderBottomBar } from "./OrderBar";
@@ -186,24 +185,10 @@ export function MenuSection({
   );
 }
 
-export function MenuPageInner({ teamId }: { teamId: string | null }) {
+export function MenuPageInner({ tableId }: { tableId: string | null }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useLocalStorage<CartItem[]>("cart", []);
   const { showErrorToast } = useCustomToast();
-
-  // 팀 주문 내역을 조회하여 팀 상태 모니터링
-  const { error: teamOrdersError } = useTeamOrders(teamId || "");
-
-  // 팀 세션이 종료된 경우 처리
-  useEffect(() => {
-    if (teamOrdersError && teamOrdersError.message.includes('팀 세션이 종료되었습니다')) {
-      showErrorToast("테이블 세션이 종료되었습니다. 새로 QR 코드를 스캔해주세요.");
-      // 페이지 새로고침하여 새 팀 생성 유도
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    }
-  }, [teamOrdersError, showErrorToast]);
 
   // 품절된 메뉴를 장바구니에서 자동 제거
   const validCart = cart.filter((item) => {
@@ -275,8 +260,8 @@ export function MenuPageInner({ teamId }: { teamId: string | null }) {
       </div>
 
       {/* 하단 주문 바 */}
-      {teamId && (
-        <OrderBottomBar teamId={teamId} cart={validCart} setCart={setCart} />
+      {tableId && (
+        <OrderBottomBar tableId={tableId} cart={validCart} setCart={setCart} />
       )}
     </Fragment>
   );

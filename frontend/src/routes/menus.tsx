@@ -1,6 +1,6 @@
 import { MenuPageInner } from "@/components/Menu/Menu.page";
 import { Button } from "@/components/ui/button";
-import { useTeamInitialization } from "@/hooks/useTeamInitialization";
+import { useTableSession } from "@/hooks/useTableSession";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import {
   createFileRoute,
@@ -22,8 +22,7 @@ export const Route = createFileRoute("/menus")({
 function MenuPage() {
   const { table } = useSearch({ from: "/menus" });
 
-  const { team, isInitialized, isCreatingTeam, createTeamError } =
-    useTeamInitialization(table);
+  const { tableId, isValidTable } = useTableSession(table);
 
   const onLoadComponent = (
     <div className="flex flex-col items-center gap-4">
@@ -32,13 +31,8 @@ function MenuPage() {
     </div>
   );
 
-  // 로딩 상태
-  if (!isInitialized || isCreatingTeam) {
-    return onLoadComponent;
-  }
-
-  // 테이블 ID가 없는 경우
-  if (createTeamError) {
+  // 테이블 ID가 유효하지 않은 경우
+  if (!isValidTable) {
     return (
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold">잘못된 접근입니다</h2>
@@ -79,7 +73,7 @@ function MenuPage() {
             }}
           >
             <Suspense fallback={onLoadComponent}>
-              <MenuPageInner teamId={team?.id} />
+              <MenuPageInner tableId={tableId} />
             </Suspense>
           </ErrorBoundary>
         )}

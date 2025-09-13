@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminServeOrderedMenuData, AdminServeOrderedMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminServeOrderedMenuData, AdminServeOrderedMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -144,26 +144,6 @@ export class AdminService {
             url: '/api/v1/admin/waitings/dequeue',
             query: {
                 dequeue_count: data.dequeueCount
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Enter Waiting
-     * @param data The data for the request.
-     * @param data.waitingId
-     * @returns Waitings 웨이팅 입장 처리
-     * @throws ApiError
-     */
-    public static enterWaiting(data: AdminEnterWaitingData): CancelablePromise<AdminEnterWaitingResponse> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/admin/waitings/{waiting_id}/enter',
-            path: {
-                waiting_id: data.waitingId
             },
             errors: {
                 422: 'Validation Error'
@@ -640,6 +620,47 @@ export class OrdersService {
     }
     
     /**
+     * Create Order
+     * 테이블 ID로 직접 주문 생성 (필요시 팀도 함께 생성)
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns OrderWithTeamInfo Successful Response
+     * @throws ApiError
+     */
+    public static createOrder(data: OrdersCreateOrderData): CancelablePromise<OrdersCreateOrderResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/orders',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Orders By Table
+     * 테이블의 모든 주문 내역 조회 (활성 팀의 주문들)
+     * @param data The data for the request.
+     * @param data.tableId
+     * @returns Orders Successful Response
+     * @throws ApiError
+     */
+    public static readOrdersByTable(data: OrdersReadOrdersByTableData): CancelablePromise<OrdersReadOrdersByTableResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/orders/table/{table_id}',
+            path: {
+                table_id: data.tableId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Read Orders By Team
      * @param data The data for the request.
      * @param data.teamId
@@ -932,26 +953,6 @@ export class WaitingsService {
             url: '/api/v1/admin/waitings/dequeue',
             query: {
                 dequeue_count: data.dequeueCount
-            },
-            errors: {
-                422: 'Validation Error'
-            }
-        });
-    }
-    
-    /**
-     * Enter Waiting
-     * @param data The data for the request.
-     * @param data.waitingId
-     * @returns Waitings 웨이팅 입장 처리
-     * @throws ApiError
-     */
-    public static adminEnterWaiting(data: AdminEnterWaitingData): CancelablePromise<AdminEnterWaitingResponse> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/admin/waitings/{waiting_id}/enter',
-            path: {
-                waiting_id: data.waitingId
             },
             errors: {
                 422: 'Validation Error'

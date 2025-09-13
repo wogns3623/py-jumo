@@ -273,23 +273,21 @@ def create_kiosk_order(
     restaurant: DefaultRestaurant,
     kiosk_order_data: KioskOrderCreate,
 ):
-    # create team for kiosk order
+    # 키오스크는 항상 새로운 독립적인 팀을 생성
     kiosk_team = Teams(
         restaurant_id=restaurant.id,
         table_id=kiosk_order_data.table_id,
         phone=kiosk_order_data.phone,
     )
     session.add(kiosk_team)
-    session.commit()
-    session.refresh(kiosk_team)
+    session.flush()  # team.id 생성을 위해 flush
 
-    # create order for kiosk order
+    # 주문 생성
     order = Orders(team_id=kiosk_team.id, restaurant_id=restaurant.id)
     session.add(order)
-    session.commit()
-    session.refresh(order)
+    session.flush()  # order.id 생성을 위해 flush
 
-    # create ordered menus for kiosk order
+    # 주문 메뉴들 생성
     ordered_menus = [
         OrderedMenus.model_validate(
             ordered_menu_data,
@@ -298,6 +296,14 @@ def create_kiosk_order(
         for ordered_menu_data in kiosk_order_data.ordered_menus
     ]
     session.add_all(ordered_menus)
+    
+    # 테이블 상태 업데이트 (idle -> in_use)
+    table = session.get(Tables, kiosk_order_data.table_id)
+    if table and table.status == TableStatus.idle:
+        table.status = TableStatus.in_use
+        session.add(table)
+    
+    # 모든 변경사항 커밋
     session.commit()
     session.refresh(order)
 
@@ -331,7 +337,7 @@ def read_orders(
     else:
         # 완료/거절된 주문이나 전체 조회는 모든 팀 포함
         statement = select(Orders).where(Orders.restaurant_id == restaurant.id)
-    
+
     if status == AllFilter.all:
         pass
     elif status == OrderStatus.ordered:

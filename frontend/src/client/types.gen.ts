@@ -154,6 +154,21 @@ export type OrderWithPaymentInfo = {
     payment_info: PaymentInfo;
 };
 
+export type OrderWithTeamInfo = {
+    id: string;
+    no: number;
+    status: OrderStatus;
+    total_price: number;
+    final_price: number;
+    team: TeamPublic;
+    payment_info: PaymentInfo;
+    ordered_menus: Array<OrderedMenuPublic>;
+    payment?: (Payments | null);
+    reject_reason?: (string | null);
+    finished_at?: (string | null);
+    created_at: string;
+};
+
 export type PaymentInfo = {
     bank_name: string;
     bank_account_no: string;
@@ -181,6 +196,14 @@ export type Restaurants = {
 export type RestaurantUpdate = {
     break_start_time?: (string | null);
     break_end_time?: (string | null);
+};
+
+/**
+ * 테이블 ID로 직접 주문 생성 (팀도 함께 생성)
+ */
+export type TableOrderCreate = {
+    table_id: string;
+    ordered_menus: Array<OrderedMenuCreate>;
 };
 
 export type Tables = {
@@ -287,12 +310,6 @@ export type AdminDequeueWaitingsData = {
 
 export type AdminDequeueWaitingsResponse = (Array<Waitings>);
 
-export type AdminEnterWaitingData = {
-    waitingId: string;
-};
-
-export type AdminEnterWaitingResponse = (Waitings);
-
 export type AdminRejectWaitingData = {
     reason?: string;
     waitingId: string;
@@ -371,6 +388,18 @@ export type AdminRefundPaymentData = {
 export type AdminRefundPaymentResponse = (Payments);
 
 export type MenusReadMenusResponse = (Array<MenuPublic>);
+
+export type OrdersCreateOrderData = {
+    requestBody: TableOrderCreate;
+};
+
+export type OrdersCreateOrderResponse = (OrderWithTeamInfo);
+
+export type OrdersReadOrdersByTableData = {
+    tableId: string;
+};
+
+export type OrdersReadOrdersByTableResponse = (Array<Orders>);
 
 export type TeamsReadOrdersByTeamData = {
     teamId: string;
