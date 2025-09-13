@@ -12,7 +12,7 @@ from app.models import Waitings, WaitingCreate, WaitingFind
 router = APIRouter(prefix="/waitings", tags=["waitings"])
 
 
-@router.get("")
+@router.post("")
 def enqueue_waitings(
     session: SessionDep, restaurant: DefaultRestaurant, waiting_data: WaitingCreate
 ) -> Waitings:

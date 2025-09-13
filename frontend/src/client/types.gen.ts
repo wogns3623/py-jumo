@@ -380,6 +380,12 @@ export type WaitingsReadWatingsData = {
 
 export type WaitingsReadWatingsResponse = (Array<Waitings>);
 
+export type WaitingsEnqueueWaitingsData = {
+    requestBody: WaitingCreate;
+};
+
+export type WaitingsEnqueueWaitingsResponse = (Waitings);
+
 export type WaitingsCancelWaitingData = {
     requestBody: WaitingFind;
 };
