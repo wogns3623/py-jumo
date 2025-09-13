@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminEnterWaitingData, AdminEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminServeOrderedMenuData, AdminServeOrderedMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, MenusReadMenusResponse, TeamsReadOrdersByTeamData, TeamsReadOrdersByTeamResponse, TeamsCreateOrderData, TeamsCreateOrderResponse, RestaurantsReadRestaurantsResponse, TeamsCreateTeamData, TeamsCreateTeamResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -345,6 +345,40 @@ export class AdminService {
             },
             query: {
                 reason: data.reason
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Cooked Ordered Menus
+     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)
+     * @returns OrderedMenuForServing Successful Response
+     * @throws ApiError
+     */
+    public static getCookedOrderedMenus(): CancelablePromise<AdminGetCookedOrderedMenusResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/serving/ordered-menus'
+        });
+    }
+    
+    /**
+     * Serve Ordered Menu
+     * 주문 메뉴 서빙 완료 처리
+     * @param data The data for the request.
+     * @param data.orderedMenuId
+     * @returns OrderedMenus Successful Response
+     * @throws ApiError
+     */
+    public static serveOrderedMenu(data: AdminServeOrderedMenuData): CancelablePromise<AdminServeOrderedMenuResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/admin/serving/ordered-menus/{ordered_menu_id}/serve',
+            path: {
+                ordered_menu_id: data.orderedMenuId
             },
             errors: {
                 422: 'Validation Error'
@@ -696,6 +730,43 @@ export class RestaurantsService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/restaurants'
+        });
+    }
+    
+}
+
+export class ServingService {
+    /**
+     * Get Cooked Ordered Menus
+     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)
+     * @returns OrderedMenuForServing Successful Response
+     * @throws ApiError
+     */
+    public static adminGetCookedOrderedMenus(): CancelablePromise<AdminGetCookedOrderedMenusResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/serving/ordered-menus'
+        });
+    }
+    
+    /**
+     * Serve Ordered Menu
+     * 주문 메뉴 서빙 완료 처리
+     * @param data The data for the request.
+     * @param data.orderedMenuId
+     * @returns OrderedMenus Successful Response
+     * @throws ApiError
+     */
+    public static adminServeOrderedMenu(data: AdminServeOrderedMenuData): CancelablePromise<AdminServeOrderedMenuResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/admin/serving/ordered-menus/{ordered_menu_id}/serve',
+            path: {
+                ordered_menu_id: data.orderedMenuId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
         });
     }
     

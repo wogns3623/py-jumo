@@ -30,6 +30,8 @@ from app.models import (
     PaymentInfo,
     OrderedMenus,
     OrderedMenuUpdate,
+    OrderedMenuPublic,
+    OrderedMenuForServing,
     MenuOrderStatus,
     Payments,
     KioskOrderCreate,
@@ -513,6 +515,98 @@ def reject_menu_order(
     session.commit()
 
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
+
+
+@router.get(
+    "/serving/ordered-menus",
+    tags=["serving"],
+    response_model=Sequence[OrderedMenuForServing],
+)
+def get_cooked_ordered_menus(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+):
+    """조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)"""
+    # OrderedMenus와 관련 정보를 join하여 가져오기
+    ordered_menus_data = session.exec(
+        select(OrderedMenus, Orders, Teams, Tables)
+        .join(Orders, OrderedMenus.order_id == Orders.id)
+        .join(Teams, Orders.team_id == Teams.id)
+        .join(Tables, Teams.table_id == Tables.id)
+        .where(
+            OrderedMenus.restaurant_id == restaurant.id,
+            OrderedMenus.cook_started_at != None,  # 조리 시작된 메뉴
+            OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
+            OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
+        )
+        .order_by(col(OrderedMenus.cook_started_at).asc())  # 조리 시작 시간 순으로
+    ).all()
+
+    # 데이터 변환
+    result = []
+    for ordered_menu, order, team, table in ordered_menus_data:
+        result.append(
+            OrderedMenuForServing(
+                **ordered_menu.model_dump(),
+                order_no=order.no,
+                table_no=table.no,
+                status=ordered_menu.status,
+                menu=ordered_menu.menu,
+            )
+        )
+
+    return result
+
+
+@router.patch("/serving/ordered-menus/{ordered_menu_id}/serve", tags=["serving"])
+def serve_ordered_menu(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    ordered_menu_id: uuid.UUID,
+) -> OrderedMenus:
+    """주문 메뉴 서빙 완료 처리"""
+    ordered_menu = session.exec(
+        select(OrderedMenus).where(
+            OrderedMenus.id == ordered_menu_id,
+            OrderedMenus.restaurant_id == restaurant.id,
+        )
+    ).first()
+
+    if not ordered_menu:
+        raise HTTPException(status_code=404, detail="주문 메뉴를 찾을 수 없습니다.")
+
+    if ordered_menu.served_at is not None:
+        raise HTTPException(status_code=400, detail="이미 서빙 완료된 메뉴입니다.")
+
+    if ordered_menu.cook_started_at is None:
+        raise HTTPException(status_code=400, detail="조리가 시작되지 않은 메뉴입니다.")
+
+    if ordered_menu.reject_reason is not None:
+        raise HTTPException(status_code=400, detail="거절된 메뉴는 서빙할 수 없습니다.")
+
+    # 서빙 완료 처리
+    ordered_menu.served_at = datetime.now(timezone.utc)
+    session.add(ordered_menu)
+
+    # 주문의 모든 메뉴가 서빙 완료되었는지 확인
+    all_ordered_menus = session.exec(
+        select(OrderedMenus).where(
+            OrderedMenus.order_id == ordered_menu.order_id,
+            OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴만
+        )
+    ).all()
+
+    # 모든 메뉴가 서빙 완료되었으면 주문 완료 처리
+    if all(menu.served_at is not None for menu in all_ordered_menus):
+        ordered_menu.order.finished_at = datetime.now(timezone.utc)
+        session.add(ordered_menu.order)
+
+    session.commit()
+    session.refresh(ordered_menu)
+
+    return ordered_menu
 
 
 @router.get("/payments", tags=["payments"])

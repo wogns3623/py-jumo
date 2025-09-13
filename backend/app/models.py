@@ -373,8 +373,20 @@ class OrderedMenuUpdate(SQLModel):
 
 
 class OrderedMenuPublic(OrderedMenuBase):
+    id: uuid.UUID
     status: MenuOrderStatus
     menu: MenuPublic
+
+    class Config:
+        from_attributes = True
+
+
+class OrderedMenuForServing(OrderedMenuBase):
+    id: uuid.UUID
+    status: MenuOrderStatus
+    menu: MenuPublic
+    order_no: int
+    table_no: int
 
     class Config:
         from_attributes = True

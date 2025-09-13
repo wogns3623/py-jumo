@@ -11,6 +11,43 @@ engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 # otherwise, SQLModel might fail to initialize relationships properly
 # for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
 
+tableUuids = [
+    "bed281a1-4f6e-4295-a11f-59f691e0b318",
+    "ebabd534-9d55-4ad1-a5f3-9a4ce4681d7c",
+    "d89f5094-efd6-45a5-afd3-f8244ab897a7",
+    "68cadcec-e914-4973-9ce0-c5b2e8f48471",
+    "ed07098d-861d-43de-97e0-592e60e795d7",
+    "14c897b4-1e51-431c-8c93-4d914bfc1258",
+    "cfc6ad29-b764-4f63-8cba-0c45485acbaf",
+    "0029a001-7c08-4800-b64a-6d4467af0673",
+    "380bce78-c0c0-4283-b07b-9038500a4e9d",
+    "4da93e3d-6de9-4d28-a924-be336095eb66",
+    "3c834dc4-621b-428b-98b1-30a78f15db4c",
+    "3c71eba3-019c-4ef1-a4c1-0bb0f9a498f3",
+    "d9a56bcf-4820-4f34-99d0-ddf4c7a773a5",
+    "a6dd061c-62f7-4148-9dbd-a030d80797a4",
+    "7c928e36-f123-40bd-bad7-86ac9e2decf9",
+    "64a84a69-b94d-48dd-8d08-378bb6430327",
+    "b563f3b2-14c8-4e32-b092-b30d530ade0c",
+    "b4ff7135-c42e-459b-a5c8-2fe978b64427",
+    "71454676-03de-4a53-9d1f-8884e6c1355f",
+    "ab8c5dba-42fa-4e82-b3df-aa03f46b3502",
+    "f6d37260-6f45-407a-ace8-9f30f3709eab",
+    "917266a8-c1af-4f0a-a2ac-8c7deaf55873",
+    "bbe94577-7f91-4358-91ac-adeb673259ee",
+    "ac7f7dc9-2431-483e-add6-9944e1b1e9ad",
+    "59f86a06-ca2e-4888-8714-cee374da6195",
+    "7e8b480f-8529-4caf-a02a-13da264216db",
+    "3f9d4ace-3ffe-4e89-aa95-477ddfc9c7e1",
+    "7c6a2fcb-205b-46f9-a42c-54ae121866d4",
+    "fb1636b8-006d-4d87-8d89-1037f15b3208",
+    "a0f435b7-b8f6-4a7a-a7b6-8b95d8af4bca",
+    "96e6bc5d-319a-4b5b-ad3f-109904dff9c0",
+    "b917d43b-46d5-412a-babd-52a91821ed82",
+    "f051230c-e3d7-4b8c-9702-a8577eafc6a5",
+    "70c60d6a-4f19-47ac-a218-b0cc30820c3c",
+]
+
 
 def init_db(session: Session) -> None:
     # Tables should be created with Alembic migrations
@@ -47,7 +84,10 @@ def init_db(session: Session) -> None:
 
     # tables
     session.add_all(
-        [Tables(no=i, restaurant_id=restaurant.id) for i in range(0, 35)],
+        [
+            Tables(id=table_id, no=i, restaurant_id=restaurant.id)
+            for i, table_id in enumerate(tableUuids, start=1)
+        ],
     )
 
     # menus

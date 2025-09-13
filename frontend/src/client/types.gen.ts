@@ -67,11 +67,24 @@ export type OrderedMenuCreate = {
     amount: number;
 };
 
+export type OrderedMenuForServing = {
+    amount: number;
+    reject_reason?: (string | null);
+    cook_started_at?: (string | null);
+    served_at?: (string | null);
+    id: string;
+    status: MenuOrderStatus;
+    menu: MenuPublic;
+    order_no: number;
+    table_no: number;
+};
+
 export type OrderedMenuPublic = {
     amount: number;
     reject_reason?: (string | null);
     cook_started_at?: (string | null);
     served_at?: (string | null);
+    id: string;
     status: MenuOrderStatus;
     menu: MenuPublic;
 };
@@ -340,6 +353,14 @@ export type AdminRejectMenuOrderData = {
 export type AdminRejectMenuOrderResponse = ({
     [key: string]: unknown;
 });
+
+export type AdminGetCookedOrderedMenusResponse = (Array<OrderedMenuForServing>);
+
+export type AdminServeOrderedMenuData = {
+    orderedMenuId: string;
+};
+
+export type AdminServeOrderedMenuResponse = (OrderedMenus);
 
 export type AdminReadPaymentsResponse = (Array<Payments>);
 

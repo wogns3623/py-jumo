@@ -21,6 +21,7 @@ import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as AdminWaitingsImport } from './routes/admin/waitings'
 import { Route as AdminTablesImport } from './routes/admin/tables'
 import { Route as AdminSettingsImport } from './routes/admin/settings'
+import { Route as AdminServingImport } from './routes/admin/serving'
 import { Route as AdminPaymentsImport } from './routes/admin/payments'
 import { Route as AdminOrdersImport } from './routes/admin/orders'
 import { Route as AdminMenusImport } from './routes/admin/menus'
@@ -75,6 +76,11 @@ const AdminTablesRoute = AdminTablesImport.update({
 
 const AdminSettingsRoute = AdminSettingsImport.update({
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+
+const AdminServingRoute = AdminServingImport.update({
+  path: '/serving',
   getParentRoute: () => AdminRoute,
 } as any)
 
@@ -142,6 +148,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPaymentsImport
       parentRoute: typeof AdminImport
     }
+    '/admin/serving': {
+      preLoaderRoute: typeof AdminServingImport
+      parentRoute: typeof AdminImport
+    }
     '/admin/settings': {
       preLoaderRoute: typeof AdminSettingsImport
       parentRoute: typeof AdminImport
@@ -170,6 +180,7 @@ export const routeTree = rootRoute.addChildren([
     AdminMenusRoute,
     AdminOrdersRoute,
     AdminPaymentsRoute,
+    AdminServingRoute,
     AdminSettingsRoute,
     AdminTablesRoute,
     AdminWaitingsRoute,
