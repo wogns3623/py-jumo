@@ -1,5 +1,5 @@
-import { AdminService, OrdersService, TeamsService } from "@/client";
-import type { KioskOrderCreate, OrderCreate, TableOrderCreate } from "@/client";
+import { AdminService, OrdersService } from "@/client";
+import type { KioskOrderCreate, TableOrderCreate } from "@/client";
 import { useMutation, useQuery, UseQueryOptions } from "@tanstack/react-query";
 
 export function useOrder(
@@ -16,21 +16,7 @@ export function useOrder(
   });
 }
 
-// 주문 생성 훅 (기존 팀 기반)
-export function useCreateOrder(teamId: string) {
-  return useMutation({
-    mutationKey: ["create-order", teamId],
-    mutationFn: async (data: OrderCreate) => {
-      const response = await TeamsService.createOrder({
-        teamId,
-        requestBody: data,
-      });
-      return response;
-    },
-  });
-}
-
-// 새로운 테이블 기반 주문 생성 훅 (팀도 함께 생성)
+// 테이블 기반 주문 생성 훅 (팀도 함께 생성)
 export function useCreateTableOrder() {
   return useMutation({
     mutationKey: ["create-table-order"],
