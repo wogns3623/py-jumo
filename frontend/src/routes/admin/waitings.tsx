@@ -62,19 +62,6 @@ function Page() {
     refetchInterval: 5000, // 5초마다 새로고침
   });
 
-  // 웨이팅 입장 처리
-  const enterWaitingMutation = useMutation({
-    mutationFn: (waitingId: string) => AdminService.enterWaiting({ waitingId }),
-    onSuccess: () => {
-      toast.success("웨이팅 입장 처리가 완료되었습니다.");
-      queryClient.invalidateQueries({ queryKey: ["admin", "waitings"] });
-    },
-    onError: (error) => {
-      console.error("웨이팅 입장 처리 실패:", error);
-      toast.error("웨이팅 입장 처리에 실패했습니다.");
-    },
-  });
-
   // 웨이팅 거절 처리
   const rejectWaitingMutation = useMutation({
     mutationFn: ({
@@ -345,16 +332,6 @@ function Page() {
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button
-                                  onClick={() =>
-                                    enterWaitingMutation.mutate(waiting.id!)
-                                  }
-                                  disabled={enterWaitingMutation.isPending}
-                                  size="sm"
-                                >
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  입장
-                                </Button>
-                                <Button
                                   onClick={() => handleRejectWaiting(waiting)}
                                   disabled={rejectWaitingMutation.isPending}
                                   variant="destructive"
@@ -412,17 +389,6 @@ function Page() {
                           </div>
 
                           <div className="flex gap-2">
-                            <Button
-                              onClick={() =>
-                                enterWaitingMutation.mutate(waiting.id!)
-                              }
-                              disabled={enterWaitingMutation.isPending}
-                              size="sm"
-                              className="flex-1"
-                            >
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              입장
-                            </Button>
                             <Button
                               onClick={() => handleRejectWaiting(waiting)}
                               disabled={rejectWaitingMutation.isPending}

@@ -219,39 +219,6 @@ def dequeue_waitings(
     return waitings_to_be_processed
 
 
-@router.patch(
-    "/waitings/{waiting_id}/enter",
-    tags=["waitings"],
-    response_description="웨이팅 입장 처리",
-)
-def enter_waiting(
-    session: SessionDep,
-    admin: CurrentAdmin,
-    restaurant: DefaultRestaurant,
-    waiting_id: uuid.UUID,
-) -> Waitings:
-    waiting = session.exec(
-        select(Waitings).where(
-            Waitings.id == waiting_id,
-            Waitings.restaurant_id == restaurant.id,
-        )
-    ).first()
-    if not waiting:
-        raise HTTPException(status_code=404, detail="웨이팅을 찾을 수 없습니다.")
-    if waiting.entered_at:
-        raise HTTPException(status_code=400, detail="이미 입장한 웨이팅입니다.")
-    if waiting.rejected_at:
-        raise HTTPException(
-            status_code=400, detail="이미 거절된 웨이팅은 입장이 불가능합니다."
-        )
-    waiting.entered_at = datetime.now(timezone.utc)
-    session.add(waiting)
-    session.commit()
-    session.refresh(waiting)
-
-    return waiting
-
-
 @router.delete(
     "/waitings/{waiting_id}",
     tags=["waitings"],
