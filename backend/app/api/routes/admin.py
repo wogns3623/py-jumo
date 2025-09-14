@@ -3,7 +3,7 @@ import uuid
 from typing import Union, Sequence
 
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select, col, or_, func
 
 from app.api.deps import SessionDep, AdminLoginForm, CurrentAdmin, DefaultRestaurant
@@ -17,6 +17,7 @@ from app.models import (
     Menus,
     MenuUpdate,
     MenuCookingQueue,
+    MenuSalesStats,
     Tables,
     TableStatus,
     TableUpdate,
@@ -807,3 +808,82 @@ def refund_payment(
     session.refresh(payment)
 
     return payment
+
+
+@router.get("/menu-sales-stats", tags=["analytics"])
+def get_menu_sales_stats(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    days: int = Query(default=30, description="조회할 일수 (기본 30일)"),
+) -> list[MenuSalesStats]:
+    """메뉴별 판매 통계 조회"""
+    from datetime import datetime, timezone, timedelta
+
+    # 조회 기간 설정
+    end_date = datetime.now(timezone.utc)
+    start_date = end_date - timedelta(days=days)
+
+    # 해당 레스토랑의 모든 메뉴 조회
+    menus = session.exec(
+        select(Menus).where(Menus.restaurant_id == restaurant.id)
+    ).all()
+
+    menu_stats = []
+
+    for menu in menus:
+        # 각 메뉴별로 주문된 OrderedMenus 조회
+        ordered_menus_query = (
+            select(OrderedMenus)
+            .join(Orders)
+            .where(
+                OrderedMenus.menu_id == menu.id,
+                Orders.created_at >= start_date,
+                Orders.created_at <= end_date,
+            )
+        )
+
+        ordered_menus = session.exec(ordered_menus_query).all()
+
+        # 통계 계산
+        total_ordered = len(ordered_menus)
+        total_served = sum(1 for om in ordered_menus if om.served_at is not None)
+        total_rejected = sum(1 for om in ordered_menus if om.reject_reason is not None)
+        total_revenue = sum(
+            menu.price for om in ordered_menus if om.served_at is not None
+        )
+        avg_daily_sales = total_served / days if days > 0 else 0
+
+        # 마지막 주문 시간 찾기
+        last_ordered_at = None
+        if ordered_menus:
+            last_orders = session.exec(
+                select(Orders.created_at)
+                .join(OrderedMenus)
+                .where(OrderedMenus.menu_id == menu.id)
+                .order_by(col(Orders.created_at).desc())
+                .limit(1)
+            ).first()
+            last_ordered_at = last_orders
+
+        # 주문이 있었던 메뉴만 또는 모든 메뉴 포함 (주문이 0개인 메뉴도 표시하려면 조건 제거)
+        if total_ordered > 0:  # 주문이 있었던 메뉴만 표시
+            menu_stats.append(
+                MenuSalesStats(
+                    menu_id=menu.id,
+                    menu_name=menu.name,
+                    menu_category=menu.category,
+                    menu_price=menu.price,
+                    total_ordered=total_ordered,
+                    total_served=total_served,
+                    total_rejected=total_rejected,
+                    total_revenue=total_revenue,
+                    avg_daily_sales=round(avg_daily_sales, 2),
+                    last_ordered_at=last_ordered_at,
+                )
+            )
+
+    # 판매량 순으로 정렬
+    menu_stats.sort(key=lambda x: x.total_ordered, reverse=True)
+
+    return menu_stats

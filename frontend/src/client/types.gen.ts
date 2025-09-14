@@ -83,6 +83,40 @@ export type Menus = {
     created_at?: string;
 };
 
+/**
+ * 메뉴별 판매 통계
+ */
+export type MenuSalesStats = {
+    menu_id: string;
+    menu_name: string;
+    menu_category?: (string | null);
+    menu_price: number;
+    /**
+     * 총 주문된 개수
+     */
+    total_ordered: number;
+    /**
+     * 총 서빙된 개수
+     */
+    total_served: number;
+    /**
+     * 총 거절된 개수
+     */
+    total_rejected: number;
+    /**
+     * 총 매출 (서빙된 것만)
+     */
+    total_revenue: number;
+    /**
+     * 일평균 판매량
+     */
+    avg_daily_sales: number;
+    /**
+     * 마지막 주문 시간
+     */
+    last_ordered_at: (string | null);
+};
+
 export type MenuUpdate = {
     no_stock?: (boolean | null);
     is_instant_serve?: (boolean | null);
@@ -381,6 +415,15 @@ export type AdminRefundPaymentData = {
 };
 
 export type AdminRefundPaymentResponse = (Payments);
+
+export type AdminGetMenuSalesStatsData = {
+    /**
+     * 조회할 일수 (기본 30일)
+     */
+    days?: number;
+};
+
+export type AdminGetMenuSalesStatsResponse = (Array<MenuSalesStats>);
 
 export type MenusReadMenusResponse = (Array<MenuPublic>);
 

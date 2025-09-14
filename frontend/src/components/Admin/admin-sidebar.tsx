@@ -23,6 +23,10 @@ const data = {
       url: "/admin/orders",
     },
     {
+      title: "메뉴 판매 통계",
+      url: "/admin/menu-stats",
+    },
+    {
       title: "주방 관리",
       url: "/admin/kitchen",
     },

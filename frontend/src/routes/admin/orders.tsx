@@ -442,23 +442,29 @@ function Page() {
                                                 </span>
                                               )}
                                             </div>
-                                            
+
                                             {/* 개별 메뉴 상태 변경 버튼들 */}
                                             {order.status !== "rejected" &&
-                                              orderedMenu.status !== "rejected" &&
-                                              orderedMenu.status !== "served" && (
+                                              orderedMenu.status !==
+                                                "rejected" &&
+                                              orderedMenu.status !==
+                                                "served" && (
                                                 <div className="flex gap-1">
-                                                  {orderedMenu.status === "ordered" && (
+                                                  {orderedMenu.status ===
+                                                    "ordered" && (
                                                     <>
                                                       <Button
                                                         size="sm"
                                                         variant="secondary"
                                                         className="text-xs px-1 py-0.5 h-auto font-medium"
                                                         onClick={() => {
-                                                          updateMenuOrderMutation.mutate({
-                                                            orderedMenuId: orderedMenu.id,
-                                                            status: "cooking",
-                                                          });
+                                                          updateMenuOrderMutation.mutate(
+                                                            {
+                                                              orderedMenuId:
+                                                                orderedMenu.id,
+                                                              status: "cooking",
+                                                            }
+                                                          );
                                                         }}
                                                         disabled={
                                                           updateMenuOrderMutation.isPending
@@ -471,10 +477,14 @@ function Page() {
                                                         variant="destructive"
                                                         className="text-xs px-1 py-0.5 h-auto font-medium"
                                                         onClick={() => {
-                                                          rejectMenuOrderMutation.mutate({
-                                                            orderedMenuId: orderedMenu.id,
-                                                            reason: "재료 부족",
-                                                          });
+                                                          rejectMenuOrderMutation.mutate(
+                                                            {
+                                                              orderedMenuId:
+                                                                orderedMenu.id,
+                                                              reason:
+                                                                "재료 부족",
+                                                            }
+                                                          );
                                                         }}
                                                         disabled={
                                                           rejectMenuOrderMutation.isPending
@@ -484,16 +494,20 @@ function Page() {
                                                       </Button>
                                                     </>
                                                   )}
-                                                  {orderedMenu.status === "cooking" && (
+                                                  {orderedMenu.status ===
+                                                    "cooking" && (
                                                     <Button
                                                       size="sm"
                                                       variant="default"
                                                       className="text-xs px-1 py-0.5 h-auto font-medium"
                                                       onClick={() =>
-                                                        updateMenuOrderMutation.mutate({
-                                                          orderedMenuId: orderedMenu.id,
-                                                          status: "served",
-                                                        })
+                                                        updateMenuOrderMutation.mutate(
+                                                          {
+                                                            orderedMenuId:
+                                                              orderedMenu.id,
+                                                            status: "served",
+                                                          }
+                                                        )
                                                       }
                                                       disabled={
                                                         updateMenuOrderMutation.isPending
@@ -690,7 +704,7 @@ function Page() {
                                                 )}
                                               </span>
                                             </div>
-                                            
+
                                             {/* 개별 메뉴 아이템들 */}
                                             <div className="space-y-1 pl-4 border-l-2 border-gray-200">
                                               {groupedMenu.ordered_menus.map(
@@ -715,27 +729,39 @@ function Page() {
                                                       </Badge>
                                                       {orderedMenu.reject_reason && (
                                                         <span className="text-destructive text-xs">
-                                                          ({orderedMenu.reject_reason})
+                                                          (
+                                                          {
+                                                            orderedMenu.reject_reason
+                                                          }
+                                                          )
                                                         </span>
                                                       )}
                                                     </div>
-                                                    
+
                                                     {/* 개별 메뉴 상태 변경 버튼들 */}
-                                                    {order.status !== "rejected" &&
-                                                      orderedMenu.status !== "rejected" &&
-                                                      orderedMenu.status !== "served" && (
+                                                    {order.status !==
+                                                      "rejected" &&
+                                                      orderedMenu.status !==
+                                                        "rejected" &&
+                                                      orderedMenu.status !==
+                                                        "served" && (
                                                         <div className="flex gap-1">
-                                                          {orderedMenu.status === "ordered" && (
+                                                          {orderedMenu.status ===
+                                                            "ordered" && (
                                                             <>
                                                               <Button
                                                                 size="sm"
                                                                 variant="secondary"
                                                                 className="font-medium text-xs px-2 py-1"
                                                                 onClick={() => {
-                                                                  updateMenuOrderMutation.mutate({
-                                                                    orderedMenuId: orderedMenu.id,
-                                                                    status: "cooking",
-                                                                  });
+                                                                  updateMenuOrderMutation.mutate(
+                                                                    {
+                                                                      orderedMenuId:
+                                                                        orderedMenu.id,
+                                                                      status:
+                                                                        "cooking",
+                                                                    }
+                                                                  );
                                                                 }}
                                                                 disabled={
                                                                   updateMenuOrderMutation.isPending
@@ -748,10 +774,14 @@ function Page() {
                                                                 variant="destructive"
                                                                 className="font-medium text-xs px-2 py-1"
                                                                 onClick={() => {
-                                                                  rejectMenuOrderMutation.mutate({
-                                                                    orderedMenuId: orderedMenu.id,
-                                                                    reason: "재료 부족",
-                                                                  });
+                                                                  rejectMenuOrderMutation.mutate(
+                                                                    {
+                                                                      orderedMenuId:
+                                                                        orderedMenu.id,
+                                                                      reason:
+                                                                        "재료 부족",
+                                                                    }
+                                                                  );
                                                                 }}
                                                                 disabled={
                                                                   rejectMenuOrderMutation.isPending
@@ -761,16 +791,21 @@ function Page() {
                                                               </Button>
                                                             </>
                                                           )}
-                                                          {orderedMenu.status === "cooking" && (
+                                                          {orderedMenu.status ===
+                                                            "cooking" && (
                                                             <Button
                                                               size="sm"
                                                               variant="default"
                                                               className="font-medium text-xs px-2 py-1"
                                                               onClick={() =>
-                                                                updateMenuOrderMutation.mutate({
-                                                                  orderedMenuId: orderedMenu.id,
-                                                                  status: "served",
-                                                                })
+                                                                updateMenuOrderMutation.mutate(
+                                                                  {
+                                                                    orderedMenuId:
+                                                                      orderedMenu.id,
+                                                                    status:
+                                                                      "served",
+                                                                  }
+                                                                )
                                                               }
                                                               disabled={
                                                                 updateMenuOrderMutation.isPending
