@@ -325,6 +325,17 @@ class Orders(OrderBase, table=True):
                 cooked_count=cooked_count,
                 status=status,
                 ordered_menu_ids=[om.id for om in ordered_menu_list],
+                ordered_menus=[
+                    OrderedMenuPublic(
+                        id=om.id,
+                        cooked=om.cooked,
+                        reject_reason=om.reject_reason,
+                        served_at=om.served_at,
+                        status=om.status,
+                        menu=om.menu,
+                    )
+                    for om in ordered_menu_list
+                ],
             )
             grouped_menus.append(grouped_menu)
 
@@ -418,9 +429,8 @@ class OrderedMenuCreate(SQLModel):
 
 
 class OrderedMenuUpdate(SQLModel):
-    served_at: Optional[datetime] = None
     reject_reason: Optional[str] = None
-    cooked: Optional[bool] = None
+    status: Optional[str] = None  # "cooking", "served" 등의 상태
 
 
 class OrderedMenuPublic(SQLModel):
@@ -456,6 +466,9 @@ class OrderedMenuGrouped(SQLModel):
     cooked_count: int = Field(default=0)
     status: MenuOrderStatus
     ordered_menu_ids: list[uuid.UUID] = Field(description="해당 메뉴의 개별 주문 ID들")
+    ordered_menus: list["OrderedMenuPublic"] = Field(
+        description="해당 메뉴의 개별 주문 상세 정보들"
+    )
 
     model_config = {"from_attributes": True}
 

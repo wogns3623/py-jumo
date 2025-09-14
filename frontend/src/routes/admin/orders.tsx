@@ -79,26 +79,15 @@ function Page() {
   // 주문 메뉴 상태 업데이트
   const updateMenuOrderMutation = useMutation({
     mutationFn: async ({
-      orderId,
-      menuId,
+      orderedMenuId,
       status,
     }: {
-      orderId: string;
-      menuId: string;
+      orderedMenuId: string;
       status: MenuOrderStatus;
     }) => {
-      const updateData: any = {};
-
-      if (status === "cooking") {
-        updateData.cooked = true;
-      } else if (status === "served") {
-        updateData.served_at = new Date().toISOString();
-      }
-
       return await AdminService.updateMenuOrder({
-        orderId,
-        menuId,
-        requestBody: updateData,
+        orderedMenuId,
+        requestBody: { status },
       });
     },
     onSuccess: () => {
@@ -114,17 +103,14 @@ function Page() {
   // 주문 메뉴 거절
   const rejectMenuOrderMutation = useMutation({
     mutationFn: async ({
-      orderId,
-      menuId,
+      orderedMenuId,
       reason,
     }: {
-      orderId: string;
-      menuId: string;
+      orderedMenuId: string;
       reason: string;
     }) => {
       return await AdminService.rejectMenuOrder({
-        orderId,
-        menuId,
+        orderedMenuId,
         reason,
       });
     },
@@ -384,128 +370,144 @@ function Page() {
                             <h5 className="text-xs font-medium mb-2 text-muted-foreground">
                               주문 메뉴
                             </h5>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {order.grouped_ordered_menus.map(
                                 (groupedMenu) => (
                                   <div
                                     key={groupedMenu.menu.id}
-                                    className="flex justify-between items-start py-2 px-3 bg-white rounded border text-sm"
+                                    className="bg-white rounded border p-3"
                                   >
-                                    <div className="flex-1">
-                                      <div className="font-medium">
-                                        {groupedMenu.menu.name}
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-muted-foreground">
-                                          수량: {groupedMenu.amount}
-                                          {(groupedMenu.cooked_count || 0) >
-                                            0 && (
-                                            <span className="text-green-600 ml-1">
-                                              (조리완료:{" "}
-                                              {groupedMenu.cooked_count || 0})
-                                            </span>
-                                          )}
-                                        </span>
-                                        <Badge
-                                          variant={getMenuStatusBadgeVariant(
-                                            groupedMenu.status
-                                          )}
-                                          className="text-xs"
-                                        >
-                                          {getMenuStatusLabel(
-                                            groupedMenu.status
-                                          )}
-                                        </Badge>
-                                      </div>
-
-                                      {/* 상태 변경 버튼들 (모바일) */}
-                                      {order.status !== "rejected" &&
-                                        groupedMenu.status !== "rejected" &&
-                                        groupedMenu.status !== "served" && (
-                                          <div className="flex gap-1 mt-2">
-                                            {groupedMenu.status ===
-                                              "ordered" && (
-                                              <>
-                                                <Button
-                                                  size="sm"
-                                                  variant="secondary"
-                                                  className="text-xs px-2 py-1 h-auto font-medium"
-                                                  onClick={() =>
-                                                    updateMenuOrderMutation.mutate(
-                                                      {
-                                                        orderId: order.id!,
-                                                        menuId:
-                                                          groupedMenu.menu.id!,
-                                                        status: "cooking",
-                                                      }
-                                                    )
-                                                  }
-                                                  disabled={
-                                                    updateMenuOrderMutation.isPending
-                                                  }
-                                                >
-                                                  조리완료
-                                                </Button>
-                                                <Button
-                                                  size="sm"
-                                                  variant="destructive"
-                                                  className="text-xs px-2 py-1 h-auto font-medium"
-                                                  onClick={() =>
-                                                    rejectMenuOrderMutation.mutate(
-                                                      {
-                                                        orderId: order.id!,
-                                                        menuId:
-                                                          groupedMenu.menu.id!,
-                                                        reason: "재료 부족",
-                                                      }
-                                                    )
-                                                  }
-                                                  disabled={
-                                                    rejectMenuOrderMutation.isPending
-                                                  }
-                                                >
-                                                  거절
-                                                </Button>
-                                              </>
-                                            )}
-                                            {groupedMenu.status ===
-                                              "cooking" && (
-                                              <Button
-                                                size="sm"
-                                                variant="default"
-                                                className="text-xs px-2 py-1 h-auto font-medium"
-                                                onClick={() =>
-                                                  updateMenuOrderMutation.mutate(
-                                                    {
-                                                      orderId: order.id!,
-                                                      menuId:
-                                                        groupedMenu.menu.id!,
-                                                      status: "served",
-                                                    }
-                                                  )
-                                                }
-                                                disabled={
-                                                  updateMenuOrderMutation.isPending
-                                                }
-                                              >
-                                                서빙완료
-                                              </Button>
-                                            )}
-                                          </div>
-                                        )}
-
-                                      {groupedMenu.status === "rejected" && (
-                                        <div className="text-xs text-destructive mt-1">
-                                          거절된 메뉴가 있습니다
+                                    {/* 메뉴 헤더 */}
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">
+                                          {groupedMenu.menu.name}
                                         </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                          <span className="text-xs text-muted-foreground">
+                                            총 {groupedMenu.amount}개
+                                            {(groupedMenu.cooked_count || 0) >
+                                              0 && (
+                                              <span className="text-green-600 ml-1">
+                                                (조리완료:{" "}
+                                                {groupedMenu.cooked_count || 0})
+                                              </span>
+                                            )}
+                                          </span>
+                                          <Badge
+                                            variant={getMenuStatusBadgeVariant(
+                                              groupedMenu.status
+                                            )}
+                                            className="text-xs"
+                                          >
+                                            {getMenuStatusLabel(
+                                              groupedMenu.status
+                                            )}
+                                          </Badge>
+                                        </div>
+                                      </div>
+                                      <span className="font-medium text-sm">
+                                        {formatPrice(
+                                          groupedMenu.menu.price *
+                                            groupedMenu.amount
+                                        )}
+                                      </span>
+                                    </div>
+
+                                    {/* 개별 메뉴 아이템들 */}
+                                    <div className="space-y-1 pl-2 border-l-2 border-gray-200">
+                                      {groupedMenu.ordered_menus.map(
+                                        (orderedMenu, index) => (
+                                          <div
+                                            key={orderedMenu.id}
+                                            className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded text-xs"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-muted-foreground">
+                                                #{index + 1}
+                                              </span>
+                                              <Badge
+                                                variant={getMenuStatusBadgeVariant(
+                                                  orderedMenu.status
+                                                )}
+                                                className="text-xs"
+                                              >
+                                                {getMenuStatusLabel(
+                                                  orderedMenu.status
+                                                )}
+                                              </Badge>
+                                              {orderedMenu.reject_reason && (
+                                                <span className="text-destructive text-xs">
+                                                  ({orderedMenu.reject_reason})
+                                                </span>
+                                              )}
+                                            </div>
+                                            
+                                            {/* 개별 메뉴 상태 변경 버튼들 */}
+                                            {order.status !== "rejected" &&
+                                              orderedMenu.status !== "rejected" &&
+                                              orderedMenu.status !== "served" && (
+                                                <div className="flex gap-1">
+                                                  {orderedMenu.status === "ordered" && (
+                                                    <>
+                                                      <Button
+                                                        size="sm"
+                                                        variant="secondary"
+                                                        className="text-xs px-1 py-0.5 h-auto font-medium"
+                                                        onClick={() => {
+                                                          updateMenuOrderMutation.mutate({
+                                                            orderedMenuId: orderedMenu.id,
+                                                            status: "cooking",
+                                                          });
+                                                        }}
+                                                        disabled={
+                                                          updateMenuOrderMutation.isPending
+                                                        }
+                                                      >
+                                                        조리
+                                                      </Button>
+                                                      <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        className="text-xs px-1 py-0.5 h-auto font-medium"
+                                                        onClick={() => {
+                                                          rejectMenuOrderMutation.mutate({
+                                                            orderedMenuId: orderedMenu.id,
+                                                            reason: "재료 부족",
+                                                          });
+                                                        }}
+                                                        disabled={
+                                                          rejectMenuOrderMutation.isPending
+                                                        }
+                                                      >
+                                                        거절
+                                                      </Button>
+                                                    </>
+                                                  )}
+                                                  {orderedMenu.status === "cooking" && (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="default"
+                                                      className="text-xs px-1 py-0.5 h-auto font-medium"
+                                                      onClick={() =>
+                                                        updateMenuOrderMutation.mutate({
+                                                          orderedMenuId: orderedMenu.id,
+                                                          status: "served",
+                                                        })
+                                                      }
+                                                      disabled={
+                                                        updateMenuOrderMutation.isPending
+                                                      }
+                                                    >
+                                                      서빙
+                                                    </Button>
+                                                  )}
+                                                </div>
+                                              )}
+                                          </div>
+                                        )
                                       )}
                                     </div>
-                                    <span className="font-medium">
-                                      {formatPrice(
-                                        groupedMenu.menu.price *
-                                          groupedMenu.amount
-                                      )}
-                                    </span>
                                   </div>
                                 )
                               )}
@@ -651,15 +653,16 @@ function Page() {
                                       (groupedMenu) => (
                                         <div
                                           key={groupedMenu.menu.id}
-                                          className="flex justify-between items-center py-2 px-3 bg-white rounded border"
+                                          className="space-y-2"
                                         >
-                                          <div className="flex-1">
-                                            <div className="flex items-center gap-3">
+                                          {/* 메뉴 헤더 */}
+                                          <div className="bg-white rounded border p-3">
+                                            <div className="flex items-center gap-3 mb-2">
                                               <span className="font-medium">
                                                 {groupedMenu.menu.name}
                                               </span>
                                               <span className="text-sm text-muted-foreground">
-                                                x {groupedMenu.amount}
+                                                총 {groupedMenu.amount}개
                                                 {(groupedMenu.cooked_count ||
                                                   0) > 0 && (
                                                   <span className="text-green-600 ml-1">
@@ -680,105 +683,109 @@ function Page() {
                                                   groupedMenu.status
                                                 )}
                                               </Badge>
+                                              <span className="font-medium ml-auto">
+                                                {formatPrice(
+                                                  groupedMenu.menu.price *
+                                                    groupedMenu.amount
+                                                )}
+                                              </span>
                                             </div>
-
-                                            {/* 상태 변경 버튼들 (데스크톱) */}
-                                            {order.status !== "rejected" &&
-                                              groupedMenu.status !==
-                                                "rejected" &&
-                                              groupedMenu.status !==
-                                                "served" && (
-                                                <div className="flex gap-2 mt-2">
-                                                  {groupedMenu.status ===
-                                                    "ordered" && (
-                                                    <>
-                                                      <Button
-                                                        size="sm"
-                                                        variant="secondary"
-                                                        className="font-medium"
-                                                        onClick={() =>
-                                                          updateMenuOrderMutation.mutate(
-                                                            {
-                                                              orderId:
-                                                                order.id!,
-                                                              menuId:
-                                                                groupedMenu.menu
-                                                                  .id!,
-                                                              status: "cooking",
-                                                            }
-                                                          )
-                                                        }
-                                                        disabled={
-                                                          updateMenuOrderMutation.isPending
-                                                        }
+                                            
+                                            {/* 개별 메뉴 아이템들 */}
+                                            <div className="space-y-1 pl-4 border-l-2 border-gray-200">
+                                              {groupedMenu.ordered_menus.map(
+                                                (orderedMenu, index) => (
+                                                  <div
+                                                    key={orderedMenu.id}
+                                                    className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded text-sm"
+                                                  >
+                                                    <div className="flex items-center gap-2">
+                                                      <span className="text-muted-foreground">
+                                                        #{index + 1}
+                                                      </span>
+                                                      <Badge
+                                                        variant={getMenuStatusBadgeVariant(
+                                                          orderedMenu.status
+                                                        )}
+                                                        className="text-xs"
                                                       >
-                                                        조리완료
-                                                      </Button>
-                                                      <Button
-                                                        size="sm"
-                                                        variant="destructive"
-                                                        className="font-medium"
-                                                        onClick={() =>
-                                                          rejectMenuOrderMutation.mutate(
-                                                            {
-                                                              orderId:
-                                                                order.id!,
-                                                              menuId:
-                                                                groupedMenu.menu
-                                                                  .id!,
-                                                              reason:
-                                                                "재료 부족",
-                                                            }
-                                                          )
-                                                        }
-                                                        disabled={
-                                                          rejectMenuOrderMutation.isPending
-                                                        }
-                                                      >
-                                                        거절
-                                                      </Button>
-                                                    </>
-                                                  )}
-                                                  {groupedMenu.status ===
-                                                    "cooking" && (
-                                                    <Button
-                                                      size="sm"
-                                                      variant="default"
-                                                      className="font-medium"
-                                                      onClick={() =>
-                                                        updateMenuOrderMutation.mutate(
-                                                          {
-                                                            orderId: order.id!,
-                                                            menuId:
-                                                              groupedMenu.menu
-                                                                .id!,
-                                                            status: "served",
-                                                          }
-                                                        )
-                                                      }
-                                                      disabled={
-                                                        updateMenuOrderMutation.isPending
-                                                      }
-                                                    >
-                                                      서빙완료
-                                                    </Button>
-                                                  )}
-                                                </div>
+                                                        {getMenuStatusLabel(
+                                                          orderedMenu.status
+                                                        )}
+                                                      </Badge>
+                                                      {orderedMenu.reject_reason && (
+                                                        <span className="text-destructive text-xs">
+                                                          ({orderedMenu.reject_reason})
+                                                        </span>
+                                                      )}
+                                                    </div>
+                                                    
+                                                    {/* 개별 메뉴 상태 변경 버튼들 */}
+                                                    {order.status !== "rejected" &&
+                                                      orderedMenu.status !== "rejected" &&
+                                                      orderedMenu.status !== "served" && (
+                                                        <div className="flex gap-1">
+                                                          {orderedMenu.status === "ordered" && (
+                                                            <>
+                                                              <Button
+                                                                size="sm"
+                                                                variant="secondary"
+                                                                className="font-medium text-xs px-2 py-1"
+                                                                onClick={() => {
+                                                                  updateMenuOrderMutation.mutate({
+                                                                    orderedMenuId: orderedMenu.id,
+                                                                    status: "cooking",
+                                                                  });
+                                                                }}
+                                                                disabled={
+                                                                  updateMenuOrderMutation.isPending
+                                                                }
+                                                              >
+                                                                조리완료
+                                                              </Button>
+                                                              <Button
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                className="font-medium text-xs px-2 py-1"
+                                                                onClick={() => {
+                                                                  rejectMenuOrderMutation.mutate({
+                                                                    orderedMenuId: orderedMenu.id,
+                                                                    reason: "재료 부족",
+                                                                  });
+                                                                }}
+                                                                disabled={
+                                                                  rejectMenuOrderMutation.isPending
+                                                                }
+                                                              >
+                                                                거절
+                                                              </Button>
+                                                            </>
+                                                          )}
+                                                          {orderedMenu.status === "cooking" && (
+                                                            <Button
+                                                              size="sm"
+                                                              variant="default"
+                                                              className="font-medium text-xs px-2 py-1"
+                                                              onClick={() =>
+                                                                updateMenuOrderMutation.mutate({
+                                                                  orderedMenuId: orderedMenu.id,
+                                                                  status: "served",
+                                                                })
+                                                              }
+                                                              disabled={
+                                                                updateMenuOrderMutation.isPending
+                                                              }
+                                                            >
+                                                              서빙완료
+                                                            </Button>
+                                                          )}
+                                                        </div>
+                                                      )}
+                                                  </div>
+                                                )
                                               )}
-
-                                            {groupedMenu.status ===
-                                              "rejected" && (
-                                              <div className="text-sm text-destructive mt-1">
-                                                거절된 메뉴가 있습니다
-                                              </div>
-                                            )}
+                                            </div>
                                           </div>
-                                          <span className="font-medium">
-                                            {formatPrice(
-                                              groupedMenu.menu.price *
-                                                groupedMenu.amount
-                                            )}
-                                          </span>
                                         </div>
                                       )
                                     )}

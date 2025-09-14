@@ -39,9 +39,8 @@ function Page() {
   const serveMenuMutation = useMutation({
     mutationFn: async (orderedMenu: OrderedMenuForServing) => {
       return await AdminService.updateMenuOrder({
-        menuId: orderedMenu.menu.id,
-        orderId: orderedMenu.order_id,
-        requestBody: { served_at: new Date().toISOString() },
+        orderedMenuId: orderedMenu.id,
+        requestBody: { status: "served" },
       });
     },
     onSuccess: () => {

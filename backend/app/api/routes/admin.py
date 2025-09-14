@@ -486,59 +486,80 @@ def reject_order(
     return {"detail": "주문이 거절되었습니다.", "reason": reason}
 
 
-@router.patch("/orders/{order_id}/menus/{menu_id}", tags=["orders"])
+@router.patch("/ordered-menus/{ordered_menu_id}", tags=["orders"])
 def update_menu_order(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
-    order_id: uuid.UUID,
-    menu_id: uuid.UUID,
+    ordered_menu_id: uuid.UUID,
     order_data: OrderedMenuUpdate,
 ) -> dict:
-    # 해당 주문의 해당 메뉴에 대한 모든 개별 레코드 조회
-    ordered_menus = session.exec(
+    # 특정 OrderedMenus 레코드 조회
+    ordered_menu = session.exec(
         select(OrderedMenus)
         .join(Orders)
         .join(Teams)
         .where(
-            OrderedMenus.order_id == order_id,
-            OrderedMenus.menu_id == menu_id,
+            OrderedMenus.id == ordered_menu_id,
             OrderedMenus.restaurant_id == restaurant.id,
             Teams.ended_at == None,  # 활성 팀만
         )
-    ).all()
+    ).first()
 
-    if not ordered_menus:
-        raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
+    if not ordered_menu:
+        raise HTTPException(status_code=404, detail="주문 메뉴를 찾을 수 없습니다.")
 
     order_data_dict = order_data.model_dump(exclude_unset=True)
 
-    # cooked 상태 업데이트인 경우 (조리 완료)
-    if "cooked" in order_data_dict and order_data_dict["cooked"]:
-        # 아직 조리되지 않은 첫 번째 아이템을 조리 완료로 변경
-        for ordered_menu in ordered_menus:
-            if not ordered_menu.cooked and not ordered_menu.reject_reason:
-                ordered_menu.cooked = True
-                session.add(ordered_menu)
-                break
+    # 상태 검증
+    if ordered_menu.reject_reason:
+        raise HTTPException(status_code=400, detail="거절된 메뉴는 수정할 수 없습니다.")
+
+    # status 필드로 간단한 상태 업데이트
+    if "status" in order_data_dict:
+        status = order_data_dict["status"]
+        if status == "cooking":
+            if ordered_menu.cooked:
+                raise HTTPException(
+                    status_code=400, detail="이미 조리 완료된 메뉴입니다."
+                )
+            ordered_menu.cooked = True
+        elif status == "served":
+            if ordered_menu.served_at:
+                raise HTTPException(
+                    status_code=400, detail="이미 서빙 완료된 메뉴입니다."
+                )
+            if not ordered_menu.cooked:
+                raise HTTPException(
+                    status_code=400,
+                    detail="조리가 완료되지 않은 메뉴는 서빙할 수 없습니다.",
+                )
+            ordered_menu.served_at = datetime.now(timezone.utc)
+        session.add(ordered_menu)
+
+    # cooked 상태 업데이트인 경우 (조리 완료) - 기존 방식 유지
+    elif "cooked" in order_data_dict and order_data_dict["cooked"]:
+        if ordered_menu.cooked:
+            raise HTTPException(status_code=400, detail="이미 조리 완료된 메뉴입니다.")
+        ordered_menu.cooked = True
+        session.add(ordered_menu)
 
     # served_at 업데이트인 경우 (서빙 완료)
     elif "served_at" in order_data_dict:
-        # 조리 완료되었지만 아직 서빙되지 않은 첫 번째 아이템을 서빙 완료로 변경
-        for ordered_menu in ordered_menus:
-            if (
-                ordered_menu.cooked
-                and not ordered_menu.served_at
-                and not ordered_menu.reject_reason
-            ):
-                ordered_menu.served_at = order_data_dict["served_at"]
-                session.add(ordered_menu)
-                break
+        if ordered_menu.served_at:
+            raise HTTPException(status_code=400, detail="이미 서빙 완료된 메뉴입니다.")
+        if not ordered_menu.cooked:
+            raise HTTPException(
+                status_code=400,
+                detail="조리가 완료되지 않은 메뉴는 서빙할 수 없습니다.",
+            )
+        ordered_menu.served_at = order_data_dict["served_at"]
+        session.add(ordered_menu)
 
     session.commit()
 
     # 모든 주문 메뉴가 완료되었는지 확인
-    order = ordered_menus[0].order
+    order = ordered_menu.order
     if all(
         om.status == MenuOrderStatus.served or om.status == MenuOrderStatus.rejected
         for om in order.ordered_menus
@@ -550,58 +571,42 @@ def update_menu_order(
     return {"detail": "메뉴 상태가 업데이트되었습니다."}
 
 
-@router.delete("/orders/{order_id}/menus/{menu_id}", tags=["orders"])
+@router.delete("/ordered-menus/{ordered_menu_id}", tags=["orders"])
 def reject_menu_order(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
-    order_id: uuid.UUID,
-    menu_id: uuid.UUID,
+    ordered_menu_id: uuid.UUID,
     reason: str = "관리자에 의해 메뉴 주문이 거절되었습니다.",
 ) -> dict:
-    # 해당 주문의 해당 메뉴에 대한 모든 개별 레코드 조회
-    ordered_menus = session.exec(
+    # 특정 OrderedMenus 레코드 조회
+    ordered_menu = session.exec(
         select(OrderedMenus)
         .join(Orders)
         .join(Teams)
         .where(
-            OrderedMenus.order_id == order_id,
-            OrderedMenus.menu_id == menu_id,
+            OrderedMenus.id == ordered_menu_id,
             OrderedMenus.restaurant_id == restaurant.id,
             Teams.ended_at == None,  # 활성 팀만
         )
-    ).all()
+    ).first()
 
-    if not ordered_menus:
-        raise HTTPException(status_code=404, detail="메뉴 주문을 찾을 수 없습니다.")
+    if not ordered_menu:
+        raise HTTPException(status_code=404, detail="주문 메뉴를 찾을 수 없습니다.")
 
-    # 아직 처리되지 않은(주문 상태인) 첫 번째 아이템을 거절로 변경
-    rejected = False
-    for ordered_menu in ordered_menus:
-        if (
-            not ordered_menu.cooked
-            and not ordered_menu.served_at
-            and not ordered_menu.reject_reason
-        ):
-            ordered_menu.reject_reason = reason
-            session.add(ordered_menu)
-            rejected = True
-            break
+    # 상태 검증
+    if ordered_menu.reject_reason:
+        raise HTTPException(status_code=400, detail="이미 거절된 메뉴입니다.")
+    if ordered_menu.served_at:
+        raise HTTPException(
+            status_code=400, detail="이미 서빙된 메뉴는 거절이 불가능합니다."
+        )
 
-    if not rejected:
-        # 모든 아이템이 이미 처리된 경우
-        if all(om.served_at for om in ordered_menus):
-            raise HTTPException(
-                status_code=400, detail="이미 서빙된 메뉴는 거절이 불가능합니다."
-            )
-        elif all(om.reject_reason for om in ordered_menus):
-            raise HTTPException(status_code=400, detail="이미 거절된 메뉴입니다.")
-        else:
-            raise HTTPException(
-                status_code=400, detail="거절할 수 있는 메뉴가 없습니다."
-            )
-
+    # 거절 처리
+    ordered_menu.reject_reason = reason
+    session.add(ordered_menu)
     session.commit()
+
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
 
 

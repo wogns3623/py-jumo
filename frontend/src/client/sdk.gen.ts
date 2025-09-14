@@ -284,8 +284,7 @@ export class AdminService {
     /**
      * Update Menu Order
      * @param data The data for the request.
-     * @param data.orderId
-     * @param data.menuId
+     * @param data.orderedMenuId
      * @param data.requestBody
      * @returns unknown Successful Response
      * @throws ApiError
@@ -293,10 +292,9 @@ export class AdminService {
     public static updateMenuOrder(data: AdminUpdateMenuOrderData): CancelablePromise<AdminUpdateMenuOrderResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
-            url: '/api/v1/admin/orders/{order_id}/menus/{menu_id}',
+            url: '/api/v1/admin/ordered-menus/{ordered_menu_id}',
             path: {
-                order_id: data.orderId,
-                menu_id: data.menuId
+                ordered_menu_id: data.orderedMenuId
             },
             body: data.requestBody,
             mediaType: 'application/json',
@@ -309,8 +307,7 @@ export class AdminService {
     /**
      * Reject Menu Order
      * @param data The data for the request.
-     * @param data.orderId
-     * @param data.menuId
+     * @param data.orderedMenuId
      * @param data.reason
      * @returns unknown Successful Response
      * @throws ApiError
@@ -318,10 +315,9 @@ export class AdminService {
     public static rejectMenuOrder(data: AdminRejectMenuOrderData): CancelablePromise<AdminRejectMenuOrderResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/admin/orders/{order_id}/menus/{menu_id}',
+            url: '/api/v1/admin/ordered-menus/{ordered_menu_id}',
             path: {
-                order_id: data.orderId,
-                menu_id: data.menuId
+                ordered_menu_id: data.orderedMenuId
             },
             query: {
                 reason: data.reason
@@ -621,8 +617,7 @@ export class OrdersService {
     /**
      * Update Menu Order
      * @param data The data for the request.
-     * @param data.orderId
-     * @param data.menuId
+     * @param data.orderedMenuId
      * @param data.requestBody
      * @returns unknown Successful Response
      * @throws ApiError
@@ -630,10 +625,9 @@ export class OrdersService {
     public static adminUpdateMenuOrder(data: AdminUpdateMenuOrderData): CancelablePromise<AdminUpdateMenuOrderResponse> {
         return __request(OpenAPI, {
             method: 'PATCH',
-            url: '/api/v1/admin/orders/{order_id}/menus/{menu_id}',
+            url: '/api/v1/admin/ordered-menus/{ordered_menu_id}',
             path: {
-                order_id: data.orderId,
-                menu_id: data.menuId
+                ordered_menu_id: data.orderedMenuId
             },
             body: data.requestBody,
             mediaType: 'application/json',
@@ -646,8 +640,7 @@ export class OrdersService {
     /**
      * Reject Menu Order
      * @param data The data for the request.
-     * @param data.orderId
-     * @param data.menuId
+     * @param data.orderedMenuId
      * @param data.reason
      * @returns unknown Successful Response
      * @throws ApiError
@@ -655,10 +648,9 @@ export class OrdersService {
     public static adminRejectMenuOrder(data: AdminRejectMenuOrderData): CancelablePromise<AdminRejectMenuOrderResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/admin/orders/{order_id}/menus/{menu_id}',
+            url: '/api/v1/admin/ordered-menus/{ordered_menu_id}',
             path: {
-                order_id: data.orderId,
-                menu_id: data.menuId
+                ordered_menu_id: data.orderedMenuId
             },
             query: {
                 reason: data.reason

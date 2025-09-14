@@ -118,12 +118,24 @@ export type OrderedMenuGrouped = {
      * 해당 메뉴의 개별 주문 ID들
      */
     ordered_menu_ids: Array<(string)>;
+    /**
+     * 해당 메뉴의 개별 주문 상세 정보들
+     */
+    ordered_menus: Array<OrderedMenuPublic>;
+};
+
+export type OrderedMenuPublic = {
+    id: string;
+    cooked?: boolean;
+    reject_reason?: (string | null);
+    served_at?: (string | null);
+    status: MenuOrderStatus;
+    menu: MenuPublic;
 };
 
 export type OrderedMenuUpdate = {
-    served_at?: (string | null);
     reject_reason?: (string | null);
-    cooked?: (boolean | null);
+    status?: (string | null);
 };
 
 export type Orders = {
@@ -333,8 +345,7 @@ export type AdminRejectOrderResponse = ({
 });
 
 export type AdminUpdateMenuOrderData = {
-    menuId: string;
-    orderId: string;
+    orderedMenuId: string;
     requestBody: OrderedMenuUpdate;
 };
 
@@ -343,8 +354,7 @@ export type AdminUpdateMenuOrderResponse = ({
 });
 
 export type AdminRejectMenuOrderData = {
-    menuId: string;
-    orderId: string;
+    orderedMenuId: string;
     reason?: string;
 };
 
