@@ -26,6 +26,7 @@ import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
 import type { OrderStatus, MenuOrderStatus } from "@/client/types.gen";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { formatKoreanDateTime, formatKoreanDate } from "@/utils/datetime";
 
 export const Route = createFileRoute("/admin/orders")({
   component: Page,
@@ -343,7 +344,7 @@ function Page() {
                           </span>
                           <p className="font-medium">
                             {order.created_at
-                              ? new Date(order.created_at).toLocaleDateString()
+                              ? formatKoreanDate(order.created_at)
                               : "미상"}
                           </p>
                         </div>
@@ -672,7 +673,7 @@ function Page() {
                           </TableCell>
                           <TableCell>
                             {order.created_at
-                              ? new Date(order.created_at).toLocaleString()
+                              ? formatKoreanDateTime(order.created_at)
                               : "시간 미상"}
                           </TableCell>
                           <TableCell>
@@ -948,9 +949,7 @@ function Page() {
                                               환불일시:
                                             </span>
                                             <p className="font-medium">
-                                              {new Date(
-                                                order.payment.refunded_at
-                                              ).toLocaleString()}
+                                              {formatKoreanDateTime(order.payment.refunded_at)}
                                             </p>
                                           </div>
                                         )}
@@ -1011,9 +1010,7 @@ function Page() {
                                             완료일시:
                                           </span>
                                           <p className="font-medium">
-                                            {new Date(
-                                              order.finished_at
-                                            ).toLocaleString()}
+                                            {formatKoreanDateTime(order.finished_at)}
                                           </p>
                                         </div>
                                       )}

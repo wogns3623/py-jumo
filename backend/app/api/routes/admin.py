@@ -147,7 +147,7 @@ def update_table(
             select(Teams).where(Teams.table_id == table_id, Teams.ended_at == None)
         ).first()
         if active_team:
-            active_team.ended_at = datetime.now()
+            active_team.ended_at = datetime.now(timezone.utc)
             session.add(active_team)
 
     session.add(table)

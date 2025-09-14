@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatKoreanTime, getTimeDifferenceInMinutes } from "@/utils/datetime";
 import {
   Table,
   TableBody,
@@ -115,19 +116,11 @@ function Page() {
   };
 
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatKoreanTime(dateString);
   };
 
   const getWaitingTime = (createdAt: string) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diffInMinutes = Math.floor(
-      (now.getTime() - created.getTime()) / (1000 * 60)
-    );
-    return diffInMinutes;
+    return getTimeDifferenceInMinutes(createdAt);
   };
 
   const getWaitingTimeColor = (minutes: number) => {

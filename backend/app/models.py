@@ -498,9 +498,15 @@ class BankTransaction(SQLModel):
     balance: int
 
     def to_payment_data_dict(self) -> dict:
+        # naive datetime을 UTC로 처리
+        created_at = (
+            self.date.replace(tzinfo=timezone.utc)
+            if self.date.tzinfo is None
+            else self.date
+        )
         return {
             "amount": self.amount,
-            "created_at": self.date,
+            "created_at": created_at,
             "transaction_by": self.transaction_by,
         }
 

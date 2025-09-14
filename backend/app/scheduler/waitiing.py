@@ -13,7 +13,7 @@ from app.models import Restaurants, Waitings
 
 @session_decor(engine)
 def send_waiting_expired_notification(session: Session):
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = datetime.now(timezone.utc)
     after_10_minutes = now - timedelta(minutes=10)
 
     restaurant = session.exec(select(Restaurants)).first()

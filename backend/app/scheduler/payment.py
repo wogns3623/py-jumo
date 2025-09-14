@@ -52,7 +52,14 @@ def connect_payment_to_order(session: Session) -> None:
         select(Payments).where(
             Payments.restaurant_id == restaurant.id,
             col(Payments.created_at).in_(
-                [transaction.date for transaction in transaction_list]
+                [
+                    (
+                        transaction.date.replace(tzinfo=timezone.utc)
+                        if transaction.date.tzinfo is None
+                        else transaction.date
+                    )
+                    for transaction in transaction_list
+                ]
             ),
         )
     ).all()
@@ -64,7 +71,12 @@ def connect_payment_to_order(session: Session) -> None:
         for transaction in transaction_list
         if not any(
             payment.amount == transaction.amount
-            and payment.created_at == transaction.date
+            and payment.created_at
+            == (
+                transaction.date.replace(tzinfo=timezone.utc)
+                if transaction.date.tzinfo is None
+                else transaction.date
+            )
             for payment in exist_payments
         )
     ]

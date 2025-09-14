@@ -6,6 +6,7 @@ import { AdminSidebarHeader } from "@/components/Admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatKoreanDateTime } from "@/utils/datetime";
 import {
   Select,
   SelectContent,
@@ -55,7 +56,7 @@ function Page() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "주문 없음";
-    return new Date(dateString).toLocaleString("ko-KR");
+    return formatKoreanDateTime(dateString);
   };
 
   const getSuccessRate = (served: number, ordered: number) => {

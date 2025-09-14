@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { AdminService, RestaurantsService } from "@/client";
+import { formatKoreanDateTime } from "@/utils/datetime";
 import type { RestaurantUpdate } from "@/client/types.gen";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -287,7 +288,7 @@ function Page() {
                 <Input
                   value={
                     restaurant?.created_at
-                      ? new Date(restaurant.created_at).toLocaleString()
+                      ? formatKoreanDateTime(restaurant.created_at)
                       : ""
                   }
                   disabled

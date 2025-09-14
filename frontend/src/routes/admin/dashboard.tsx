@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminService } from "@/client";
+import { parseUTCDateForComparison } from "@/utils/datetime";
 import {
   DollarSign,
   Users,
@@ -63,12 +64,20 @@ function Page() {
     }
 
     const today = new Date();
-    const todayStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
+    // 한국 시간대 기준으로 오늘 시작 시간 계산
+    const koreanToday = new Date(
+      today.toLocaleString("en-US", { timeZone: "Asia/Seoul" })
     );
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const todayStart = new Date(
+      koreanToday.getFullYear(),
+      koreanToday.getMonth(),
+      koreanToday.getDate()
+    );
+    const monthStart = new Date(
+      koreanToday.getFullYear(),
+      koreanToday.getMonth(),
+      1
+    );
 
     // 실제 처리된 주문들만 필터링 (paid, finished 상태)
     const processedOrders = orders.filter(
@@ -77,7 +86,7 @@ function Page() {
 
     // 오늘 매출 (완료된 주문들의 총 가격)
     const todayOrders = processedOrders.filter(
-      (order) => order.created_at && new Date(order.created_at) >= todayStart
+      (order) => order.created_at && parseUTCDateForComparison(order.created_at) >= todayStart
     );
     const todaySales = todayOrders.reduce(
       (sum, order) => sum + order.total_price,
@@ -86,7 +95,7 @@ function Page() {
 
     // 이번달 매출
     const monthOrders = processedOrders.filter(
-      (order) => order.created_at && new Date(order.created_at) >= monthStart
+      (order) => order.created_at && parseUTCDateForComparison(order.created_at) >= monthStart
     );
     const monthSales = monthOrders.reduce(
       (sum, order) => sum + order.total_price,
@@ -96,7 +105,7 @@ function Page() {
     // 오늘 방문자 수 (오늘 웨이팅에 들어온 사람들)
     const todayWaitings = waitings.filter(
       (waiting) =>
-        waiting.created_at && new Date(waiting.created_at) >= todayStart
+        waiting.created_at && parseUTCDateForComparison(waiting.created_at) >= todayStart
     );
     const todayVisitors = todayWaitings.length; // 웨이팅 건수를 방문자 수로 계산
 
@@ -176,7 +185,8 @@ function Page() {
             </p>
           </div>
           <Badge variant="outline" className="text-sm whitespace-nowrap">
-            마지막 업데이트: {new Date().toLocaleTimeString("ko-KR")}
+            마지막 업데이트:{" "}
+            {new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul" })}
           </Badge>
         </div>
 

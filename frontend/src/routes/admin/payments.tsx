@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
 import { ExternalLink } from "lucide-react";
+import { formatKoreanDate, formatKoreanDateTime } from "@/utils/datetime";
 
 export const Route = createFileRoute("/admin/payments")({
   component: Page,
@@ -158,9 +159,7 @@ function Page() {
                           </span>
                           <p className="font-medium">
                             {payment.created_at
-                              ? new Date(
-                                  payment.created_at
-                                ).toLocaleDateString()
+                              ? formatKoreanDate(payment.created_at)
                               : "미상"}
                           </p>
                         </div>
@@ -170,7 +169,7 @@ function Page() {
                               환불일시:
                             </span>
                             <p className="font-medium text-destructive">
-                              {new Date(payment.refunded_at).toLocaleString()}
+                              {formatKoreanDateTime(payment.refunded_at)}
                             </p>
                           </div>
                         )}
