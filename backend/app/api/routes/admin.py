@@ -384,6 +384,7 @@ def read_orders(
 
     result = []
     for order in orders:
+        # team 정보 포함하여 응답 생성
         result.append(
             OrderWithPaymentInfo.model_validate(
                 order,
@@ -391,6 +392,7 @@ def read_orders(
                     "payment_info": PaymentInfo(
                         bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
                     ),
+                    "team": order.team,
                 },
             )
         )
@@ -415,15 +417,13 @@ def read_order(
     if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
 
-    payment_info = PaymentInfo(
-        bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
-    )
-
-    return OrderWithPaymentInfo(
-        **order.model_dump(),
-        grouped_ordered_menus=order.grouped_ordered_menus,
-        payment_info=payment_info,
-        team=order.team,
+    return OrderWithPaymentInfo.model_validate(
+        order,
+        update={
+            "payment_info": PaymentInfo(
+                bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+            ),
+        },
     )
 
 

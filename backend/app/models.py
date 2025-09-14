@@ -224,6 +224,7 @@ class TeamCreate(SQLModel):
 class TeamPublic(SQLModel):
     id: uuid.UUID
     table: Tables
+    phone: Optional[str] = None
     ended_at: Optional[datetime] = None
     created_at: datetime
 
@@ -376,6 +377,7 @@ class OrderPublic(OrderBase):
     grouped_ordered_menus: list["OrderedMenuGrouped"]
     payment: Optional["Payments"]
     payment_info: Optional[PaymentInfo] = None
+    team: "TeamPublic"
 
     class Config:
         from_attributes = True

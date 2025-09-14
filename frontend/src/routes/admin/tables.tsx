@@ -186,16 +186,8 @@ function Page() {
           </Badge>
         </div>
 
-        {/* 통합된 Flex 기반 테이블 목록 */}
-        <div className="flex flex-wrap gap-3 sm:gap-4">
+        <div className="grid grid-cols-7 gap-3 sm:gap-4">
           {tables?.map((table) => {
-            // 한 줄에 (전체 테이블 개수)/2 개가 들어가도록 계산
-            const totalTables = tables?.length || 1;
-            const tablesPerRow = Math.ceil((totalTables + 2) / 2);
-            const widthPercentage = 100 / tablesPerRow;
-            const gapSize = 0.75; // gap-3 = 0.75rem, gap-4 = 1rem
-            const tableWidth = `calc(${widthPercentage}% - ${gapSize}rem)`;
-
             return (
               <Popover
                 key={table.id}
@@ -214,7 +206,7 @@ function Page() {
                     role="button"
                     tabIndex={0}
                     className="cursor-pointer transition-all hover:shadow-md flex-shrink-0"
-                    style={{ width: tableWidth }}
+                    // style={{ width: tableWidth }}
                   >
                     <Card
                       className={`border-2 transition-colors aspect-square ${getStatusBackgroundColor(

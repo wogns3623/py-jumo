@@ -203,6 +203,7 @@ export type OrderWithPaymentInfo = {
     grouped_ordered_menus: Array<OrderedMenuGrouped>;
     payment: (Payments | null);
     payment_info: PaymentInfo;
+    team: TeamPublic;
 };
 
 export type PaymentInfo = {
@@ -254,6 +255,14 @@ export type TableStatus = 'idle' | 'in_use' | 'reserved';
 
 export type TableUpdate = {
     status: TableStatus;
+};
+
+export type TeamPublic = {
+    id: string;
+    table: Tables;
+    phone?: (string | null);
+    ended_at?: (string | null);
+    created_at: string;
 };
 
 export type Token = {

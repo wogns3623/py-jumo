@@ -198,6 +198,10 @@ function Page() {
     return new Intl.NumberFormat("ko-KR").format(price) + "원";
   };
 
+  const isKioskOrder = (order: any) => {
+    return order.team?.phone !== null && order.team?.phone !== undefined;
+  };
+
   if (error) {
     return (
       <>
@@ -292,6 +296,14 @@ function Page() {
                           >
                             {getStatusLabel(order.status)}
                           </Badge>
+                          {isKioskOrder(order) && (
+                            <Badge
+                              variant="secondary"
+                              className="bg-blue-100 text-blue-800 text-xs"
+                            >
+                              키오스크
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center">
                           {expandedOrders.has(order.id!) ? (
@@ -304,6 +316,27 @@ function Page() {
 
                       {/* 기본 정보 */}
                       <div className="grid grid-cols-2 gap-2 text-sm px-4">
+                        <div>
+                          <span className="text-muted-foreground">
+                            주문 유형:
+                          </span>
+                          <p className="font-medium">
+                            {isKioskOrder(order) ? "키오스크" : "일반 주문"}
+                            {isKioskOrder(order) && order.team?.phone && (
+                              <span className="text-xs text-muted-foreground ml-1">
+                                ({order.team.phone})
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">테이블:</span>
+                          <p className="font-medium">
+                            {order.team?.table?.no
+                              ? `${order.team.table.no}번`
+                              : "미상"}
+                          </p>
+                        </div>
                         <div>
                           <span className="text-muted-foreground">
                             생성일시:
@@ -331,6 +364,18 @@ function Page() {
                           </p>
                         </div>
                       </div>
+
+                      {/* 키오스크 주문 안내 */}
+                      {isKioskOrder(order) && (
+                        <div className="px-4 pb-2">
+                          <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                            <p className="text-xs text-blue-800">
+                              📱 키오스크 주문 - 조리 완료 시 고객에게 자동
+                              알림톡 발송
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* 액션 */}
                       <div className="flex items-center justify-end gap-2 px-4 pb-4">
@@ -470,7 +515,7 @@ function Page() {
                                                           updateMenuOrderMutation.isPending
                                                         }
                                                       >
-                                                        조리
+                                                        조리완료
                                                       </Button>
                                                       <Button
                                                         size="sm"
@@ -574,6 +619,8 @@ function Page() {
                     <TableRow>
                       <TableHead></TableHead>
                       <TableHead>주문번호</TableHead>
+                      <TableHead>주문 유형</TableHead>
+                      <TableHead>테이블</TableHead>
                       <TableHead>생성일시</TableHead>
                       <TableHead>총 금액</TableHead>
                       <TableHead>결제 금액</TableHead>
@@ -600,6 +647,28 @@ function Page() {
                           </TableCell>
                           <TableCell className="font-medium">
                             #{order.no}
+                          </TableCell>
+                          <TableCell>
+                            {isKioskOrder(order) ? (
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant="secondary"
+                                  className="bg-blue-100 text-blue-800"
+                                >
+                                  키오스크
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {order.team?.phone}
+                                </span>
+                              </div>
+                            ) : (
+                              <Badge variant="outline">일반 주문</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {order.team?.table?.no
+                              ? `${order.team.table.no}번 테이블`
+                              : "테이블 미상"}
                           </TableCell>
                           <TableCell>
                             {order.created_at
@@ -651,11 +720,21 @@ function Page() {
                         </TableRow>
                         {expandedOrders.has(order.id!) && (
                           <TableRow>
-                            <TableCell colSpan={7}>
+                            <TableCell colSpan={9}>
                               <div className="p-4 bg-muted rounded-lg">
-                                <h4 className="font-medium mb-3">
-                                  주문 상세 정보
-                                </h4>
+                                <div className="flex items-center justify-between mb-3">
+                                  <h4 className="font-medium">
+                                    주문 상세 정보
+                                  </h4>
+                                  {isKioskOrder(order) && (
+                                    <div className="bg-blue-50 border border-blue-200 rounded px-3 py-1">
+                                      <span className="text-xs text-blue-800 font-medium">
+                                        📱 키오스크 주문 - 조리 완료 시 자동
+                                        알림톡 발송
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
 
                                 {/* 주문 메뉴 목록 */}
                                 <div className="mb-4">
