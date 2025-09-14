@@ -125,6 +125,11 @@ services:
 
     build:
       context: ./backend
+    command: >
+      fastapi run
+      --workers 4
+      app/main.py
+      --host
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-public

@@ -104,16 +104,28 @@ services:
         [
           "CMD",
           "curl",
+          "-k",
           "-f",
-          "http://localhost:8000/api/v1/utils/health-check/",
+          "https://localhost:8000/api/v1/utils/health-check/",
         ]
       interval: 10s
       timeout: 5s
       retries: 5
     build:
       context: ./backend
+    command: >
+      uvicorn app.main:app 
+      --host 0.0.0.0
+      --port 8000
+      --ssl-keyfile /app/certs/private.key 
+      --ssl-certfile /app/certs/certificate.crt
+      --ssl-keyfile-password ${SSL_KEY_PASSWORD?Variable not set}
+    volumes:
+      # SSL 인증서를 마운트하는 볼륨 (실제 인증서 경로로 수정 필요)
+      - ${SSL_CERT_PATH?Variable not set}:/app/certs/certificate.crt:ro
+      - ${SSL_KEY_PATH?Variable not set}:/app/certs/private.key:ro
     ports:
-      - "8000:8000"
+      - "8000:8000" # HTTPS 포트
     networks:
       - backend-network
 

@@ -47,4 +47,3 @@ RUN --mount=type=cache,target=/root/.cache/ms-playwright \
 RUN --mount=type=cache,target=/root/.cache/ms-playwright \
     playwright install-deps
 
-CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
