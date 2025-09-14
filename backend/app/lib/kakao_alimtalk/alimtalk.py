@@ -36,6 +36,7 @@ class KakaoAlimtalk:
         response = requests.post(api_url, headers=headers, data=json.dumps(body))
         response.raise_for_status()
 
+        print("KakaoAlimtalk response:", response.json())
         return response.json()
 
     def __make_signature(

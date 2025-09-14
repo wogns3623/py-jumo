@@ -44,10 +44,16 @@ function WaitingPage() {
     if (!formData.phone.trim()) {
       newErrors.phone = "전화번호를 입력해주세요.";
       isValid = false;
-    } else if (!/^01[0-9]-?\d{3,4}-?\d{4}$/.test(formData.phone)) {
-      newErrors.phone =
-        "올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)";
-      isValid = false;
+    } else {
+      // 숫자만 추출해서 검증
+      const numbersOnly = formData.phone.replace(/[^0-9]/g, "");
+      if (numbersOnly.length !== 11) {
+        newErrors.phone = "전화번호는 11자리 숫자여야 합니다.";
+        isValid = false;
+      } else if (!numbersOnly.startsWith("01")) {
+        newErrors.phone = "올바른 휴대폰 번호를 입력해주세요. (01X로 시작)";
+        isValid = false;
+      }
     }
 
     setErrors(newErrors);
@@ -57,9 +63,24 @@ function WaitingPage() {
   const handleInputChange =
     (field: keyof typeof formData) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      let value = e.target.value;
+
+      // 전화번호 필드인 경우 숫자만 허용
+      if (field === "phone") {
+        // 숫자만 추출
+        const numbersOnly = value.replace(/[^0-9]/g, "");
+
+        // 11자리 제한
+        if (numbersOnly.length > 11) {
+          return;
+        }
+
+        value = numbersOnly;
+      }
+
       setFormData((prev) => ({
         ...prev,
-        [field]: e.target.value,
+        [field]: value,
       }));
 
       // 입력 시 해당 필드의 에러 메시지 제거
@@ -78,6 +99,7 @@ function WaitingPage() {
       return;
     }
 
+    // 서버에 보낼 데이터 (이미 숫자만 저장되어 있음)
     createWaiting.mutate(formData, {
       onSuccess: () => {
         toast.success("웨이팅 등록 완료! 🎉", {
@@ -148,13 +170,17 @@ function WaitingPage() {
                 </Label>
                 <Input
                   id="phone"
-                  placeholder="010-1234-5678"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="01012345678"
                   value={formData.phone}
                   onChange={handleInputChange("phone")}
                   className="h-12 border-gray-200 focus:border-amber-500 focus:ring-amber-500 rounded-lg"
+                  maxLength={11}
                 />
                 <p className="text-sm text-gray-500">
-                  순서가 되면 연락드릴 번호를 입력해주세요
+                  숫자만 입력하세요 (예: 01012345678)
                 </p>
                 {errors.phone && (
                   <p className="text-sm text-red-500 font-medium">

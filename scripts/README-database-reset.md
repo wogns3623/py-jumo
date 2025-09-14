@@ -3,16 +3,19 @@
 ## 🔧 스크립트 종류
 
 ### 1. Linux/macOS 스크립트
+
 - **`reset-database.sh`** - 안전한 완전 리셋 (사용자 확인 필요)
 - **`reset-database-dev.sh`** - 개발용 빠른 리셋 (즉시 실행)
 
 ### 2. Windows 스크립트
+
 - **`reset-database-dev.ps1`** - PowerShell용 개발 리셋 스크립트
 - **`reset-database-dev.bat`** - 명령 프롬프트용 개발 리셋 스크립트
 
 ## 🚀 사용법
 
 ### Linux/macOS
+
 ```bash
 # 안전한 리셋 (확인 필요)
 ./scripts/reset-database.sh
@@ -24,6 +27,7 @@
 ### Windows
 
 #### PowerShell (권장)
+
 ```powershell
 # PowerShell에서 실행 정책 설정 (최초 1회)
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -33,6 +37,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 #### 명령 프롬프트
+
 ```cmd
 REM 관리자 권한으로 명령 프롬프트 실행 후
 scripts\reset-database-dev.bat
@@ -41,11 +46,13 @@ scripts\reset-database-dev.bat
 ## 🛠️ 사전 요구사항
 
 ### 모든 플랫폼
+
 - Docker Desktop 설치 및 실행
 - Docker Compose 설치
 - 프로젝트 루트 디렉토리에서 실행
 
 ### Windows 추가 요구사항
+
 - PowerShell 5.0 이상 (PowerShell 스크립트용)
 - UV 또는 Python 설치 (마이그레이션용)
 
