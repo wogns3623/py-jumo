@@ -14,10 +14,12 @@ import { OrderBottomBar } from "./OrderBar";
 // 메뉴 카드 컴포넌트
 export function MenuCard({
   menu,
+  canOrder = true,
   quantity,
   onQuantityChange,
 }: {
   menu: MenuPublic;
+  canOrder: boolean;
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }) {
@@ -102,13 +104,15 @@ export function MenuCard({
                 품절
               </Badge>
             ) : (
-              <QuantityControl
-                quantity={quantity}
-                onIncrease={() => onQuantityChange(quantity + 1)}
-                onDecrease={() => onQuantityChange(Math.max(0, quantity - 1))}
-                size="md"
-                className="gap-0"
-              />
+              canOrder && (
+                <QuantityControl
+                  quantity={quantity}
+                  onIncrease={() => onQuantityChange(quantity + 1)}
+                  onDecrease={() => onQuantityChange(Math.max(0, quantity - 1))}
+                  size="md"
+                  className="gap-0"
+                />
+              )
             )}
           </div>
         </div>
@@ -121,12 +125,14 @@ export function MenuCard({
 export function MenuSection({
   title,
   menus,
+  canOrder = true,
   cart,
   onCartChange,
   className,
 }: {
   title: string;
   menus: MenuPublic[];
+  canOrder: boolean;
   cart: CartItem[];
   onCartChange: (cart: CartItem[]) => void;
   className?: string;
@@ -173,6 +179,7 @@ export function MenuSection({
             <MenuCard
               key={menu.id}
               menu={menu}
+              canOrder={canOrder}
               quantity={quantity}
               onQuantityChange={(newQuantity) =>
                 updateQuantity(menu.id!, newQuantity)
@@ -242,6 +249,7 @@ export function MenuPageInner({ tableId }: { tableId: string | null }) {
               key={group.title}
               title={group.title}
               menus={group.items}
+              canOrder={tableId !== null}
               cart={validCart}
               onCartChange={setCart}
               className={group.className || ""}

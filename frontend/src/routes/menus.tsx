@@ -32,7 +32,7 @@ function MenuPage() {
   );
 
   // 테이블 ID가 유효하지 않은 경우
-  if (!isValidTable) {
+  if (tableId && !isValidTable) {
     return (
       <div className="flex flex-col items-center gap-4">
         <h2 className="text-xl font-semibold">잘못된 접근입니다</h2>
