@@ -1,5 +1,16 @@
 # Full Stack FastAPI Template
 
+# 배포
+
+- .env, frontend/.env 파일 생성
+- Docker, Docker Compose 설치
+
+```
+docker compose -f docker-compose.backend.yml up -d
+```
+
+# 개발 서버
+
 ## 실행
 
 - .env.example 파일을 복사하여 .env 파일을 생성하고 필요한 값을 설정합니다.
