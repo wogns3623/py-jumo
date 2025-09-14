@@ -5,8 +5,8 @@ import type { MenuPublic } from "@/client";
 import { MenuImage, QuantityControl } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "@/components/ui/sonner";
 import { useMenusSuspense } from "@/hooks/useMenu";
-import useCustomToast from "@/hooks/useCustomToast";
 import { cn } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
 import { OrderBottomBar } from "./OrderBar";
@@ -23,10 +23,10 @@ export function MenuCard({
   quantity: number;
   onQuantityChange: (quantity: number) => void;
 }) {
-  const { showErrorToast } = useCustomToast();
-
   const handleSoldOutClick = () => {
-    showErrorToast(`${menu.name}은(는) 현재 품절입니다.`);
+    toast.error("Something went wrong!", {
+      description: `${menu.name}은(는) 현재 품절입니다.`,
+    });
   };
 
   return (
@@ -195,7 +195,6 @@ export function MenuSection({
 export function MenuPageInner({ tableId }: { tableId: string | null }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useLocalStorage<CartItem[]>("cart", []);
-  const { showErrorToast } = useCustomToast();
 
   // 품절된 메뉴를 장바구니에서 자동 제거
   const validCart = cart.filter((item) => {
@@ -214,9 +213,9 @@ export function MenuPageInner({ tableId }: { tableId: string | null }) {
       const removedNames = removedItems
         .map((item) => item.menu.name)
         .join(", ");
-      showErrorToast(
-        `${removedNames}이(가) 품절되어 장바구니에서 제거되었습니다.`
-      );
+      toast.error("Something went wrong!", {
+        description: `${removedNames}이(가) 품절되어 장바구니에서 제거되었습니다.`,
+      });
     }
 
     setCart(validCart);
