@@ -24,46 +24,46 @@ function OrderItem({
   onRemove: () => void;
 }) {
   return (
-    <div className="flex items-start gap-3 bg-gray-50 rounded-lg border border-gray-100">
-      {/* 메뉴 이미지 - 더 컴팩트한 크기 */}
-      <div className="h-16 w-36 bg-white rounded-lg">
-        {item.menu.image && (
-          <MenuImage
-            src={item.menu.image}
-            alt={item.menu.name}
-            className="w-full h-full"
-            bgColor={item.menu.bg_color || undefined}
-            useEdgeBackground={false}
-            objectFit="cover"
-          />
-        )}
+    <div className="flex flex-col items-start gap-2 rounded-lg border border-gray-100 shadow-lg bg-accent p-2">
+      <div className="flex items-start gap-3">
+        <div className="h-16 w-36 bg-white rounded-lg">
+          {item.menu.image && (
+            <MenuImage
+              src={item.menu.image}
+              alt={item.menu.name}
+              className="w-full h-full"
+              bgColor={item.menu.bg_color || undefined}
+              useEdgeBackground={false}
+              objectFit="cover"
+            />
+          )}
+        </div>
+        <div>
+          <h4 className="font-medium text-sm text-gray-900 truncate">
+            {item.menu.name.split(" : ")[0]}
+          </h4>
+          <p className="text-xs text-gray-600 mt-0.5 w-36 break-keep">
+            {item.menu.desc}
+          </p>
+        </div>
       </div>
 
-      {/* 메뉴 정보 */}
-      <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm text-gray-900 truncate">
-          {item.menu.name.split(" : ")[0]}
-        </h4>
-        <p className="text-xs text-gray-600 mt-0.5 w-36 break-keep">
-          {item.menu.desc}
-        </p>
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-sm font-medium text-gray-900">
-            {item.menu.price.toLocaleString()}원
-          </span>
-          <QuantityControl
-            quantity={item.quantity}
-            onIncrease={() => onQuantityChange(item.quantity + 1)}
-            onDecrease={() => {
-              if (item.quantity === 1) {
-                onRemove();
-              } else {
-                onQuantityChange(item.quantity - 1);
-              }
-            }}
-            size="sm"
-          />
-        </div>
+      <div className="w-full flex items-center justify-end gap-2">
+        <span className="text-sm font-medium text-gray-900">
+          {item.menu.price.toLocaleString()}원
+        </span>
+        <QuantityControl
+          quantity={item.quantity}
+          onIncrease={() => onQuantityChange(item.quantity + 1)}
+          onDecrease={() => {
+            if (item.quantity === 1) {
+              onRemove();
+            } else {
+              onQuantityChange(item.quantity - 1);
+            }
+          }}
+          size="sm"
+        />
       </div>
     </div>
   );
