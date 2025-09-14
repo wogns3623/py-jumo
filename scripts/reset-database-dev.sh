@@ -15,6 +15,7 @@ docker-compose down
 echo "🗑️  데이터베이스 볼륨 삭제 중..."
 docker volume rm py-jumo_app-db-data 2>/dev/null || \
 docker volume rm app-db-data 2>/dev/null || \
+docker volume rm "${COMPOSE_PROJECT_NAME}_app-db-data" 2>/dev/null || \
 echo "   볼륨이 이미 존재하지 않음"
 
 # 3. 데이터베이스만 시작

@@ -45,7 +45,9 @@ docker-compose down --remove-orphans
 log_info "2단계: 데이터베이스 볼륨 삭제"
 docker volume ls | grep -q "app-db-data" && {
     log_warn "app-db-data 볼륨을 삭제합니다..."
-    docker volume rm py-jumo_app-db-data 2>/dev/null || docker volume rm app-db-data 2>/dev/null || {
+    docker volume rm py-jumo_app-db-data 2>/dev/null || \
+    docker volume rm app-db-data 2>/dev/null || \
+    docker volume rm "${COMPOSE_PROJECT_NAME}_app-db-data" 2>/dev/null || {
         log_warn "볼륨 삭제 실패 - 수동으로 확인이 필요할 수 있습니다."
         docker volume ls | grep "app-db-data" || log_info "app-db-data 볼륨이 이미 존재하지 않습니다."
     }
