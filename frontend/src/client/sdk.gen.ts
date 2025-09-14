@@ -330,7 +330,7 @@ export class AdminService {
     
     /**
      * Get Cooked Ordered Menus
-     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)
+     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중) - 키오스크 주문 제외
      * @returns OrderedMenuForServing Successful Response
      * @throws ApiError
      */
@@ -803,7 +803,7 @@ export class RestaurantsService {
 export class ServingService {
     /**
      * Get Cooked Ordered Menus
-     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)
+     * 조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중) - 키오스크 주문 제외
      * @returns OrderedMenuForServing Successful Response
      * @throws ApiError
      */

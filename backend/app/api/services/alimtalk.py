@@ -1,5 +1,5 @@
 from app.core.config import settings
-from app.models import Restaurants, Waitings
+from app.models import Restaurants, Waitings, Teams, Tables
 
 
 def send_waiting_registered(
@@ -94,6 +94,28 @@ def send_waiting_calcelled(restaurant: Restaurants, waiting: Waitings):
                 {
                     "countryCode": "82",
                     "to": waiting.phone,
+                    "content": content,
+                    "useSmsFailover": False,
+                }
+            ],
+        }
+    )
+
+
+def send_kiosk_order_ready(
+    restaurant: Restaurants, team: Teams, table: Tables, order_no: int
+):
+    """키오스크 주문 조리 완료 알림톡 발송"""
+    content = f"[{restaurant.name}]\n주문이 완료되었습니다!\n\n주문번호: {order_no}번\n테이블: {table.no}번\n\n지금 가져가실 수 있습니다."
+
+    settings.alimtalk.send_message(
+        {
+            "templateCode": "KioskOrderReady",
+            "plusFriendId": "@acorn_soft",
+            "messages": [
+                {
+                    "countryCode": "82",
+                    "to": team.phone,
                     "content": content,
                     "useSmsFailover": False,
                 }

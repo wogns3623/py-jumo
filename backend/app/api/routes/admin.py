@@ -7,7 +7,11 @@ from fastapi import APIRouter, HTTPException, Query
 from sqlmodel import select, col, or_, func
 
 from app.api.deps import SessionDep, AdminLoginForm, CurrentAdmin, DefaultRestaurant
-from app.api.services.alimtalk import send_waiting_now_seated, send_waiting_one_left
+from app.api.services.alimtalk import (
+    send_waiting_now_seated,
+    send_waiting_one_left,
+    send_kiosk_order_ready,
+)
 from app.core import security
 from app.core.config import settings
 from app.models import (
@@ -525,6 +529,19 @@ def update_menu_order(
                     status_code=400, detail="이미 조리 완료된 메뉴입니다."
                 )
             ordered_menu.cooked = True
+
+            # 키오스크 주문인 경우 조리 완료 알림톡 발송
+            order = ordered_menu.order
+            team = order.team
+            if team.phone:  # 키오스크 주문 (전화번호가 있는 경우)
+                table = team.table
+                # 자동 서빙 완료 처리
+                ordered_menu.served_at = datetime.now(timezone.utc)
+                try:
+                    send_kiosk_order_ready(restaurant, team, table, order.no)  # type: ignore
+                except Exception as e:
+                    print(f"알림톡 발송 실패: {e}")
+
         elif status == "served":
             if ordered_menu.served_at:
                 raise HTTPException(
@@ -536,25 +553,6 @@ def update_menu_order(
                     detail="조리가 완료되지 않은 메뉴는 서빙할 수 없습니다.",
                 )
             ordered_menu.served_at = datetime.now(timezone.utc)
-        session.add(ordered_menu)
-
-    # cooked 상태 업데이트인 경우 (조리 완료) - 기존 방식 유지
-    elif "cooked" in order_data_dict and order_data_dict["cooked"]:
-        if ordered_menu.cooked:
-            raise HTTPException(status_code=400, detail="이미 조리 완료된 메뉴입니다.")
-        ordered_menu.cooked = True
-        session.add(ordered_menu)
-
-    # served_at 업데이트인 경우 (서빙 완료)
-    elif "served_at" in order_data_dict:
-        if ordered_menu.served_at:
-            raise HTTPException(status_code=400, detail="이미 서빙 완료된 메뉴입니다.")
-        if not ordered_menu.cooked:
-            raise HTTPException(
-                status_code=400,
-                detail="조리가 완료되지 않은 메뉴는 서빙할 수 없습니다.",
-            )
-        ordered_menu.served_at = order_data_dict["served_at"]
         session.add(ordered_menu)
 
     session.commit()
@@ -621,7 +619,7 @@ def get_cooked_ordered_menus(
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
 ):
-    """조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중)"""
+    """조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중) - 키오스크 주문 제외"""
     # OrderedMenus와 관련 정보를 join하여 가져오기
     ordered_menus_data = session.exec(
         select(OrderedMenus, Orders, Teams, Tables)
@@ -634,6 +632,7 @@ def get_cooked_ordered_menus(
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
             Teams.ended_at == None,  # 활성 팀만
+            Teams.phone == None,  # 키오스크 주문 제외 (키오스크는 phone이 있음)
         )
         .order_by(
             col(Orders.created_at).asc()
