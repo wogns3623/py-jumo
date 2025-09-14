@@ -63,6 +63,11 @@ class MenuBase(SQLModel):
     bg_color: Optional[str] = Field(default=None)
     category: Optional[str] = Field(default=None, index=True)
     no_stock: bool = Field(default=False)
+    is_instant_serve: bool = Field(
+        default=False,
+        description="즉시 서빙 가능한 메뉴 여부",
+        sa_column_kwargs={"server_default": "0"},
+    )
 
 
 class Menus(MenuBase, table=True):
@@ -77,6 +82,7 @@ class Menus(MenuBase, table=True):
 
 class MenuUpdate(SQLModel):
     no_stock: Optional[bool] = None
+    is_instant_serve: Optional[bool] = None
 
 
 class MenuPublic(MenuBase):
@@ -345,8 +351,10 @@ class MenuOrderStatus(str, enum.Enum):
 
 class OrderedMenuBase(SQLModel):
     amount: int = Field(gt=0)
+    cooked_amount: int = Field(
+        default=0, ge=0, sa_column_kwargs={"server_default": "0"}
+    )  # 조리 완료된 수량
     reject_reason: Optional[str] = Field(default=None)
-    cook_started_at: Optional[datetime] = Field(default=None)
     served_at: Optional[datetime] = Field(default=None)
 
 
@@ -367,7 +375,7 @@ class OrderedMenus(OrderedMenuBase, table=True):
     def status(self) -> MenuOrderStatus:
         if self.served_at is not None:
             return MenuOrderStatus.served
-        elif self.cook_started_at is not None:
+        elif self.cooked_amount > 0:  # 조리된 수량이 있으면 cooking 상태
             return MenuOrderStatus.cooking
         elif self.reject_reason is not None:
             return MenuOrderStatus.rejected
@@ -381,7 +389,6 @@ class OrderedMenuCreate(SQLModel):
 
 
 class OrderedMenuUpdate(SQLModel):
-    cook_started_at: Optional[datetime] = None
     served_at: Optional[datetime] = None
     reject_reason: Optional[str] = None
 
@@ -399,8 +406,10 @@ class OrderedMenuForServing(OrderedMenuBase):
     id: uuid.UUID
     status: MenuOrderStatus
     menu: MenuPublic
+    order_id: uuid.UUID
     order_no: int
     table_no: int
+    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -443,8 +452,22 @@ class KioskOrderCreate(OrderCreate):
 
 class KioskTeamPublic(SQLModel):
     id: uuid.UUID
+    table_no: int
     phone: str
-    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MenuCookingQueue(SQLModel):
+    """메뉴별 조리 대기 현황"""
+
+    menu_id: uuid.UUID
+    menu_name: str
+    menu_category: Optional[str] = None
+    total_pending_count: int = Field(description="조리 대기중인 총 개수")
+    oldest_order_time: Optional[datetime] = Field(description="가장 오래된 주문 시간")
+    is_instant_serve: bool = Field(default=False, description="즉시 서빙 가능 여부")
 
     class Config:
         from_attributes = True

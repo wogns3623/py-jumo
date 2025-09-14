@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useCountdown } from "usehooks-ts";
 
 import { OrderWithTeamInfo } from "@/client";
 import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
@@ -147,21 +146,30 @@ function FinalConfirmModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const [timer, controller] = useCountdown({
-    countStart: 15,
-    intervalMs: 1000,
-  });
+  const [timer, setTimer] = useState(15);
 
   useEffect(() => {
-    if (open) controller.startCountdown();
+    if (open) {
+      setTimer(15); // 모달이 열릴 때 타이머를 15초로 리셋
+    }
   }, [open]);
 
   useEffect(() => {
-    if (timer === 0) {
-      controller.resetCountdown();
-      controller.stopCountdown();
-    }
-  }, [timer]);
+    if (!open) return; // 모달이 닫혀있으면 타이머 실행하지 않음
+
+    const interval = setInterval(() => {
+      setTimer((prevTimer) => {
+        if (prevTimer <= 1) {
+          // 타이머가 1 이하가 되면 모달 닫기
+          onOpenChange(false);
+          return 0;
+        }
+        return prevTimer - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval); // 컴포넌트 언마운트 시 인터벌 정리
+  }, [open, onOpenChange]);
 
   return (
     <ConfirmModal

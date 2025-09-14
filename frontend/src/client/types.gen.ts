@@ -21,6 +21,27 @@ export type KioskOrderCreate = {
     phone: string;
 };
 
+/**
+ * 메뉴별 조리 대기 현황
+ */
+export type MenuCookingQueue = {
+    menu_id: string;
+    menu_name: string;
+    menu_category?: (string | null);
+    /**
+     * 조리 대기중인 총 개수
+     */
+    total_pending_count: number;
+    /**
+     * 가장 오래된 주문 시간
+     */
+    oldest_order_time: (string | null);
+    /**
+     * 즉시 서빙 가능 여부
+     */
+    is_instant_serve?: boolean;
+};
+
 export type MenuOrderStatus = 'ordered' | 'rejected' | 'cooking' | 'served';
 
 export type MenuPublic = {
@@ -34,6 +55,10 @@ export type MenuPublic = {
     bg_color?: (string | null);
     category?: (string | null);
     no_stock?: boolean;
+    /**
+     * 즉시 서빙 가능한 메뉴 여부
+     */
+    is_instant_serve?: boolean;
     id: string;
     created_at: string;
 };
@@ -49,6 +74,10 @@ export type Menus = {
     bg_color?: (string | null);
     category?: (string | null);
     no_stock?: boolean;
+    /**
+     * 즉시 서빙 가능한 메뉴 여부
+     */
+    is_instant_serve?: boolean;
     id?: string;
     restaurant_id: string;
     created_at?: string;
@@ -56,6 +85,7 @@ export type Menus = {
 
 export type MenuUpdate = {
     no_stock?: (boolean | null);
+    is_instant_serve?: (boolean | null);
 };
 
 export type OrderedMenuCreate = {
@@ -65,20 +95,22 @@ export type OrderedMenuCreate = {
 
 export type OrderedMenuForServing = {
     amount: number;
+    cooked_amount?: number;
     reject_reason?: (string | null);
-    cook_started_at?: (string | null);
     served_at?: (string | null);
     id: string;
     status: MenuOrderStatus;
     menu: MenuPublic;
+    order_id: string;
     order_no: number;
     table_no: number;
+    created_at: string;
 };
 
 export type OrderedMenuPublic = {
     amount: number;
+    cooked_amount?: number;
     reject_reason?: (string | null);
-    cook_started_at?: (string | null);
     served_at?: (string | null);
     id: string;
     status: MenuOrderStatus;
@@ -87,8 +119,8 @@ export type OrderedMenuPublic = {
 
 export type OrderedMenus = {
     amount: number;
+    cooked_amount?: number;
     reject_reason?: (string | null);
-    cook_started_at?: (string | null);
     served_at?: (string | null);
     id?: string;
     restaurant_id: string;
@@ -98,7 +130,6 @@ export type OrderedMenus = {
 };
 
 export type OrderedMenuUpdate = {
-    cook_started_at?: (string | null);
     served_at?: (string | null);
     reject_reason?: (string | null);
 };
@@ -354,11 +385,15 @@ export type AdminRejectMenuOrderResponse = ({
 
 export type AdminGetCookedOrderedMenusResponse = (Array<OrderedMenuForServing>);
 
-export type AdminServeOrderedMenuData = {
-    orderedMenuId: string;
+export type AdminGetCookingQueueResponse = (Array<MenuCookingQueue>);
+
+export type AdminCookOneMenuData = {
+    menuId: string;
 };
 
-export type AdminServeOrderedMenuResponse = (OrderedMenus);
+export type AdminCookOneMenuResponse = ({
+    [key: string]: unknown;
+});
 
 export type AdminReadPaymentsResponse = (Array<Payments>);
 

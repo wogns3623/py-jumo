@@ -23,6 +23,10 @@ const data = {
       url: "/admin/orders",
     },
     {
+      title: "주방 관리",
+      url: "/admin/kitchen",
+    },
+    {
       title: "서빙 관리",
       url: "/admin/serving",
     },

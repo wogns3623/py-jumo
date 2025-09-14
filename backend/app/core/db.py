@@ -135,6 +135,7 @@ def init_db(session: Session) -> None:
                 bg_color="#DF0A1C",
                 price=2500,
                 category="뚱캔들과 생명수",
+                is_instant_serve=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
@@ -145,6 +146,7 @@ def init_db(session: Session) -> None:
                 bg_color="#141108",
                 price=2500,
                 category="뚱캔들과 생명수",
+                is_instant_serve=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
@@ -155,6 +157,7 @@ def init_db(session: Session) -> None:
                 bg_color="#2DB24C",
                 price=2500,
                 category="뚱캔들과 생명수",
+                is_instant_serve=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
@@ -165,6 +168,7 @@ def init_db(session: Session) -> None:
                 bg_color="#FE8002",
                 price=2500,
                 category="뚱캔들과 생명수",
+                is_instant_serve=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
@@ -175,6 +179,7 @@ def init_db(session: Session) -> None:
                 bg_color="#E0F7FA",
                 price=2500,
                 category="뚱캔들과 생명수",
+                is_instant_serve=True,
             ),
         ]
     )

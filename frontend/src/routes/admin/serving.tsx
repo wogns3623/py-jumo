@@ -37,8 +37,12 @@ function Page() {
 
   // 서빙 완료 처리 mutation
   const serveMenuMutation = useMutation({
-    mutationFn: async (orderedMenuId: string) => {
-      return await AdminService.serveOrderedMenu({ orderedMenuId });
+    mutationFn: async (orderedMenu: OrderedMenuForServing) => {
+      return await AdminService.updateMenuOrder({
+        menuId: orderedMenu.menu.id,
+        orderId: orderedMenu.order_id,
+        requestBody: { served_at: new Date().toISOString() },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -84,7 +88,7 @@ function Page() {
         order_no: number;
         table_no: number;
         menus: OrderedMenuForServing[];
-        earliestCookStarted: string;
+        earliestCreated: string;
       }
     >();
 
@@ -94,18 +98,16 @@ function Page() {
           order_no: menu.order_no,
           table_no: menu.table_no,
           menus: [],
-          earliestCookStarted: menu.cook_started_at!,
+          earliestCreated: menu.created_at,
         });
       }
 
       const order = orderMap.get(menu.order_no)!;
       order.menus.push(menu);
 
-      // 가장 이른 조리 시작 시간 업데이트
-      if (
-        new Date(menu.cook_started_at!) < new Date(order.earliestCookStarted)
-      ) {
-        order.earliestCookStarted = menu.cook_started_at!;
+      // 가장 이른 주문 생성 시간 업데이트
+      if (new Date(menu.created_at) < new Date(order.earliestCreated)) {
+        order.earliestCreated = menu.created_at;
       }
     });
 
@@ -165,9 +167,7 @@ function Page() {
             {/* 데스크톱 테이블 뷰 */}
             <div className="hidden lg:block space-y-4">
               {groupedOrders.map((order) => {
-                const waitingMinutes = getWaitingTime(
-                  order.earliestCookStarted
-                );
+                const waitingMinutes = getWaitingTime(order.earliestCreated);
                 return (
                   <Card key={order.order_no}>
                     <CardContent className="p-0">
@@ -185,7 +185,7 @@ function Page() {
                             {order.table_no}번 테이블
                           </Badge>
                           <span className="text-sm text-muted-foreground">
-                            조리시작: {formatTime(order.earliestCookStarted)}
+                            주문시간: {formatTime(order.earliestCreated)}
                           </span>
                           <span
                             className={`text-sm font-medium ${getWaitingTimeColor(
@@ -233,7 +233,7 @@ function Page() {
                               <TableCell className="w-28">
                                 <Button
                                   onClick={() =>
-                                    serveMenuMutation.mutate(orderedMenu.id)
+                                    serveMenuMutation.mutate(orderedMenu)
                                   }
                                   disabled={serveMenuMutation.isPending}
                                   size="sm"
@@ -256,9 +256,7 @@ function Page() {
             {/* 모바일 카드 리스트 뷰 */}
             <div className="lg:hidden space-y-4">
               {groupedOrders.map((order) => {
-                const waitingMinutes = getWaitingTime(
-                  order.earliestCookStarted
-                );
+                const waitingMinutes = getWaitingTime(order.earliestCreated);
                 return (
                   <Card key={order.order_no} className="overflow-hidden">
                     <CardContent className="p-0">
@@ -277,7 +275,7 @@ function Page() {
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{formatTime(order.earliestCookStarted)}</span>
+                          <span>{formatTime(order.earliestCreated)}</span>
                           <span
                             className={`font-medium ${getWaitingTimeColor(
                               waitingMinutes
@@ -313,7 +311,7 @@ function Page() {
                             </div>
                             <Button
                               onClick={() =>
-                                serveMenuMutation.mutate(orderedMenu.id)
+                                serveMenuMutation.mutate(orderedMenu)
                               }
                               disabled={serveMenuMutation.isPending}
                               size="sm"
