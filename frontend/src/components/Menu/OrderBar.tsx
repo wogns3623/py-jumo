@@ -98,7 +98,7 @@ function LastOrderPaymentInfoBottomBar({
             variant="outline"
             onClick={() => requestPayment(order as any)}
           >
-            이체하기
+            계좌번호 복사하기
           </Button>
         </>
       ) : order.status === "paid" ? (
