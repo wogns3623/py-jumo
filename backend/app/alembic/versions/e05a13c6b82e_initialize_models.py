@@ -1,8 +1,8 @@
 """initialize models
 
-Revision ID: a36468d16ccc
+Revision ID: e05a13c6b82e
 Revises: 
-Create Date: 2025-09-14 06:15:13.080200
+Create Date: 2025-09-14 20:23:35.321102
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel.sql.sqltypes
 
 
 # revision identifiers, used by Alembic.
-revision = 'a36468d16ccc'
+revision = 'e05a13c6b82e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,6 +37,7 @@ def upgrade():
     sa.Column('bg_color', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('category', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('no_stock', sa.Boolean(), nullable=False),
+    sa.Column('is_instant_serve', sa.Boolean(), server_default='0', nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('restaurant_id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -117,9 +118,8 @@ def upgrade():
     op.create_index(op.f('ix_orders_restaurant_id'), 'orders', ['restaurant_id'], unique=False)
     op.create_index(op.f('ix_orders_team_id'), 'orders', ['team_id'], unique=False)
     op.create_table('orderedmenus',
-    sa.Column('amount', sa.Integer(), nullable=False),
+    sa.Column('cooked', sa.Boolean(), nullable=False),
     sa.Column('reject_reason', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('cook_started_at', sa.DateTime(), nullable=True),
     sa.Column('served_at', sa.DateTime(), nullable=True),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('restaurant_id', sa.Uuid(), nullable=False),

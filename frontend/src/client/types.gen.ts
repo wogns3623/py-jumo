@@ -94,11 +94,10 @@ export type OrderedMenuCreate = {
 };
 
 export type OrderedMenuForServing = {
-    amount: number;
-    cooked_amount?: number;
+    id: string;
+    cooked?: boolean;
     reject_reason?: (string | null);
     served_at?: (string | null);
-    id: string;
     status: MenuOrderStatus;
     menu: MenuPublic;
     order_id: string;
@@ -107,45 +106,24 @@ export type OrderedMenuForServing = {
     created_at: string;
 };
 
-export type OrderedMenuPublic = {
-    amount: number;
-    cooked_amount?: number;
-    reject_reason?: (string | null);
-    served_at?: (string | null);
-    id: string;
-    status: MenuOrderStatus;
+/**
+ * 메뉴별로 그룹화된 주문 메뉴 (수량 포함)
+ */
+export type OrderedMenuGrouped = {
     menu: MenuPublic;
-};
-
-export type OrderedMenus = {
     amount: number;
-    cooked_amount?: number;
-    reject_reason?: (string | null);
-    served_at?: (string | null);
-    id?: string;
-    restaurant_id: string;
-    order_id: string;
-    menu_id: string;
-    created_at?: string;
+    cooked_count?: number;
+    status: MenuOrderStatus;
+    /**
+     * 해당 메뉴의 개별 주문 ID들
+     */
+    ordered_menu_ids: Array<(string)>;
 };
 
 export type OrderedMenuUpdate = {
     served_at?: (string | null);
     reject_reason?: (string | null);
-};
-
-export type OrderPublic = {
-    reject_reason?: (string | null);
-    finished_at?: (string | null);
-    created_at?: string;
-    id: string;
-    no: number;
-    status: OrderStatus;
-    total_price: number;
-    final_price: number;
-    ordered_menus: Array<OrderedMenuPublic>;
-    payment: (Payments | null);
-    payment_info?: (PaymentInfo | null);
+    cooked?: (boolean | null);
 };
 
 export type Orders = {
@@ -167,10 +145,7 @@ export type OrderUpdate = {
     reject_reason?: (string | null);
 };
 
-/**
- * 주문과 팀 정보를 함께 반환하는 모델
- */
-export type OrderWithTeamInfo = {
+export type OrderWithPaymentInfo = {
     reject_reason?: (string | null);
     finished_at?: (string | null);
     created_at?: string;
@@ -179,10 +154,9 @@ export type OrderWithTeamInfo = {
     status: OrderStatus;
     total_price: number;
     final_price: number;
-    ordered_menus: Array<OrderedMenuPublic>;
+    grouped_ordered_menus: Array<OrderedMenuGrouped>;
     payment: (Payments | null);
     payment_info: PaymentInfo;
-    team: TeamPublic;
 };
 
 export type PaymentInfo = {
@@ -234,13 +208,6 @@ export type TableStatus = 'idle' | 'in_use' | 'reserved';
 
 export type TableUpdate = {
     status: TableStatus;
-};
-
-export type TeamPublic = {
-    id: string;
-    table: Tables;
-    ended_at?: (string | null);
-    created_at: string;
 };
 
 export type Token = {
@@ -335,19 +302,19 @@ export type AdminCreateKioskOrderData = {
     requestBody: KioskOrderCreate;
 };
 
-export type AdminCreateKioskOrderResponse = (OrderWithTeamInfo);
+export type AdminCreateKioskOrderResponse = (OrderWithPaymentInfo);
 
 export type AdminReadOrdersData = {
     status?: (OrderStatus | AllFilter);
 };
 
-export type AdminReadOrdersResponse = (Array<OrderPublic>);
+export type AdminReadOrdersResponse = (Array<OrderWithPaymentInfo>);
 
 export type AdminReadOrderData = {
     orderId: string;
 };
 
-export type AdminReadOrderResponse = (OrderPublic);
+export type AdminReadOrderResponse = (OrderWithPaymentInfo);
 
 export type AdminUpdateOrderData = {
     orderId: string;
@@ -371,7 +338,9 @@ export type AdminUpdateMenuOrderData = {
     requestBody: OrderedMenuUpdate;
 };
 
-export type AdminUpdateMenuOrderResponse = (OrderedMenus);
+export type AdminUpdateMenuOrderResponse = ({
+    [key: string]: unknown;
+});
 
 export type AdminRejectMenuOrderData = {
     menuId: string;
@@ -409,7 +378,7 @@ export type OrdersCreateOrderData = {
     requestBody: TableOrderCreate;
 };
 
-export type OrdersCreateOrderResponse = (OrderWithTeamInfo);
+export type OrdersCreateOrderResponse = (OrderWithPaymentInfo);
 
 export type OrdersReadOrdersByTableData = {
     tableId: string;

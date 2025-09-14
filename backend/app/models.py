@@ -281,10 +281,7 @@ class Orders(OrderBase, table=True):
 
     @property
     def total_price(self) -> int:
-        return sum(
-            menu_order.menu.price * menu_order.amount
-            for menu_order in self.ordered_menus
-        )
+        return sum(menu_order.menu.price for menu_order in self.ordered_menus)
 
     @property
     def final_price(self) -> Optional[int]:
@@ -292,6 +289,46 @@ class Orders(OrderBase, table=True):
         if self.no is None:
             return None
         return self.total_price - (self.no % 100)
+
+    @property
+    def grouped_ordered_menus(self) -> list["OrderedMenuGrouped"]:
+        """메뉴별로 그룹화된 주문 메뉴 정보"""
+        from collections import defaultdict
+
+        # 메뉴별로 그룹화
+        menu_groups = defaultdict(list)
+        for ordered_menu in self.ordered_menus:
+            menu_groups[ordered_menu.menu_id].append(ordered_menu)
+
+        grouped_menus = []
+        for menu_id, ordered_menu_list in menu_groups.items():
+            # 첫 번째 주문 메뉴에서 메뉴 정보 가져오기
+            first_ordered_menu = ordered_menu_list[0]
+
+            # 수량 및 조리 상태 계산
+            total_amount = len(ordered_menu_list)
+            cooked_count = sum(1 for om in ordered_menu_list if om.cooked)
+
+            # 상태 결정 (전체 상태의 우선순위에 따라)
+            if all(om.served_at for om in ordered_menu_list):
+                status = MenuOrderStatus.served
+            elif any(om.reject_reason for om in ordered_menu_list):
+                status = MenuOrderStatus.rejected
+            elif cooked_count > 0:
+                status = MenuOrderStatus.cooking
+            else:
+                status = MenuOrderStatus.ordered
+
+            grouped_menu = OrderedMenuGrouped(
+                menu=first_ordered_menu.menu,
+                amount=total_amount,
+                cooked_count=cooked_count,
+                status=status,
+                ordered_menu_ids=[om.id for om in ordered_menu_list],
+            )
+            grouped_menus.append(grouped_menu)
+
+        return grouped_menus
 
 
 class OrderCreate(SQLModel):
@@ -317,13 +354,15 @@ class PaymentInfo(SQLModel):
 
 
 class OrderPublic(OrderBase):
+    """그룹화된 메뉴 정보를 포함한 주문 응답 모델"""
+
     id: uuid.UUID
     no: int
     status: OrderStatus
     total_price: int
     final_price: int
 
-    ordered_menus: list["OrderedMenuPublic"]
+    grouped_ordered_menus: list["OrderedMenuGrouped"]
     payment: Optional["Payments"]
     payment_info: Optional[PaymentInfo] = None
 
@@ -335,13 +374,6 @@ class OrderWithPaymentInfo(OrderPublic):
     payment_info: PaymentInfo
 
 
-class OrderWithTeamInfo(OrderPublic):
-    """주문과 팀 정보를 함께 반환하는 모델"""
-
-    team: "TeamPublic"
-    payment_info: PaymentInfo
-
-
 class MenuOrderStatus(str, enum.Enum):
     ordered = "ordered"
     rejected = "rejected"
@@ -350,10 +382,7 @@ class MenuOrderStatus(str, enum.Enum):
 
 
 class OrderedMenuBase(SQLModel):
-    amount: int = Field(gt=0)
-    cooked_amount: int = Field(
-        default=0, ge=0, sa_column_kwargs={"server_default": "0"}
-    )  # 조리 완료된 수량
+    cooked: bool = Field(default=False)  # 조리 완료 여부
     reject_reason: Optional[str] = Field(default=None)
     served_at: Optional[datetime] = Field(default=None)
 
@@ -375,7 +404,7 @@ class OrderedMenus(OrderedMenuBase, table=True):
     def status(self) -> MenuOrderStatus:
         if self.served_at is not None:
             return MenuOrderStatus.served
-        elif self.cooked_amount > 0:  # 조리된 수량이 있으면 cooking 상태
+        elif self.cooked:  # 조리 완료 상태
             return MenuOrderStatus.cooking
         elif self.reject_reason is not None:
             return MenuOrderStatus.rejected
@@ -385,16 +414,20 @@ class OrderedMenus(OrderedMenuBase, table=True):
 
 class OrderedMenuCreate(SQLModel):
     menu_id: uuid.UUID
-    amount: int = Field(gt=0)
+    amount: int = Field(gt=0)  # 프론트엔드에서는 여전히 amount로 받음
 
 
 class OrderedMenuUpdate(SQLModel):
     served_at: Optional[datetime] = None
     reject_reason: Optional[str] = None
+    cooked: Optional[bool] = None
 
 
-class OrderedMenuPublic(OrderedMenuBase):
+class OrderedMenuPublic(SQLModel):
     id: uuid.UUID
+    cooked: bool = Field(default=False)
+    reject_reason: Optional[str] = Field(default=None)
+    served_at: Optional[datetime] = Field(default=None)
     status: MenuOrderStatus
     menu: MenuPublic
 
@@ -402,8 +435,11 @@ class OrderedMenuPublic(OrderedMenuBase):
         from_attributes = True
 
 
-class OrderedMenuForServing(OrderedMenuBase):
+class OrderedMenuForServing(SQLModel):
     id: uuid.UUID
+    cooked: bool = Field(default=False)
+    reject_reason: Optional[str] = Field(default=None)
+    served_at: Optional[datetime] = Field(default=None)
     status: MenuOrderStatus
     menu: MenuPublic
     order_id: uuid.UUID
@@ -411,8 +447,17 @@ class OrderedMenuForServing(OrderedMenuBase):
     table_no: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class OrderedMenuGrouped(SQLModel):
+    """메뉴별로 그룹화된 주문 메뉴 (수량 포함)"""
+
+    menu: MenuPublic
+    amount: int
+    cooked_count: int = Field(default=0)
+    status: MenuOrderStatus
+    ordered_menu_ids: list[uuid.UUID] = Field(description="해당 메뉴의 개별 주문 ID들")
+
+    model_config = {"from_attributes": True}
 
 
 class Payments(SQLModel, table=True):

@@ -27,8 +27,7 @@ from app.models import (
     Orders,
     OrderStatus,
     OrderUpdate,
-    OrderPublic,
-    OrderWithTeamInfo,
+    OrderWithPaymentInfo,
     PaymentInfo,
     OrderedMenus,
     OrderedMenuUpdate,
@@ -266,7 +265,7 @@ def reject_waiting(
     return {"detail": "웨이팅이 거절되었습니다.", "reason": reason}
 
 
-@router.post("/kiosk/orders", tags=["orders"], response_model=OrderWithTeamInfo)
+@router.post("/kiosk/orders", tags=["orders"], response_model=OrderWithPaymentInfo)
 def create_kiosk_order(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -287,14 +286,16 @@ def create_kiosk_order(
     session.add(order)
     session.flush()  # order.id 생성을 위해 flush
 
-    # 주문 메뉴들 생성
-    ordered_menus = [
-        OrderedMenus.model_validate(
-            ordered_menu_data,
-            update={"order_id": order.id, "restaurant_id": restaurant.id},
-        )
-        for ordered_menu_data in kiosk_order_data.ordered_menus
-    ]
+    # 주문 메뉴들 생성 (amount 수량만큼 개별 레코드 생성)
+    ordered_menus = []
+    for ordered_menu_data in kiosk_order_data.ordered_menus:
+        for _ in range(ordered_menu_data.amount):
+            ordered_menu = OrderedMenus(
+                order_id=order.id,
+                restaurant_id=restaurant.id,
+                menu_id=ordered_menu_data.menu_id,
+            )
+            ordered_menus.append(ordered_menu)
     session.add_all(ordered_menus)
 
     # 테이블 상태 업데이트 (idle -> in_use)
@@ -324,7 +325,7 @@ def create_kiosk_order(
         session.commit()
         session.refresh(order)
 
-    return OrderWithTeamInfo.model_validate(
+    return OrderWithPaymentInfo.model_validate(
         order,
         update={
             "payment_info": PaymentInfo(
@@ -334,7 +335,7 @@ def create_kiosk_order(
     )
 
 
-@router.get("/orders", tags=["orders"], response_model=Sequence[OrderPublic])
+@router.get("/orders", tags=["orders"], response_model=Sequence[OrderWithPaymentInfo])
 def read_orders(
     session: SessionDep,
     admin: CurrentAdmin,
@@ -375,40 +376,50 @@ def read_orders(
         statement = statement.where(Orders.reject_reason != None)
 
     orders = session.exec(statement.order_by(col(Orders.created_at).desc())).all()
-    return orders
 
-    # for order, payment in orders:
-    #     if payment and order.payment_id == payment.id:
-    #         order.payment = payment
+    result = []
+    for order in orders:
+        result.append(
+            OrderWithPaymentInfo.model_validate(
+                order,
+                update={
+                    "payment_info": PaymentInfo(
+                        bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+                    ),
+                },
+            )
+        )
 
-    # return [order for order, _ in orders]
+    return result
 
 
-@router.get("/orders/{order_id}", tags=["orders"], response_model=OrderPublic)
+@router.get("/orders/{order_id}", tags=["orders"], response_model=OrderWithPaymentInfo)
 def read_order(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     order_id: uuid.UUID,
 ):
-    data = session.exec(
-        select(Orders, Payments, Teams)
-        .join(Payments, isouter=True)
-        .join(Teams)
-        .where(
+    order = session.exec(
+        select(Orders).where(
             Orders.id == order_id,
             Orders.restaurant_id == restaurant.id,
-            Teams.ended_at == None,  # 활성 팀만
         )
     ).first()
-    if not data:
+
+    if not order:
         raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
 
-    order, payment, team = data
-    if payment and order.payment_id == payment.id:
-        order.payment = payment
+    payment_info = PaymentInfo(
+        bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
+    )
 
-    return order
+    return OrderWithPaymentInfo(
+        **order.model_dump(),
+        grouped_ordered_menus=order.grouped_ordered_menus,
+        payment_info=payment_info,
+        team=order.team,
+    )
 
 
 @router.patch("/orders/{order_id}", tags=["orders"])
@@ -483,8 +494,9 @@ def update_menu_order(
     order_id: uuid.UUID,
     menu_id: uuid.UUID,
     order_data: OrderedMenuUpdate,
-) -> OrderedMenus:
-    ordered_menu = session.exec(
+) -> dict:
+    # 해당 주문의 해당 메뉴에 대한 모든 개별 레코드 조회
+    ordered_menus = session.exec(
         select(OrderedMenus)
         .join(Orders)
         .join(Teams)
@@ -494,24 +506,48 @@ def update_menu_order(
             OrderedMenus.restaurant_id == restaurant.id,
             Teams.ended_at == None,  # 활성 팀만
         )
-    ).first()
-    if not ordered_menu:
-        raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
-    order_data_dict = order_data.model_dump(exclude_unset=True)
-    ordered_menu.sqlmodel_update(order_data_dict)
-    session.add(ordered_menu)
-    session.commit()
-    session.refresh(ordered_menu)
+    ).all()
 
+    if not ordered_menus:
+        raise HTTPException(status_code=404, detail="주문을 찾을 수 없습니다.")
+
+    order_data_dict = order_data.model_dump(exclude_unset=True)
+
+    # cooked 상태 업데이트인 경우 (조리 완료)
+    if "cooked" in order_data_dict and order_data_dict["cooked"]:
+        # 아직 조리되지 않은 첫 번째 아이템을 조리 완료로 변경
+        for ordered_menu in ordered_menus:
+            if not ordered_menu.cooked and not ordered_menu.reject_reason:
+                ordered_menu.cooked = True
+                session.add(ordered_menu)
+                break
+
+    # served_at 업데이트인 경우 (서빙 완료)
+    elif "served_at" in order_data_dict:
+        # 조리 완료되었지만 아직 서빙되지 않은 첫 번째 아이템을 서빙 완료로 변경
+        for ordered_menu in ordered_menus:
+            if (
+                ordered_menu.cooked
+                and not ordered_menu.served_at
+                and not ordered_menu.reject_reason
+            ):
+                ordered_menu.served_at = order_data_dict["served_at"]
+                session.add(ordered_menu)
+                break
+
+    session.commit()
+
+    # 모든 주문 메뉴가 완료되었는지 확인
+    order = ordered_menus[0].order
     if all(
         om.status == MenuOrderStatus.served or om.status == MenuOrderStatus.rejected
-        for om in ordered_menu.order.ordered_menus
+        for om in order.ordered_menus
     ):
-        ordered_menu.order.finished_at = datetime.now(timezone.utc)
-        session.add(ordered_menu.order)
+        order.finished_at = datetime.now(timezone.utc)
+        session.add(order)
         session.commit()
 
-    return ordered_menu
+    return {"detail": "메뉴 상태가 업데이트되었습니다."}
 
 
 @router.delete("/orders/{order_id}/menus/{menu_id}", tags=["orders"])
@@ -523,7 +559,8 @@ def reject_menu_order(
     menu_id: uuid.UUID,
     reason: str = "관리자에 의해 메뉴 주문이 거절되었습니다.",
 ) -> dict:
-    ordered_menu = session.exec(
+    # 해당 주문의 해당 메뉴에 대한 모든 개별 레코드 조회
+    ordered_menus = session.exec(
         select(OrderedMenus)
         .join(Orders)
         .join(Teams)
@@ -533,19 +570,38 @@ def reject_menu_order(
             OrderedMenus.restaurant_id == restaurant.id,
             Teams.ended_at == None,  # 활성 팀만
         )
-    ).first()
-    if not ordered_menu:
-        raise HTTPException(status_code=404, detail="메뉴 주문을 찾을 수 없습니다.")
-    if ordered_menu.status is MenuOrderStatus.rejected:
-        raise HTTPException(status_code=400, detail="이미 거절된 메뉴입니다.")
-    if ordered_menu.status is MenuOrderStatus.served:
-        raise HTTPException(
-            status_code=400, detail="이미 서빙된 메뉴는 거절이 불가능합니다."
-        )
-    ordered_menu.reject_reason = reason
-    session.add(ordered_menu)
-    session.commit()
+    ).all()
 
+    if not ordered_menus:
+        raise HTTPException(status_code=404, detail="메뉴 주문을 찾을 수 없습니다.")
+
+    # 아직 처리되지 않은(주문 상태인) 첫 번째 아이템을 거절로 변경
+    rejected = False
+    for ordered_menu in ordered_menus:
+        if (
+            not ordered_menu.cooked
+            and not ordered_menu.served_at
+            and not ordered_menu.reject_reason
+        ):
+            ordered_menu.reject_reason = reason
+            session.add(ordered_menu)
+            rejected = True
+            break
+
+    if not rejected:
+        # 모든 아이템이 이미 처리된 경우
+        if all(om.served_at for om in ordered_menus):
+            raise HTTPException(
+                status_code=400, detail="이미 서빙된 메뉴는 거절이 불가능합니다."
+            )
+        elif all(om.reject_reason for om in ordered_menus):
+            raise HTTPException(status_code=400, detail="이미 거절된 메뉴입니다.")
+        else:
+            raise HTTPException(
+                status_code=400, detail="거절할 수 있는 메뉴가 없습니다."
+            )
+
+    session.commit()
     return {"detail": "메뉴 주문이 거절되었습니다.", "reason": reason}
 
 
@@ -568,7 +624,7 @@ def get_cooked_ordered_menus(
         .join(Tables)
         .where(
             OrderedMenus.restaurant_id == restaurant.id,
-            OrderedMenus.cooked_amount > 0,  # 조리 완료된 메뉴
+            OrderedMenus.cooked == True,  # 조리 완료된 메뉴
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
             Teams.ended_at == None,  # 활성 팀만
@@ -609,10 +665,10 @@ def get_cooking_queue(
     stmt = (
         select(
             OrderedMenus.menu_id,
-            col(Menus.name).label("menu_name"),
+            col(Menus.name).label("menu_name"),  # type: ignore
             col(Menus.category).label("menu_category"),
             Menus.is_instant_serve,
-            func.sum(OrderedMenus.amount - OrderedMenus.cooked_amount).label("total_pending_count"),  # type: ignore
+            func.count(col(OrderedMenus.id)).label("total_pending_count"),
             func.min(col(Orders.created_at)).label("oldest_order_time"),
         )
         .join(Orders, OrderedMenus.order_id == Orders.id)
@@ -620,8 +676,7 @@ def get_cooking_queue(
         .join(Teams, Orders.team_id == Teams.id)
         .where(
             OrderedMenus.restaurant_id == restaurant.id,
-            OrderedMenus.cooked_amount
-            < OrderedMenus.amount,  # 아직 조리되지 않은 수량이 있음
+            OrderedMenus.cooked == False,  # 아직 조리되지 않은 메뉴
             col(OrderedMenus.reject_reason).is_(None),  # 거절되지 않음
             col(Teams.ended_at).is_(None),  # 활성 팀만
             Orders.status != OrderStatus.rejected,  # 거절된 주문 제외
@@ -633,7 +688,7 @@ def get_cooking_queue(
             Menus.category,
             Menus.is_instant_serve,
         )
-        .having(func.sum(OrderedMenus.amount - OrderedMenus.cooked_amount) > 0)
+        .having(func.count(col(OrderedMenus.id)) > 0)
         .order_by(
             col(OrderedMenus.menu_id).asc(),  # 메뉴 ID 순으로 일정한 순서 보장
             # func.min(col(Orders.created_at)).asc(),  # 가장 오래된 주문 순
@@ -675,8 +730,7 @@ def cook_one_menu(
         .where(
             OrderedMenus.restaurant_id == restaurant.id,
             OrderedMenus.menu_id == menu_id,
-            OrderedMenus.cooked_amount
-            < OrderedMenus.amount,  # 아직 조리되지 않은 수량이 있음
+            OrderedMenus.cooked == False,  # 아직 조리되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않음
             Teams.ended_at == None,  # 활성 팀만
             Orders.status != OrderStatus.rejected,  # 거절된 주문 제외
@@ -696,21 +750,15 @@ def cook_one_menu(
     if not menu:
         raise HTTPException(status_code=404, detail="메뉴를 찾을 수 없습니다.")
 
-    # 조리 완료된 수량 증가 (amount는 그대로 유지)
-    if ordered_menu.cooked_amount >= ordered_menu.amount:
-        raise HTTPException(
-            status_code=400, detail="이미 모든 수량이 조리 완료되었습니다."
-        )
-
-    ordered_menu.cooked_amount += 1
+    # 조리 완료 처리
+    ordered_menu.cooked = True
 
     session.add(ordered_menu)
-    message = f"{menu.name} 1개가 조리 완료되었습니다. ({ordered_menu.cooked_amount}/{ordered_menu.amount})"
+    message = f"{menu.name} 1개가 조리 완료되었습니다."
     cooked_id = ordered_menu.id
 
     session.commit()
-    if ordered_menu.amount > 0:
-        session.refresh(ordered_menu)
+    session.refresh(ordered_menu)
 
     return {"message": message, "ordered_menu_id": str(cooked_id)}
 

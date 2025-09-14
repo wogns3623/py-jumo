@@ -12,7 +12,7 @@ from app.models import (
     TableOrderCreate,
     Orders,
     OrderedMenus,
-    OrderWithTeamInfo,
+    OrderWithPaymentInfo,
     PaymentInfo,
     TableStatus,
 )
@@ -20,12 +20,12 @@ from app.models import (
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
-@router.post("", response_model=OrderWithTeamInfo)
+@router.post("", response_model=OrderWithPaymentInfo)
 def create_order(
     session: SessionDep,
     restaurant: DefaultRestaurant,
     order_data: TableOrderCreate,
-) -> OrderWithTeamInfo:
+) -> OrderWithPaymentInfo:
     """테이블 ID로 직접 주문 생성 (필요시 팀도 함께 생성)"""
 
     # 1. 해당 테이블에 활성 팀이 있는지 확인 (동시성 제어)
@@ -56,14 +56,16 @@ def create_order(
     session.add(order)
     session.flush()  # order.id 생성을 위해 flush
 
-    # 3. 주문 메뉴들 생성
-    ordered_menus = [
-        OrderedMenus.model_validate(
-            menu_data,
-            update={"order_id": order.id, "restaurant_id": restaurant.id},
-        )
-        for menu_data in order_data.ordered_menus
-    ]
+    # 3. 주문 메뉴들 생성 (amount 수량만큼 개별 레코드 생성)
+    ordered_menus = []
+    for menu_data in order_data.ordered_menus:
+        for _ in range(menu_data.amount):
+            ordered_menu = OrderedMenus(
+                order_id=order.id,
+                restaurant_id=restaurant.id,
+                menu_id=menu_data.menu_id,
+            )
+            ordered_menus.append(ordered_menu)
     session.add_all(ordered_menus)
 
     # 4. 테이블 상태 업데이트 (idle -> in_use)
@@ -77,10 +79,9 @@ def create_order(
     session.refresh(order)
     session.refresh(team)
 
-    return OrderWithTeamInfo.model_validate(
+    return OrderWithPaymentInfo.model_validate(
         order,
         update={
-            "team": team,
             "payment_info": PaymentInfo(
                 bank_name="KB국민은행", bank_account_no=settings.BANK_ACCOUNT_NO
             ),

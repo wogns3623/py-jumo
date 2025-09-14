@@ -1,11 +1,11 @@
-import { OrderWithTeamInfo } from "@/client";
+import { OrderWithPaymentInfo } from "@/client";
 import { toast } from "sonner";
 
-export function getPaymentUrl(order: OrderWithTeamInfo) {
+export function getPaymentUrl(order: OrderWithPaymentInfo) {
   return `supertoss://send?amount=${order.final_price}&bank=${order.payment_info.bank_name}&accountNo=${order.payment_info.bank_account_no}&origin=qr`;
 }
 
-export function requestPayment(order: OrderWithTeamInfo) {
+export function requestPayment(order: OrderWithPaymentInfo) {
   const paymentUrl = getPaymentUrl(order);
 
   setTimeout(() => {

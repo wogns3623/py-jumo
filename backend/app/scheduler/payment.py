@@ -8,7 +8,6 @@ from app.core.db import engine, session_decor
 from app.models import (
     Restaurants,
     Orders,
-    OrderPublic,
     Payments,
     BankTransaction,
 )

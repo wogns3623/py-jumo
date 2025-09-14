@@ -179,7 +179,7 @@ export class AdminService {
      * Create Kiosk Order
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns OrderWithTeamInfo Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static createKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
@@ -198,7 +198,7 @@ export class AdminService {
      * Read Orders
      * @param data The data for the request.
      * @param data.status
-     * @returns OrderPublic Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static readOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {
@@ -218,7 +218,7 @@ export class AdminService {
      * Read Order
      * @param data The data for the request.
      * @param data.orderId
-     * @returns OrderPublic Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static readOrder(data: AdminReadOrderData): CancelablePromise<AdminReadOrderResponse> {
@@ -287,7 +287,7 @@ export class AdminService {
      * @param data.orderId
      * @param data.menuId
      * @param data.requestBody
-     * @returns OrderedMenus Successful Response
+     * @returns unknown Successful Response
      * @throws ApiError
      */
     public static updateMenuOrder(data: AdminUpdateMenuOrderData): CancelablePromise<AdminUpdateMenuOrderResponse> {
@@ -516,7 +516,7 @@ export class OrdersService {
      * Create Kiosk Order
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns OrderWithTeamInfo Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static adminCreateKioskOrder(data: AdminCreateKioskOrderData): CancelablePromise<AdminCreateKioskOrderResponse> {
@@ -535,7 +535,7 @@ export class OrdersService {
      * Read Orders
      * @param data The data for the request.
      * @param data.status
-     * @returns OrderPublic Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static adminReadOrders(data: AdminReadOrdersData = {}): CancelablePromise<AdminReadOrdersResponse> {
@@ -555,7 +555,7 @@ export class OrdersService {
      * Read Order
      * @param data The data for the request.
      * @param data.orderId
-     * @returns OrderPublic Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static adminReadOrder(data: AdminReadOrderData): CancelablePromise<AdminReadOrderResponse> {
@@ -624,7 +624,7 @@ export class OrdersService {
      * @param data.orderId
      * @param data.menuId
      * @param data.requestBody
-     * @returns OrderedMenus Successful Response
+     * @returns unknown Successful Response
      * @throws ApiError
      */
     public static adminUpdateMenuOrder(data: AdminUpdateMenuOrderData): CancelablePromise<AdminUpdateMenuOrderResponse> {
@@ -674,7 +674,7 @@ export class OrdersService {
      * 테이블 ID로 직접 주문 생성 (필요시 팀도 함께 생성)
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns OrderWithTeamInfo Successful Response
+     * @returns OrderWithPaymentInfo Successful Response
      * @throws ApiError
      */
     public static createOrder(data: OrdersCreateOrderData): CancelablePromise<OrdersCreateOrderResponse> {

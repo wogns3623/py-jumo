@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 
-import type { OrderWithTeamInfo } from "@/client";
+import type { OrderWithPaymentInfo } from "@/client";
 import { OrderConfirmDialog } from "@/components/Menu/OrderConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { useCreateTableOrder } from "@/hooks/useOrder";
@@ -18,19 +18,19 @@ export function OrderBottomBar({
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
 }) {
-  const [storedLastOrder, setStoredLastOrder] =
-    useLocalStorage<OrderWithTeamInfo | null>("last_order", null);
-  const [lastOrder, setLastOrder] = useState<OrderWithTeamInfo | null>(null);
+  const [lastOrderStorage, setLastOrderStorage] =
+    useLocalStorage<OrderWithPaymentInfo | null>("last_order", null);
+  const [lastOrder, setLastOrder] = useState<OrderWithPaymentInfo | null>(null);
 
   useEffect(() => {
     if (!lastOrder) return;
-    if (!storedLastOrder || storedLastOrder.id !== lastOrder.id) {
+    if (!lastOrderStorage || lastOrderStorage.id !== lastOrder.id) {
       console.log("New lastOrder detected:", lastOrder.id);
-      setStoredLastOrder(lastOrder);
+      setLastOrderStorage(lastOrder);
       return;
     }
 
-    if (storedLastOrder.status !== lastOrder.status) {
+    if (lastOrderStorage.status !== lastOrder.status) {
       console.log("lastOrder status changed:", lastOrder.status);
 
       if (lastOrder.status === "paid") {
@@ -42,9 +42,9 @@ export function OrderBottomBar({
           `주문이 거절되었습니다. 사유: ${lastOrder.reject_reason || "없음"}`
         );
       }
-      setStoredLastOrder(lastOrder);
+      setLastOrderStorage(lastOrder);
     }
-  }, [lastOrder, storedLastOrder, setStoredLastOrder]);
+  }, [lastOrder, lastOrderStorage, setLastOrderStorage]);
 
   // 테이블 기반에서는 주문 조회 로직 제거
   // 주문 후 응답으로 받은 정보만 사용
@@ -52,7 +52,9 @@ export function OrderBottomBar({
   if (lastOrder && lastOrder.status === "ordered" && lastOrder.payment_info) {
     // 결제 정보 보여줌
     return (
-      <LastOrderPaymentInfoBottomBar order={lastOrder as OrderWithTeamInfo} />
+      <LastOrderPaymentInfoBottomBar
+        order={lastOrder as OrderWithPaymentInfo}
+      />
     );
   }
 
@@ -69,7 +71,7 @@ export function OrderBottomBar({
 function LastOrderPaymentInfoBottomBar({
   order,
 }: {
-  order: OrderWithTeamInfo;
+  order: OrderWithPaymentInfo;
 }) {
   return (
     <div className="fixed bottom-0 left-0 right-0 w-full h-[73px] bg-white border-t border-gray-200 flex items-center px-4 z-10">
@@ -119,7 +121,7 @@ function ConfirmOrderBottomBar({
   tableId: string;
   cart: CartItem[];
   setCart: (cart: CartItem[]) => void;
-  setLastOrder: (order: OrderWithTeamInfo | null) => void;
+  setLastOrder: (order: OrderWithPaymentInfo | null) => void;
 }) {
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
 

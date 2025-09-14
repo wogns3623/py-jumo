@@ -228,7 +228,7 @@ function Page() {
                                 </div>
                               </TableCell>
                               <TableCell className="w-20 font-medium">
-                                {orderedMenu.amount}개
+                                1개
                               </TableCell>
                               <TableCell className="w-28">
                                 <Button
@@ -306,7 +306,7 @@ function Page() {
                                 {orderedMenu.menu.name}
                               </h4>
                               <p className="text-sm text-muted-foreground">
-                                수량: {orderedMenu.amount}개
+                                수량: 1개
                               </p>
                             </div>
                             <Button
