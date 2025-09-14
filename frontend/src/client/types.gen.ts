@@ -469,3 +469,15 @@ export type WaitingsCancelWaitingData = {
 };
 
 export type WaitingsCancelWaitingResponse = (unknown);
+
+export type WaitingsGetWaitingData = {
+    waitingId: string;
+};
+
+export type WaitingsGetWaitingResponse = (Waitings);
+
+export type WaitingsCancelWaitingByIdData = {
+    waitingId: string;
+};
+
+export type WaitingsCancelWaitingByIdResponse = (unknown);

@@ -18,6 +18,7 @@ import { Route as KioskImport } from './routes/kiosk'
 import { Route as AdminImport } from './routes/admin'
 import { Route as IndexImport } from './routes/index'
 import { Route as AdminIndexImport } from './routes/admin/index'
+import { Route as WaitingsWaitingIdImport } from './routes/waitings/$waitingId'
 import { Route as AdminWaitingsImport } from './routes/admin/waitings'
 import { Route as AdminTablesImport } from './routes/admin/tables'
 import { Route as AdminSettingsImport } from './routes/admin/settings'
@@ -64,6 +65,11 @@ const IndexRoute = IndexImport.update({
 const AdminIndexRoute = AdminIndexImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+
+const WaitingsWaitingIdRoute = WaitingsWaitingIdImport.update({
+  path: '/$waitingId',
+  getParentRoute: () => WaitingsRoute,
 } as any)
 
 const AdminWaitingsRoute = AdminWaitingsImport.update({
@@ -184,6 +190,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWaitingsImport
       parentRoute: typeof AdminImport
     }
+    '/waitings/$waitingId': {
+      preLoaderRoute: typeof WaitingsWaitingIdImport
+      parentRoute: typeof WaitingsImport
+    }
     '/admin/': {
       preLoaderRoute: typeof AdminIndexImport
       parentRoute: typeof AdminImport
@@ -211,7 +221,7 @@ export const routeTree = rootRoute.addChildren([
   KioskRoute,
   LoginRoute,
   MenusRoute,
-  WaitingsRoute,
+  WaitingsRoute.addChildren([WaitingsWaitingIdRoute]),
 ])
 
 /* prettier-ignore-end */

@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminGetCookingQueueResponse, AdminCookOneMenuData, AdminCookOneMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, AdminGetMenuSalesStatsData, AdminGetMenuSalesStatsResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, RestaurantsReadRestaurantsResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminGetCookingQueueResponse, AdminCookOneMenuData, AdminCookOneMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, AdminGetMenuSalesStatsData, AdminGetMenuSalesStatsResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, RestaurantsReadRestaurantsResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse, WaitingsGetWaitingData, WaitingsGetWaitingResponse, WaitingsCancelWaitingByIdData, WaitingsCancelWaitingByIdResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -993,6 +993,48 @@ export class WaitingsService {
             url: '/api/v1/waitings',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Waiting
+     * 개별 웨이팅 정보 조회
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @returns Waitings Successful Response
+     * @throws ApiError
+     */
+    public static getWaiting(data: WaitingsGetWaitingData): CancelablePromise<WaitingsGetWaitingResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/waitings/{waiting_id}',
+            path: {
+                waiting_id: data.waitingId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Cancel Waiting By Id
+     * 웨이팅 ID로 취소
+     * @param data The data for the request.
+     * @param data.waitingId
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static cancelWaitingById(data: WaitingsCancelWaitingByIdData): CancelablePromise<WaitingsCancelWaitingByIdResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/waitings/{waiting_id}/cancel',
+            path: {
+                waiting_id: data.waitingId
+            },
             errors: {
                 422: 'Validation Error'
             }
