@@ -534,11 +534,10 @@ def update_menu_order(
             order = ordered_menu.order
             team = order.team
             if team.phone:  # 키오스크 주문 (전화번호가 있는 경우)
-                table = team.table
                 # 자동 서빙 완료 처리
                 ordered_menu.served_at = datetime.now(timezone.utc)
                 try:
-                    send_kiosk_order_ready(restaurant, team, table, order.no)  # type: ignore
+                    send_kiosk_order_ready(restaurant, team.phone, order.no)  # type: ignore
                 except Exception as e:
                     print(f"알림톡 발송 실패: {e}")
 

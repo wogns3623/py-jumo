@@ -102,21 +102,32 @@ def send_waiting_calcelled(restaurant: Restaurants, waiting: Waitings):
     )
 
 
-def send_kiosk_order_ready(
-    restaurant: Restaurants, team: Teams, table: Tables, order_no: int
-):
+def send_kiosk_order_ready(restaurant: Restaurants, phone: str, order_no: int):
     """키오스크 주문 조리 완료 알림톡 발송"""
-    content = f"[{restaurant.name}]\n주문이 완료되었습니다!\n\n주문번호: {order_no}번\n테이블: {table.no}번\n\n지금 가져가실 수 있습니다."
+    # 웨이팅 알림 재사용
+    custom_string = f"주문번호: {order_no}\n주문하신 메뉴가 준비되었어요!\n고객"
+    content = f"[{restaurant.name}]\n{custom_string}님, 입장 순서가 되었습니다.\n\n현재 바로 입장이 가능하니\n10분 이내에 직원에게 문의해주세요."
 
     settings.alimtalk.send_message(
         {
-            "templateCode": "KioskOrderReady",
+            "templateCode": "WaitlistNowSeated",
             "plusFriendId": "@acorn_soft",
             "messages": [
                 {
                     "countryCode": "82",
-                    "to": team.phone,
+                    "to": phone,
                     "content": content,
+                    "buttons": [
+                        {
+                            "order": 1,
+                            "type": "WL",
+                            "name": "위치보기",
+                            "linkMobile": "http://money.ipdisk.co.kr:100/publist/HDD1/%EC%A3%BC%EC%A0%90/HYAI.png",
+                            "linkPc": "http://money.ipdisk.co.kr:100/publist/HDD1/%EC%A3%BC%EC%A0%90/HYAI.png",
+                            "schemeIos": "",
+                            "schemeAndroid": "",
+                        }
+                    ],
                     "useSmsFailover": False,
                 }
             ],
