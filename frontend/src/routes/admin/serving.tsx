@@ -13,7 +13,11 @@ import { MenuImage } from "@/components/shared/MenuImage";
 import { AdminService } from "@/client";
 import type { OrderedMenuForServing } from "@/client/types.gen";
 import { CheckCircle, Clock, ChefHat, MapPin } from "lucide-react";
-import { formatKoreanTime, getTimeDifferenceInMinutes, parseUTCDateForComparison } from "@/utils/datetime";
+import {
+  formatKoreanTime,
+  getTimeDifferenceInMinutes,
+  parseUTCDateForComparison,
+} from "@/utils/datetime";
 
 export const Route = createFileRoute("/admin/serving")({
   component: Page,
@@ -98,7 +102,10 @@ function Page() {
       order.menus.push(menu);
 
       // 가장 이른 주문 생성 시간 업데이트 (UTC 기준으로 비교)
-      if (parseUTCDateForComparison(menu.created_at) < parseUTCDateForComparison(order.earliestCreated)) {
+      if (
+        parseUTCDateForComparison(menu.created_at) <
+        parseUTCDateForComparison(order.earliestCreated)
+      ) {
         order.earliestCreated = menu.created_at;
       }
     });

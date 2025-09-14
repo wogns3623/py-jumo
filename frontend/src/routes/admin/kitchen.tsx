@@ -64,7 +64,8 @@ function Page() {
             </p>
           </div>
           <Badge variant="outline" className="text-sm whitespace-nowrap">
-            마지막 업데이트: {new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul" })}
+            마지막 업데이트:{" "}
+            {new Date().toLocaleTimeString("ko-KR", { timeZone: "Asia/Seoul" })}
           </Badge>
         </div>
 

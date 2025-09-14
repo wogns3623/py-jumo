@@ -9,7 +9,7 @@
  */
 const parseUTCDate = (isoString: string): Date => {
   // ISO 문자열이 'Z'로 끝나지 않으면 UTC 표시 추가
-  const utcString = isoString.endsWith('Z') ? isoString : `${isoString}Z`;
+  const utcString = isoString.endsWith("Z") ? isoString : `${isoString}Z`;
   return new Date(utcString);
 };
 
@@ -67,7 +67,10 @@ export const formatRelativeTime = (isoString: string): string => {
 /**
  * 두 UTC ISO 문자열의 시간 차이를 분 단위로 계산
  */
-export const getTimeDifferenceInMinutes = (startISOString: string, endISOString?: string): number => {
+export const getTimeDifferenceInMinutes = (
+  startISOString: string,
+  endISOString?: string
+): number => {
   const start = parseUTCDate(startISOString);
   const end = endISOString ? parseUTCDate(endISOString) : new Date();
   return Math.floor((end.getTime() - start.getTime()) / (1000 * 60));

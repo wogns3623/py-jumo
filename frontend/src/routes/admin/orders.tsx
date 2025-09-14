@@ -949,7 +949,9 @@ function Page() {
                                               환불일시:
                                             </span>
                                             <p className="font-medium">
-                                              {formatKoreanDateTime(order.payment.refunded_at)}
+                                              {formatKoreanDateTime(
+                                                order.payment.refunded_at
+                                              )}
                                             </p>
                                           </div>
                                         )}
@@ -1010,7 +1012,9 @@ function Page() {
                                             완료일시:
                                           </span>
                                           <p className="font-medium">
-                                            {formatKoreanDateTime(order.finished_at)}
+                                            {formatKoreanDateTime(
+                                              order.finished_at
+                                            )}
                                           </p>
                                         </div>
                                       )}

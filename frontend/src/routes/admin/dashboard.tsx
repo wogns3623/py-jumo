@@ -86,7 +86,9 @@ function Page() {
 
     // 오늘 매출 (완료된 주문들의 총 가격)
     const todayOrders = processedOrders.filter(
-      (order) => order.created_at && parseUTCDateForComparison(order.created_at) >= todayStart
+      (order) =>
+        order.created_at &&
+        parseUTCDateForComparison(order.created_at) >= todayStart
     );
     const todaySales = todayOrders.reduce(
       (sum, order) => sum + order.total_price,
@@ -95,7 +97,9 @@ function Page() {
 
     // 이번달 매출
     const monthOrders = processedOrders.filter(
-      (order) => order.created_at && parseUTCDateForComparison(order.created_at) >= monthStart
+      (order) =>
+        order.created_at &&
+        parseUTCDateForComparison(order.created_at) >= monthStart
     );
     const monthSales = monthOrders.reduce(
       (sum, order) => sum + order.total_price,
@@ -105,7 +109,8 @@ function Page() {
     // 오늘 방문자 수 (오늘 웨이팅에 들어온 사람들)
     const todayWaitings = waitings.filter(
       (waiting) =>
-        waiting.created_at && parseUTCDateForComparison(waiting.created_at) >= todayStart
+        waiting.created_at &&
+        parseUTCDateForComparison(waiting.created_at) >= todayStart
     );
     const todayVisitors = todayWaitings.length; // 웨이팅 건수를 방문자 수로 계산
 
