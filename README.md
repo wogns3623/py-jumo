@@ -2,7 +2,7 @@
 
 # 배포
 
-- .env, frontend/.env 파일 생성
+- .env 파일 생성
 - Docker, Docker Compose 설치
 
 ```
@@ -14,6 +14,7 @@ docker compose -f docker-compose.backend.yml up -d
 ## 실행
 
 - .env.example 파일을 복사하여 .env 파일을 생성하고 필요한 값을 설정합니다.
+- frontend/.env 파일도 동일하게 생성합니다.
 - Docker와 Docker Compose가 설치되어 있는지 확인합니다.
 - 다음 명령어로 Docker Compose를 사용하여 모든 서비스를 빌드하고 시작합니다.
 
