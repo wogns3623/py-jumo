@@ -132,7 +132,7 @@ export function MenuSection({
 }: {
   title: string;
   menus: MenuPublic[];
-  canOrder: boolean;
+  canOrder?: boolean;
   cart: CartItem[];
   onCartChange: (cart: CartItem[]) => void;
   className?: string;
