@@ -37,6 +37,7 @@ function Page() {
       const response = await AdminService.readPayments();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 결제 환불

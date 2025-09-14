@@ -32,7 +32,7 @@ function Page() {
       const response = await AdminService.getCookedOrderedMenus();
       return response as OrderedMenuForServing[];
     },
-    refetchInterval: 3000, // 3초마다 자동 새로고침
+    refetchInterval: 5000, // 5초마다 자동 새로고침
   });
 
   // 서빙 완료 처리 mutation

@@ -30,21 +30,21 @@ function Page() {
   } = useQuery({
     queryKey: ["admin", "orders"],
     queryFn: () => AdminService.readOrders(),
-    refetchInterval: 30000, // 30초마다 새로고침
+    refetchInterval: 5000, // 5초마다 새로고침
   });
 
   // 웨이팅 데이터 가져오기
   const { data: waitings, isLoading: waitingsLoading } = useQuery({
     queryKey: ["admin", "waitings"],
     queryFn: () => AdminService.readWaitings(),
-    refetchInterval: 10000, // 10초마다 새로고침
+    refetchInterval: 5000, // 5초마다 새로고침
   });
 
   // 테이블 데이터 가져오기
   const { data: tables, isLoading: tablesLoading } = useQuery({
     queryKey: ["admin", "tables"],
     queryFn: () => AdminService.readTables(),
-    refetchInterval: 10000, // 10초마다 새로고침
+    refetchInterval: 5000, // 5초마다 새로고침
   });
 
   // 통계 계산

@@ -43,6 +43,7 @@ function Page() {
       const response = await AdminService.readTables();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 테이블 상태 업데이트

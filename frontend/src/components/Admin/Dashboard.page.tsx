@@ -12,6 +12,7 @@ export function AdminDashboardPage() {
       const response = await AdminService.readTables();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 레스토랑 정보 조회
@@ -21,6 +22,7 @@ export function AdminDashboardPage() {
       const response = await RestaurantsService.readRestaurants();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 결제 목록 조회 (매출 계산용)
@@ -30,6 +32,7 @@ export function AdminDashboardPage() {
       const response = await AdminService.readPayments();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 주문 목록 조회 (기본 통계용)
@@ -39,6 +42,7 @@ export function AdminDashboardPage() {
       const response = await AdminService.readOrders();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 통계 계산

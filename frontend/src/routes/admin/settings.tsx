@@ -32,6 +32,7 @@ function Page() {
       const response = await RestaurantsService.readRestaurants();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 레스토랑 정보 업데이트

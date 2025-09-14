@@ -30,6 +30,7 @@ function Page() {
       const response = await MenusService.readMenus();
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 메뉴 상태 업데이트 mutation

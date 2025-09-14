@@ -49,6 +49,7 @@ function Page() {
       );
       return response;
     },
+    refetchInterval: 5000,
   });
 
   // 주문 거절
@@ -433,7 +434,7 @@ function Page() {
                                                   updateMenuOrderMutation.isPending
                                                 }
                                               >
-                                                조리시작
+                                                조리완료
                                               </Button>
                                               <Button
                                                 size="sm"
@@ -687,7 +688,7 @@ function Page() {
                                                           updateMenuOrderMutation.isPending
                                                         }
                                                       >
-                                                        조리시작
+                                                        조리완료
                                                       </Button>
                                                       <Button
                                                         size="sm"
