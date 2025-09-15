@@ -5,10 +5,7 @@ import {
   useContext,
   useEffect,
   useRef,
-  useState,
 } from "react";
-
-import { toast } from "@/components/ui/sonner";
 
 interface InactiveContextProps {
   stop: () => void;
