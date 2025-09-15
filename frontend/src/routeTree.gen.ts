@@ -11,12 +11,12 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as WaitingsImport } from './routes/waitings'
 import { Route as MenusImport } from './routes/menus'
 import { Route as LoginImport } from './routes/login'
 import { Route as KioskImport } from './routes/kiosk'
 import { Route as AdminImport } from './routes/admin'
 import { Route as IndexImport } from './routes/index'
+import { Route as WaitingsIndexImport } from './routes/waitings/index'
 import { Route as AdminIndexImport } from './routes/admin/index'
 import { Route as WaitingsWaitingIdImport } from './routes/waitings/$waitingId'
 import { Route as AdminWaitingsImport } from './routes/admin/waitings'
@@ -31,11 +31,6 @@ import { Route as AdminKitchenImport } from './routes/admin/kitchen'
 import { Route as AdminDashboardImport } from './routes/admin/dashboard'
 
 // Create/Update Routes
-
-const WaitingsRoute = WaitingsImport.update({
-  path: '/waitings',
-  getParentRoute: () => rootRoute,
-} as any)
 
 const MenusRoute = MenusImport.update({
   path: '/menus',
@@ -62,14 +57,19 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const WaitingsIndexRoute = WaitingsIndexImport.update({
+  path: '/waitings/',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AdminIndexRoute = AdminIndexImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
 
 const WaitingsWaitingIdRoute = WaitingsWaitingIdImport.update({
-  path: '/$waitingId',
-  getParentRoute: () => WaitingsRoute,
+  path: '/waitings/$waitingId',
+  getParentRoute: () => rootRoute,
 } as any)
 
 const AdminWaitingsRoute = AdminWaitingsImport.update({
@@ -146,10 +146,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MenusImport
       parentRoute: typeof rootRoute
     }
-    '/waitings': {
-      preLoaderRoute: typeof WaitingsImport
-      parentRoute: typeof rootRoute
-    }
     '/admin/dashboard': {
       preLoaderRoute: typeof AdminDashboardImport
       parentRoute: typeof AdminImport
@@ -192,11 +188,15 @@ declare module '@tanstack/react-router' {
     }
     '/waitings/$waitingId': {
       preLoaderRoute: typeof WaitingsWaitingIdImport
-      parentRoute: typeof WaitingsImport
+      parentRoute: typeof rootRoute
     }
     '/admin/': {
       preLoaderRoute: typeof AdminIndexImport
       parentRoute: typeof AdminImport
+    }
+    '/waitings/': {
+      preLoaderRoute: typeof WaitingsIndexImport
+      parentRoute: typeof rootRoute
     }
   }
 }
@@ -221,7 +221,8 @@ export const routeTree = rootRoute.addChildren([
   KioskRoute,
   LoginRoute,
   MenusRoute,
-  WaitingsRoute.addChildren([WaitingsWaitingIdRoute]),
+  WaitingsWaitingIdRoute,
+  WaitingsIndexRoute,
 ])
 
 /* prettier-ignore-end */

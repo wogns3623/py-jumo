@@ -14,7 +14,7 @@ import {
 import { toast } from "@/components/ui/sonner";
 import { Loader2, Clock, Users } from "lucide-react";
 
-export const Route = createFileRoute("/waitings")({
+export const Route = createFileRoute("/waitings/")({
   component: WaitingPage,
 });
 
