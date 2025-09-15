@@ -552,10 +552,13 @@ function Page() {
                                                           );
                                                         }}
                                                         disabled={
+                                                          !order.payment ||
                                                           updateMenuOrderMutation.isPending
                                                         }
                                                       >
-                                                        조리완료
+                                                        {!order.payment
+                                                          ? "결제 대기중"
+                                                          : "조리완료"}
                                                       </Button>
                                                       <Button
                                                         size="sm"
@@ -595,10 +598,13 @@ function Page() {
                                                         )
                                                       }
                                                       disabled={
+                                                        !order.payment ||
                                                         updateMenuOrderMutation.isPending
                                                       }
                                                     >
-                                                      서빙
+                                                      {!order.payment
+                                                        ? "결제 대기중"
+                                                        : "서빙완료"}
                                                     </Button>
                                                   )}
                                                 </div>
@@ -888,10 +894,13 @@ function Page() {
                                                                   );
                                                                 }}
                                                                 disabled={
+                                                                  !order.payment ||
                                                                   updateMenuOrderMutation.isPending
                                                                 }
                                                               >
-                                                                조리완료
+                                                                {!order.payment
+                                                                  ? "결제 대기중"
+                                                                  : "조리완료"}
                                                               </Button>
                                                               <Button
                                                                 size="sm"
@@ -932,10 +941,13 @@ function Page() {
                                                                 )
                                                               }
                                                               disabled={
+                                                                !order.payment ||
                                                                 updateMenuOrderMutation.isPending
                                                               }
                                                             >
-                                                              서빙완료
+                                                              {!order.payment
+                                                                ? "결제 대기중"
+                                                                : "서빙완료"}
                                                             </Button>
                                                           )}
                                                         </div>
