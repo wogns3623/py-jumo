@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str = ""
 
     # Development settings
-    AUTO_PAYMENT_IN_DEV: bool = True  # 개발 환경에서 관리자 로그인 시 자동 결제 처리
+    AUTO_PAYMENT_IN_DEV: bool = False  # 개발 환경에서 관리자 로그인 시 자동 결제 처리
 
     # 60 minutes * 24 hours * 8 days = 8 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8

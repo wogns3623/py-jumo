@@ -71,12 +71,7 @@ def connect_payment_to_order(session: Session) -> None:
         for transaction in transaction_list
         if not any(
             payment.amount == transaction.amount
-            and payment.created_at
-            == (
-                transaction.date.replace(tzinfo=timezone.utc)
-                if transaction.date.tzinfo is None
-                else transaction.date
-            )
+            and payment.created_at == transaction.date
             for payment in exist_payments
         )
     ]
@@ -87,6 +82,7 @@ def connect_payment_to_order(session: Session) -> None:
     # 전체 결제 내역 동기화
     session.add_all(non_exist_payments)
     session.commit()
+    print(f"Inserted {len(non_exist_payments)} new payments")
 
     orders_without_payment = {
         order.id: order
@@ -97,6 +93,7 @@ def connect_payment_to_order(session: Session) -> None:
         ).all()
     }
 
+    payment_attached_orders = []
     for payment in non_exist_payments:
         expected_order_no = 100 - payment.amount % 100
         for order in orders_without_payment.values():
@@ -106,16 +103,25 @@ def connect_payment_to_order(session: Session) -> None:
                 and order.total_price == payment.amount + expected_order_no
             ):
                 order.payment_id = payment.id
-                session.add(order)
+                payment_attached_orders.append(order)
                 del orders_without_payment[order.id]
                 break
 
-    # 10분동안 입금되지 않은 주문은 자동 거절 처리
-    for order in orders_without_payment.values():
-        if order.created_at < before_10_minutes:
-            order.reject_reason = (
-                "10분동안 입금되지 않아 자동으로 주문이 거절되었습니다."
-            )
-            session.add(order)
+    if len(payment_attached_orders) > 0:
+        session.add_all(payment_attached_orders)
+        session.commit()
+        print(f"Attached payments to orders: {len(payment_attached_orders)}")
 
-    session.commit()
+    # 10분동안 입금되지 않은 주문은 자동 거절 처리
+    if len(orders_without_payment) > 0:
+        for order in orders_without_payment.values():
+            if order.created_at < before_10_minutes:
+                order.reject_reason = (
+                    "10분동안 입금되지 않아 자동으로 주문이 거절되었습니다."
+                )
+                session.add(order)
+
+        session.commit()
+        print(
+            f"Processed orders without payment after 10 minutes: {len(orders_without_payment)}"
+        )

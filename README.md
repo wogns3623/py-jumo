@@ -6,6 +6,7 @@
 - Docker, Docker Compose 설치
 
 ```
+docker compose down -v
 docker compose -f docker-compose.backend.yml up -d
 ```
 
