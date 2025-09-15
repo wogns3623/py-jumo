@@ -24,7 +24,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
-import type { OrderStatus, OrderedMenuStatus } from "@/client/types.gen";
+import type {
+  OrderStatus,
+  OrderWithPaymentInfo,
+  OrderedMenuStatus,
+} from "@/client/types.gen";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatKoreanDateTime, formatKoreanDate } from "@/utils/datetime";
 
@@ -166,7 +170,21 @@ function Page() {
     setExpandedOrders(newExpanded);
   };
 
-  const getStatusBadgeVariant = (status: OrderStatus) => {
+  const getStatusBadgeVariant = (order: OrderWithPaymentInfo) => {
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "served"))
+      return "default";
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
+      return "destructive";
+    if (
+      order.grouped_ordered_menus.every(
+        (menu) => menu.status === "served" || menu.status === "rejected"
+      )
+    )
+      return "secondary";
+
+    if (order.grouped_ordered_menus.some((menu) => menu.status === "cooked"))
+      return "secondary";
+
     switch (status) {
       case "ordered":
         return "outline";
@@ -181,8 +199,20 @@ function Page() {
     }
   };
 
-  const getStatusLabel = (status: OrderStatus) => {
-    switch (status) {
+  const getStatusLabel = (order: OrderWithPaymentInfo) => {
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "served"))
+      return "완료";
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
+      return "거절";
+    if (
+      order.grouped_ordered_menus.every(
+        (menu) => menu.status === "served" || menu.status === "rejected"
+      )
+    )
+      return "부분 거절";
+    if (order.grouped_ordered_menus.some((menu) => menu.status === "cooked"))
+      return "조리중";
+    switch (order.status) {
       case "ordered":
         return "주문접수";
       case "paid":
@@ -331,10 +361,10 @@ function Page() {
                             #{order.no}
                           </span>
                           <Badge
-                            variant={getStatusBadgeVariant(order.status)}
+                            variant={getStatusBadgeVariant(order)}
                             className="text-xs"
                           >
-                            {getStatusLabel(order.status)}
+                            {getStatusLabel(order)}
                           </Badge>
                           {isKioskOrder(order) && (
                             <Badge
@@ -733,10 +763,8 @@ function Page() {
                             {formatPrice(order.final_price)}
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant={getStatusBadgeVariant(order.status)}
-                            >
-                              {getStatusLabel(order.status)}
+                            <Badge variant={getStatusBadgeVariant(order)}>
+                              {getStatusLabel(order)}
                             </Badge>
                           </TableCell>
                           <TableCell>
