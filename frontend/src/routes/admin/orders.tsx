@@ -115,7 +115,7 @@ function Page() {
       status,
     }: {
       orderedMenuId: string;
-      status: OederedMenuStatus;
+      status: OrderedMenuStatus;
     }) => {
       return await AdminService.updateMenuOrder({
         orderedMenuId,
@@ -196,7 +196,7 @@ function Page() {
     }
   };
 
-  const getMenuStatusLabel = (status: OederedMenuStatus) => {
+  const getMenuStatusLabel = (status: OrderedMenuStatus) => {
     switch (status) {
       case "ordered":
         return "주문접수";
@@ -211,7 +211,7 @@ function Page() {
     }
   };
 
-  const getMenuStatusBadgeVariant = (status: OederedMenuStatus) => {
+  const getMenuStatusBadgeVariant = (status: OrderedMenuStatus) => {
     switch (status) {
       case "ordered":
         return "outline";
