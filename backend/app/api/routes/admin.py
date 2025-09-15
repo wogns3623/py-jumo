@@ -540,6 +540,7 @@ def reject_order(
 
 def _update_ordered_menu(
     session: SessionDep,
+    restaurant: Restaurants,
     ordered_menu: OrderedMenus,
     order_data: OrderedMenuUpdate,
 ):
@@ -566,17 +567,6 @@ def _update_ordered_menu(
                 )
             ordered_menu.cooked = True
 
-            # 키오스크 주문인 경우 조리 완료 알림톡 발송
-            order = ordered_menu.order
-            team = order.team
-            if team.phone:  # 키오스크 주문 (전화번호가 있는 경우)
-                # 자동 서빙 완료 처리
-                ordered_menu.served_at = datetime.now(timezone.utc)
-                try:
-                    send_kiosk_order_ready(restaurant, team.phone, order.no)  # type: ignore
-                except Exception as e:
-                    print(f"알림톡 발송 실패: {e}")
-
         elif status == OrderedMenuStatus.served:
             if ordered_menu.served_at:
                 raise HTTPException(
@@ -595,10 +585,20 @@ def _update_ordered_menu(
     # 모든 주문 메뉴가 완료되었는지 확인
     order = ordered_menu.order
     if all(
-        om.status == OrderedMenuStatus.served or om.status == OrderedMenuStatus.rejected
+        om.status == OrderedMenuStatus.cooked or om.status == OrderedMenuStatus.rejected
         for om in order.ordered_menus
     ):
         order.finished_at = datetime.now(timezone.utc)
+
+        # 키오스크 주문인 경우 조리 완료 알림톡 발송
+        team = order.team
+        if team.phone:  # 키오스크 주문 (전화번호가 있는 경우)
+            # 자동 서빙 완료 처리
+            ordered_menu.served_at = datetime.now(timezone.utc)
+            try:
+                send_kiosk_order_ready(restaurant, team.phone, order.no)  # type: ignore
+            except Exception as e:
+                print(f"알림톡 발송 실패: {e}")
         session.add(order)
         session.commit()
 
@@ -632,7 +632,7 @@ def update_menu_order(
     if ordered_menu.reject_reason:
         raise HTTPException(status_code=400, detail="거절된 메뉴는 수정할 수 없습니다.")
 
-    return _update_ordered_menu(session, ordered_menu, order_data)
+    return _update_ordered_menu(session, restaurant, ordered_menu, order_data)
 
 
 @router.delete("/ordered-menus/{ordered_menu_id}", tags=["orders"])
@@ -667,7 +667,10 @@ def reject_menu_order(
         )
 
     return _update_ordered_menu(
-        session, ordered_menu, order_data=OrderedMenuUpdate(reject_reason=reason)
+        session,
+        restaurant,
+        ordered_menu,
+        order_data=OrderedMenuUpdate(reject_reason=reason),
     )
 
 
@@ -821,6 +824,7 @@ def cook_one_menu(
 
     _update_ordered_menu(
         session,
+        restaurant,
         ordered_menu,
         order_data=OrderedMenuUpdate(status=OrderedMenuStatus.cooked),
     )
