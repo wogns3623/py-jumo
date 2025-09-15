@@ -153,6 +153,12 @@ function Page() {
                       {/* 기본 정보 */}
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
+                          <span className="text-muted-foreground">결제자:</span>
+                          <p className="font-semibold text-lg">
+                            {payment.transaction_by || ""}
+                          </p>
+                        </div>
+                        <div>
                           <span className="text-muted-foreground">
                             결제 금액:
                           </span>
@@ -222,6 +228,7 @@ function Page() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>결제 ID</TableHead>
+                      <TableHead>결제자</TableHead>
                       <TableHead>금액</TableHead>
                       <TableHead>결제일시</TableHead>
                       <TableHead>상태</TableHead>
@@ -234,6 +241,9 @@ function Page() {
                       <TableRow key={payment.id}>
                         <TableCell className="font-medium">
                           {payment.id?.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {payment.transaction_by || ""}
                         </TableCell>
                         <TableCell className="font-semibold">
                           {(payment.amount || 0).toLocaleString()}원
