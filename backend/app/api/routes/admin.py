@@ -712,7 +712,6 @@ def get_cooked_ordered_menus(
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않은 메뉴
             Teams.ended_at == None,  # 활성 팀만
-            Teams.phone == None,  # 키오스크 주문 제외 (키오스크는 phone이 있음)
         )
         .order_by(
             col(Orders.created_at).asc()
@@ -726,7 +725,9 @@ def get_cooked_ordered_menus(
         result.append(
             OrderedMenuForServing(
                 **ordered_menu.model_dump(),
+                order=order,
                 order_no=order.no,
+                table=table,
                 table_no=table.no,
                 status=ordered_menu.status,
                 menu=ordered_menu.menu,

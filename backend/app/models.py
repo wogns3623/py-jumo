@@ -363,7 +363,6 @@ class TableOrderCreate(SQLModel):
 class OrderUpdate(SQLModel):
     payment_id: Optional[uuid.UUID] = None
     finished_at: Optional[datetime] = None
-    reject_reason: Optional[str] = None
 
 
 class PaymentInfo(SQLModel):
@@ -461,7 +460,9 @@ class OrderedMenuForServing(SQLModel):
     status: OrderedMenuStatus
     menu: MenuPublic
     order_id: uuid.UUID
+    order: OrderPublic
     order_no: int
+    table: Tables
     table_no: int
     created_at: datetime
 

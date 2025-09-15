@@ -133,7 +133,9 @@ export type OrderedMenuForServing = {
     status: OrderedMenuStatus;
     menu: MenuPublic;
     order_id: string;
+    order: OrderPublic;
     order_no: number;
+    table: Tables;
     table_no: number;
     created_at: string;
 };
@@ -172,6 +174,24 @@ export type OrderedMenuUpdate = {
     status?: (string | null);
 };
 
+/**
+ * 그룹화된 메뉴 정보를 포함한 주문 응답 모델
+ */
+export type OrderPublic = {
+    reject_reason?: (string | null);
+    finished_at?: (string | null);
+    created_at?: string;
+    id: string;
+    no: number;
+    status: OrderStatus;
+    total_price: number;
+    final_price: number;
+    grouped_ordered_menus: Array<OrderedMenuGrouped>;
+    payment: (Payments | null);
+    payment_info?: (PaymentInfo | null);
+    team: TeamPublic;
+};
+
 export type Orders = {
     reject_reason?: (string | null);
     finished_at?: (string | null);
@@ -188,7 +208,6 @@ export type OrderStatus = 'ordered' | 'paid' | 'rejected' | 'finished';
 export type OrderUpdate = {
     payment_id?: (string | null);
     finished_at?: (string | null);
-    reject_reason?: (string | null);
 };
 
 export type OrderWithPaymentInfo = {
