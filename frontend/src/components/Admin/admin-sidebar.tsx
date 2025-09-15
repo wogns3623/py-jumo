@@ -48,7 +48,7 @@ const data = {
     },
     {
       title: "키오스크 열기",
-      url: "/kiosk?table=70c60d6a-4f19-47ac-a218-b0cc30820c3c",
+      url: "/kiosk?table=1df38d54-cf56-4b01-82ed-41ecfb3cb5df",
     },
     {
       title: "설정",
