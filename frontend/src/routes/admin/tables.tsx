@@ -302,7 +302,7 @@ function Page() {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-2">일반 테이블</h3>
+          <h3 className="text-lg font-semibold mb-2">키오스크</h3>
           <div className="grid grid-cols-7 gap-3 sm:gap-4">
             {kioskTables?.map((table) => {
               return (
