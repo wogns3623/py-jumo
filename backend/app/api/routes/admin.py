@@ -535,6 +535,13 @@ def reject_order(
     session.add(order)
     session.commit()
 
+    # ordered_menus들도 모두 거절 처리
+    for ordered_menu in order.ordered_menus:
+        if not ordered_menu.reject_reason:
+            ordered_menu.reject_reason = reason
+            session.add(ordered_menu)
+    session.commit()
+
     return {"detail": "주문이 거절되었습니다.", "reason": reason}
 
 
@@ -544,6 +551,7 @@ def _update_ordered_menu(
     ordered_menu: OrderedMenus,
     order_data: OrderedMenuUpdate,
 ):
+    print(ordered_menu, order_data)
     if order_data.reject_reason:
         if ordered_menu.served_at:
             raise HTTPException(
@@ -687,11 +695,18 @@ def get_cooked_ordered_menus(
     """조리가 완료된 주문 메뉴 목록 조회 (서빙 대기중) - 키오스크 주문 제외"""
     # OrderedMenus와 관련 정보를 join하여 가져오기
     ordered_menus_data = session.exec(
-        select(OrderedMenus, Orders, Teams, Tables)
+        select(
+            OrderedMenus,
+            Orders,
+            Teams,
+            Tables,
+        )
         .join(Orders, OrderedMenus.order_id == Orders.id)  # type: ignore
         .join(Teams)
         .join(Tables)
         .where(
+            Orders.reject_reason == None,  # 거절된 주문 제외
+            Orders.payment_id != None,  # 입금된 주문만 처리
             OrderedMenus.restaurant_id == restaurant.id,
             OrderedMenus.cooked == True,  # 조리 완료된 메뉴
             OrderedMenus.served_at == None,  # 아직 서빙되지 않은 메뉴
@@ -703,6 +718,7 @@ def get_cooked_ordered_menus(
             col(Orders.created_at).asc()
         )  # 주문 생성 시간 순으로 (오래된 주문 먼저)
     ).all()
+    print(ordered_menus_data)
 
     # 데이터 변환
     result = []
@@ -747,9 +763,10 @@ def get_cooking_queue(
         .where(
             OrderedMenus.restaurant_id == restaurant.id,
             OrderedMenus.cooked == False,  # 아직 조리되지 않은 메뉴
-            col(OrderedMenus.reject_reason).is_(None),  # 거절되지 않음
-            col(Teams.ended_at).is_(None),  # 활성 팀만
-            Orders.status != OrderStatus.rejected,  # 거절된 주문 제외
+            OrderedMenus.reject_reason == None,  # 거절되지 않음
+            Teams.ended_at == None,  # 활성 팀만
+            Orders.reject_reason == None,  # 거절된 주문 제외
+            Orders.payment_id != None,  # 입금된 주문만 처리
             Menus.is_instant_cook
             == False,  # 즉시 조리 메뉴 제외 (조리가 필요한 메뉴만)
         )
@@ -804,7 +821,8 @@ def cook_one_menu(
             OrderedMenus.cooked == False,  # 아직 조리되지 않은 메뉴
             OrderedMenus.reject_reason == None,  # 거절되지 않음
             Teams.ended_at == None,  # 활성 팀만
-            Orders.status != OrderStatus.rejected,  # 거절된 주문 제외
+            Orders.reject_reason == None,  # 거절된 주문 제외
+            Orders.payment_id != None,  # 입금된 주문만 처리
             Menus.is_instant_cook
             == False,  # 즉시 조리 메뉴 제외 (조리가 필요한 메뉴만)
         )

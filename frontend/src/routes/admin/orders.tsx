@@ -200,7 +200,7 @@ function Page() {
     switch (status) {
       case "ordered":
         return "주문접수";
-      case "cooking":
+      case "cooked":
         return "조리중";
       case "served":
         return "완료";
@@ -215,7 +215,7 @@ function Page() {
     switch (status) {
       case "ordered":
         return "outline";
-      case "cooking":
+      case "cooked":
         return "secondary";
       case "served":
         return "default";
@@ -547,7 +547,7 @@ function Page() {
                                                             {
                                                               orderedMenuId:
                                                                 orderedMenu.id,
-                                                              status: "cooking",
+                                                              status: "cooked",
                                                             }
                                                           );
                                                         }}
@@ -580,7 +580,7 @@ function Page() {
                                                     </>
                                                   )}
                                                   {orderedMenu.status ===
-                                                    "cooking" && (
+                                                    "cooked" && (
                                                     <Button
                                                       size="sm"
                                                       variant="default"
@@ -883,7 +883,7 @@ function Page() {
                                                                       orderedMenuId:
                                                                         orderedMenu.id,
                                                                       status:
-                                                                        "cooking",
+                                                                        "cooked",
                                                                     }
                                                                   );
                                                                 }}
@@ -916,7 +916,7 @@ function Page() {
                                                             </>
                                                           )}
                                                           {orderedMenu.status ===
-                                                            "cooking" && (
+                                                            "cooked" && (
                                                             <Button
                                                               size="sm"
                                                               variant="default"
