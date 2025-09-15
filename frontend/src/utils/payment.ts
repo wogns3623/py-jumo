@@ -30,10 +30,8 @@ function copyToClipboard(text: string) {
   textArea.value = text;
   document.body.appendChild(textArea);
 
-  var range;
-
   if (isOS()) {
-    range = document.createRange();
+    const range = document.createRange();
     range.selectNodeContents(textArea);
     const selection = window.getSelection();
     if (!selection) return;
