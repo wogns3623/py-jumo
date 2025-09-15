@@ -377,7 +377,7 @@ export class AdminService {
     
     /**
      * Read Payments
-     * @returns Payments Successful Response
+     * @returns PaymentWithOrder Successful Response
      * @throws ApiError
      */
     public static readPayments(): CancelablePromise<AdminReadPaymentsResponse> {
@@ -391,7 +391,7 @@ export class AdminService {
      * Refund Payment
      * @param data The data for the request.
      * @param data.paymentId
-     * @returns Payments Successful Response
+     * @returns PaymentWithOrder Successful Response
      * @throws ApiError
      */
     public static refundPayment(data: AdminRefundPaymentData): CancelablePromise<AdminRefundPaymentResponse> {
@@ -752,7 +752,7 @@ export class OrdersService {
 export class PaymentsService {
     /**
      * Read Payments
-     * @returns Payments Successful Response
+     * @returns PaymentWithOrder Successful Response
      * @throws ApiError
      */
     public static adminReadPayments(): CancelablePromise<AdminReadPaymentsResponse> {
@@ -766,7 +766,7 @@ export class PaymentsService {
      * Refund Payment
      * @param data The data for the request.
      * @param data.paymentId
-     * @returns Payments Successful Response
+     * @returns PaymentWithOrder Successful Response
      * @throws ApiError
      */
     public static adminRefundPayment(data: AdminRefundPaymentData): CancelablePromise<AdminRefundPaymentResponse> {

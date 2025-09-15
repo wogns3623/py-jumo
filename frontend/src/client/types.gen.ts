@@ -220,6 +220,20 @@ export type Payments = {
     created_at?: string;
 };
 
+/**
+ * 결제 정보와 주문 정보를 함께 포함하는 모델
+ */
+export type PaymentWithOrder = {
+    id: string;
+    restaurant_id: string;
+    transaction_by?: (string | null);
+    amount: number;
+    refunded_at?: (string | null);
+    created_at: string;
+    order_id?: (string | null);
+    order_no?: (number | null);
+};
+
 export type Restaurants = {
     id?: string;
     name?: string;
@@ -417,13 +431,13 @@ export type AdminCookOneMenuResponse = ({
     [key: string]: unknown;
 });
 
-export type AdminReadPaymentsResponse = (Array<Payments>);
+export type AdminReadPaymentsResponse = (Array<PaymentWithOrder>);
 
 export type AdminRefundPaymentData = {
     paymentId: string;
 };
 
-export type AdminRefundPaymentResponse = (Payments);
+export type AdminRefundPaymentResponse = (PaymentWithOrder);
 
 export type AdminGetMenuSalesStatsData = {
     /**

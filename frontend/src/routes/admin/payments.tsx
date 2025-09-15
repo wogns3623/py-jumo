@@ -56,11 +56,18 @@ function Page() {
     },
   });
 
-  const handleViewOrder = () => {
-    // 결제와 연결된 주문을 찾아 주문 페이지로 이동
-    // 실제로는 payment에서 order_id를 가져와야 하지만, 현재 API 구조상 어려움
-    navigate({ to: "/admin/orders" });
-    toast.info("주문 관리 페이지로 이동합니다.");
+  const handleViewOrder = (payment: any) => {
+    // 결제와 연결된 주문이 있는 경우에만 주문 페이지로 이동
+    if (payment.order_id) {
+      navigate({
+        to: "/admin/orders",
+        search: { orderId: payment.order_id },
+      });
+    } else {
+      // 주문과 연결되지 않은 결제의 경우 일반 주문 관리 페이지로 이동
+      navigate({ to: "/admin/orders" });
+      toast.info("주문 관리 페이지로 이동합니다.");
+    }
   };
 
   if (error) {
@@ -176,16 +183,18 @@ function Page() {
                       </div>
 
                       {/* 액션 */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewOrder()}
-                          className="w-full sm:w-auto"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-1" />
-                          주문 보기
-                        </Button>
+                      <div className="flex flex-col sm:flex-row items-end gap-2 pt-2 border-t">
+                        {payment.order_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewOrder(payment)}
+                            className="w-full sm:w-auto"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            주문 보기
+                          </Button>
+                        )}
                         {!payment.refunded_at && (
                           <Button
                             variant="destructive"
@@ -249,15 +258,17 @@ function Page() {
                             : "-"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewOrder()}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              주문 보기
-                            </Button>
+                          <div className="flex items-end gap-2">
+                            {payment.order_id && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewOrder(payment)}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                주문 보기
+                              </Button>
+                            )}
                             {!payment.refunded_at && (
                               <Button
                                 variant="destructive"

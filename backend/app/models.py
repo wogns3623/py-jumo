@@ -491,6 +491,22 @@ class Payments(SQLModel, table=True):
     )
 
 
+class PaymentWithOrder(SQLModel):
+    """결제 정보와 주문 정보를 함께 포함하는 모델"""
+
+    id: uuid.UUID
+    restaurant_id: uuid.UUID
+    transaction_by: Optional[str] = None
+    amount: int
+    refunded_at: Optional[datetime] = None
+    created_at: datetime
+    order_id: Optional[uuid.UUID] = None
+    order_no: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
+
 class BankTransaction(SQLModel):
     transaction_by: str
     date: datetime

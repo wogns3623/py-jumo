@@ -39,6 +39,7 @@ from app.models import (
     OrderedMenuForServing,
     MenuOrderStatus,
     Payments,
+    PaymentWithOrder,
     KioskOrderCreate,
     Teams,
 )
@@ -772,14 +773,23 @@ def read_payments(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
-) -> Sequence[Payments]:
+) -> Sequence[PaymentWithOrder]:
     payments = session.exec(
         select(Payments)
         .where(Payments.restaurant_id == restaurant.id)
         .order_by(col(Payments.created_at).desc())
     ).all()
 
-    return payments
+    # 결제 정보와 주문 정보를 함께 반환
+    payments_with_order = []
+    for payment in payments:
+        payment_data = PaymentWithOrder.model_validate(payment)
+        if payment.order:
+            payment_data.order_id = payment.order.id
+            payment_data.order_no = payment.order.no
+        payments_with_order.append(payment_data)
+
+    return payments_with_order
 
 
 @router.patch("/payments/{payment_id}/refund", tags=["payments"])
@@ -788,7 +798,7 @@ def refund_payment(
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     payment_id: uuid.UUID,
-) -> Payments:
+) -> PaymentWithOrder:
     payment = session.exec(
         select(Payments).where(
             Payments.id == payment_id,
@@ -805,7 +815,13 @@ def refund_payment(
     session.commit()
     session.refresh(payment)
 
-    return payment
+    # PaymentWithOrder로 변환하여 반환
+    payment_with_order = PaymentWithOrder.model_validate(payment)
+    if payment.order:
+        payment_with_order.order_id = payment.order.id
+        payment_with_order.order_no = payment.order.no
+
+    return payment_with_order
 
 
 @router.get("/menu-sales-stats", tags=["analytics"])

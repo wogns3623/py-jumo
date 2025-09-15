@@ -7,7 +7,7 @@
 
 ```
 docker compose down -v
-docker compose -f docker-compose.backend.yml up -d
+docker compose -f docker-compose.backend.yml up --build --force-recreate -d
 ```
 
 # 개발 서버
@@ -20,7 +20,7 @@ docker compose -f docker-compose.backend.yml up -d
 - 다음 명령어로 Docker Compose를 사용하여 모든 서비스를 빌드하고 시작합니다.
 
 ```
-docker compose watch
+docker compose up --build --force-recreate -d
 ```
 
 ## 접속

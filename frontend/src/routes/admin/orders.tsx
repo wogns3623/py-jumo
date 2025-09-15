@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { AdminSidebarHeader } from "@/components/Admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
@@ -30,12 +30,21 @@ import { formatKoreanDateTime, formatKoreanDate } from "@/utils/datetime";
 
 export const Route = createFileRoute("/admin/orders")({
   component: Page,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      orderId: (search.orderId as string) || undefined,
+    };
+  },
 });
 
 function Page() {
+  const { orderId } = Route.useSearch();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
-  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(
+    orderId ? new Set([orderId]) : new Set()
+  );
+  const scrollOnce = useRef(false);
 
   // 주문 목록 조회
   const {
@@ -52,6 +61,28 @@ function Page() {
     },
     refetchInterval: 5000,
   });
+
+  // 특정 주문 ID가 있을 때 해당 주문으로 스크롤
+  useEffect(() => {
+    if (scrollOnce.current) return; // 이미 스크롤했으면 무시
+
+    if (orderId && orders) {
+      scrollOnce.current = true; // 스크롤 시도 완료 표시
+      const targetOrder = orders.find((order) => order.id === orderId);
+      if (targetOrder) {
+        // 주문이 로드된 후 약간의 지연을 두고 스크롤
+        setTimeout(() => {
+          const element = document.getElementById(`order-${orderId}`);
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+          }
+        }, 100);
+      }
+    }
+  }, [orderId, orders]);
 
   // 주문 거절
   const rejectOrderMutation = useMutation({
@@ -279,7 +310,15 @@ function Page() {
             {/* 모바일 카드 뷰 */}
             <div className="block lg:hidden space-y-4">
               {orders?.map((order) => (
-                <Card key={order.id} className="overflow-hidden">
+                <Card
+                  key={order.id}
+                  className={`overflow-hidden ${
+                    orderId === order.id
+                      ? "ring-2 ring-primary ring-offset-2"
+                      : ""
+                  }`}
+                  id={`order-${order.id}`}
+                >
                   <CardContent className="p-0">
                     <div className="space-y-3">
                       {/* 헤더 - 클릭 가능한 영역 */}
@@ -634,8 +673,13 @@ function Page() {
                       <>
                         <TableRow
                           key={order.id}
-                          className="cursor-pointer hover:bg-accent/50 transition-colors"
+                          className={`cursor-pointer hover:bg-accent/50 transition-colors ${
+                            orderId === order.id
+                              ? "bg-primary/10 ring-2 ring-primary ring-offset-2"
+                              : ""
+                          }`}
                           onClick={() => toggleOrderExpansion(order.id!)}
+                          id={`order-${order.id}`}
                         >
                           <TableCell>
                             <div className="flex items-center justify-center">
