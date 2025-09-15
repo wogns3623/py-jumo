@@ -182,7 +182,7 @@ function Page() {
     )
       return "secondary";
 
-    if (order.grouped_ordered_menus.some((menu) => menu.status === "cooked"))
+    if (order.grouped_ordered_menus.some((menu) => !menu.menu.is_instant_cook && menu.status === "cooked"))
       return "secondary";
 
     switch (order.status) {
@@ -208,7 +208,7 @@ function Page() {
       )
     )
       return "부분 거절";
-    if (order.grouped_ordered_menus.some((menu) => menu.status === "cooked"))
+    if (order.grouped_ordered_menus.some((menu) => !menu.menu.is_instant_cook && menu.status === "cooked"))
       return "조리중";
     switch (order.status) {
       case "ordered":
