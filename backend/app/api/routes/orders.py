@@ -12,6 +12,7 @@ from app.models import (
     TableOrderCreate,
     Orders,
     OrderedMenus,
+    Menus,
     OrderWithPaymentInfo,
     PaymentInfo,
     TableStatus,
@@ -56,14 +57,20 @@ def create_order(
     session.add(order)
     session.flush()  # order.id 생성을 위해 flush
 
+    menus = session.exec(
+        select(Menus).where(Menus.restaurant_id == restaurant.id)
+    ).all()
+    menu_dict = {menu.id: menu for menu in menus}
+
     # 3. 주문 메뉴들 생성 (amount 수량만큼 개별 레코드 생성)
     ordered_menus = []
-    for menu_data in order_data.ordered_menus:
-        for _ in range(menu_data.amount):
+    for ordered_menu_data in order_data.ordered_menus:
+        for _ in range(ordered_menu_data.amount):
             ordered_menu = OrderedMenus(
                 order_id=order.id,
                 restaurant_id=restaurant.id,
-                menu_id=menu_data.menu_id,
+                menu_id=ordered_menu_data.menu_id,
+                cooked=menu_dict[ordered_menu_data.menu_id].is_instant_cook,
             )
             ordered_menus.append(ordered_menu)
     session.add_all(ordered_menus)

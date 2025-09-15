@@ -2,7 +2,7 @@ from sqlmodel import Session, create_engine, select, SQLModel
 from sqlalchemy import Engine
 
 from app.core.config import settings
-from app.models import Restaurants, Tables, Menus
+from app.models import Restaurants, Tables, Menus, TableType
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
@@ -89,8 +89,16 @@ def init_db(session: Session) -> None:
     # tables
     session.add_all(
         [
-            Tables(id=table_id, no=i, restaurant_id=restaurant.id)
+            Tables(
+                id=table_id, no=i, type=TableType.normal, restaurant_id=restaurant.id
+            )
             for i, table_id in enumerate(tableUuids, start=1)
+        ],
+    )
+    session.add_all(
+        [
+            Tables(no=i, type=TableType.kiosk, restaurant_id=restaurant.id)
+            for i in [35, 36]
         ],
     )
 
@@ -100,7 +108,6 @@ def init_db(session: Session) -> None:
             Menus(
                 restaurant_id=restaurant.id,
                 name="에겐 대하 : 안녕하새우",
-                # name="대하",
                 desc="엄청난 대하가 몇 마리 ? 20마리 !",
                 image="/assets/images/menus/shrimp.png",
                 bg_color="#D9D9D9",
@@ -110,7 +117,6 @@ def init_db(session: Session) -> None:
             Menus(
                 restaurant_id=restaurant.id,
                 name="테토 장어 : 왜 불러.",
-                # name="장어",
                 desc="비키거라. 대하에 꿀리지 않는 테토 장어 두 마리 나가신다.",
                 image="/assets/images/menus/eel.png",
                 bg_color="#000000",
@@ -128,58 +134,72 @@ def init_db(session: Session) -> None:
             ),
             Menus(
                 restaurant_id=restaurant.id,
+                name="킹타이거 새우",
+                desc="이 구역의 왕은 나야 ! 아무도 날 막지 못해",
+                image="/assets/images/menus/king_tiger.png",
+                bg_color="#D9D9D9",
+                price=16000,
+                category="스폐셜 메뉴",
+            ),
+            Menus(
+                restaurant_id=restaurant.id,
                 name="코카콜라 : 선택을 못 할땐 노래를 불러봐 !",
-                # name="코카콜라",
                 desc="코카콜라 맛있다 맛있으면 또 먹어 딩동댕동 다음은 뭐게?",
                 image="/assets/images/menus/coke.png",
                 bg_color="#DF0A1C",
                 price=2500,
                 category="뚱캔들과 생명수",
-                is_instant_serve=True,
+                is_instant_cook=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
-                name="펩시제로라임 : 제로의 근본은 나지.",
-                # name="펩시제로라임",
-                desc="반박시 코카콜라 말이 맞음.",
+                name="코카콜라 제로 : 다이어트 중이라고? 그럼 나지",
+                desc="다이어트 중에 양심상 제로 먹는 사람 여기여기 붙어라",
                 image="/assets/images/menus/pepsi.png",
                 bg_color="#141108",
                 price=2500,
                 category="뚱캔들과 생명수",
-                is_instant_serve=True,
+                is_instant_cook=True,
             ),
+            # Menus(
+            #     restaurant_id=restaurant.id,
+            #     name="펩시제로라임 : 제로의 근본은 나지.",
+            #     desc="반박시 코카콜라 말이 맞음.",
+            #     image="/assets/images/menus/pepsi.png",
+            #     bg_color="#141108",
+            #     price=2500,
+            #     category="뚱캔들과 생명수",
+            #     is_instant_cook=True,
+            # ),
             Menus(
                 restaurant_id=restaurant.id,
                 name="스프라이트 : 속이 답답할 떈 스프라이트가 필요한 법",
-                # name="스프라이트",
                 desc="법 언제 생기는지는 나도 모름.",
                 image="/assets/images/menus/sprite.png",
                 bg_color="#2DB24C",
                 price=2500,
                 category="뚱캔들과 생명수",
-                is_instant_serve=True,
+                is_instant_cook=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
                 name="환타 : 달달함을 맡고 있지",
-                # name="환타",
                 desc="나보다 달달한 음료 없을 걸?",
                 image="/assets/images/menus/fanta.png",
                 bg_color="#FE8002",
                 price=2500,
                 category="뚱캔들과 생명수",
-                is_instant_serve=True,
+                is_instant_cook=True,
             ),
             Menus(
                 restaurant_id=restaurant.id,
                 name="건방진 생수 : 난 너의 생명수 (500ml)",
-                # name="생수 (500ml)",
                 desc="긴말 필요 없음",
                 image="/assets/images/menus/water.png",
                 bg_color="#E0F7FA",
                 price=2500,
                 category="뚱캔들과 생명수",
-                is_instant_serve=True,
+                is_instant_cook=True,
             ),
         ]
     )

@@ -63,9 +63,9 @@ class MenuBase(SQLModel):
     bg_color: Optional[str] = Field(default=None)
     category: Optional[str] = Field(default=None, index=True)
     no_stock: bool = Field(default=False)
-    is_instant_serve: bool = Field(
+    is_instant_cook: bool = Field(
         default=False,
-        description="즉시 서빙 가능한 메뉴 여부",
+        description="즉시 조리 가능한 메뉴 여부 (조리 없이 바로 서빙)",
         sa_column_kwargs={"server_default": "0"},
     )
 
@@ -82,7 +82,7 @@ class Menus(MenuBase, table=True):
 
 class MenuUpdate(SQLModel):
     no_stock: Optional[bool] = None
-    is_instant_serve: Optional[bool] = None
+    is_instant_cook: Optional[bool] = None
 
 
 class MenuPublic(MenuBase):
@@ -93,14 +93,19 @@ class MenuPublic(MenuBase):
         from_attributes = True
 
 
+class AllFilter(str, enum.Enum):
+    all = "all"
+
+
 class TableStatus(str, enum.Enum):
     idle = "idle"
     in_use = "in_use"
     reserved = "reserved"
 
 
-class AllFilter(str, enum.Enum):
-    all = "all"
+class TableType(str, enum.Enum):
+    normal = "normal"
+    kiosk = "kiosk"
 
 
 class Tables(SQLModel, table=True):
@@ -109,6 +114,7 @@ class Tables(SQLModel, table=True):
         foreign_key="restaurants.id", index=True, ondelete="CASCADE"
     )
     no: int = Field()
+    type: TableType = Field(default="normal", index=True)
     status: TableStatus = Field(
         sa_column=Column(Enum(TableStatus), index=True), default=TableStatus.idle
     )
@@ -312,13 +318,13 @@ class Orders(OrderBase, table=True):
 
             # 상태 결정 (전체 상태의 우선순위에 따라)
             if all(om.served_at for om in ordered_menu_list):
-                status = MenuOrderStatus.served
+                status = OrderedMenuStatus.served
             elif any(om.reject_reason for om in ordered_menu_list):
-                status = MenuOrderStatus.rejected
+                status = OrderedMenuStatus.rejected
             elif cooked_count > 0:
-                status = MenuOrderStatus.cooking
+                status = OrderedMenuStatus.cooked
             else:
-                status = MenuOrderStatus.ordered
+                status = OrderedMenuStatus.ordered
 
             grouped_menu = OrderedMenuGrouped(
                 menu=first_ordered_menu.menu,
@@ -387,10 +393,10 @@ class OrderWithPaymentInfo(OrderPublic):
     payment_info: PaymentInfo
 
 
-class MenuOrderStatus(str, enum.Enum):
+class OrderedMenuStatus(str, enum.Enum):
     ordered = "ordered"
     rejected = "rejected"
-    cooking = "cooking"
+    cooked = "cooked"
     served = "served"
 
 
@@ -414,15 +420,15 @@ class OrderedMenus(OrderedMenuBase, table=True):
     menu: "Menus" = Relationship()
 
     @property
-    def status(self) -> MenuOrderStatus:
+    def status(self) -> OrderedMenuStatus:
         if self.served_at is not None:
-            return MenuOrderStatus.served
+            return OrderedMenuStatus.served
         elif self.cooked:  # 조리 완료 상태
-            return MenuOrderStatus.cooking
+            return OrderedMenuStatus.cooked
         elif self.reject_reason is not None:
-            return MenuOrderStatus.rejected
+            return OrderedMenuStatus.rejected
         else:
-            return MenuOrderStatus.ordered
+            return OrderedMenuStatus.ordered
 
 
 class OrderedMenuCreate(SQLModel):
@@ -440,7 +446,7 @@ class OrderedMenuPublic(SQLModel):
     cooked: bool = Field(default=False)
     reject_reason: Optional[str] = Field(default=None)
     served_at: Optional[datetime] = Field(default=None)
-    status: MenuOrderStatus
+    status: OrderedMenuStatus
     menu: MenuPublic
 
     class Config:
@@ -452,7 +458,7 @@ class OrderedMenuForServing(SQLModel):
     cooked: bool = Field(default=False)
     reject_reason: Optional[str] = Field(default=None)
     served_at: Optional[datetime] = Field(default=None)
-    status: MenuOrderStatus
+    status: OrderedMenuStatus
     menu: MenuPublic
     order_id: uuid.UUID
     order_no: int
@@ -466,7 +472,7 @@ class OrderedMenuGrouped(SQLModel):
     menu: MenuPublic
     amount: int
     cooked_count: int = Field(default=0)
-    status: MenuOrderStatus
+    status: OrderedMenuStatus
     ordered_menu_ids: list[uuid.UUID] = Field(description="해당 메뉴의 개별 주문 ID들")
     ordered_menus: list["OrderedMenuPublic"] = Field(
         description="해당 메뉴의 개별 주문 상세 정보들"
@@ -549,7 +555,7 @@ class MenuCookingQueue(SQLModel):
     menu_category: Optional[str] = None
     total_pending_count: int = Field(description="조리 대기중인 총 개수")
     oldest_order_time: Optional[datetime] = Field(description="가장 오래된 주문 시간")
-    is_instant_serve: bool = Field(default=False, description="즉시 서빙 가능 여부")
+    is_instant_cook: bool = Field(default=False, description="즉시 조리 가능 여부")
 
     class Config:
         from_attributes = True

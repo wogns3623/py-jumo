@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+import { useMemo, useState } from "react";
 
 import { AdminSidebarHeader } from "@/components/Admin/admin-sidebar";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
-import type { Waitings } from "@/client/types.gen";
+import type { WaitingPublic } from "@/client/types.gen";
 import {
   Clock,
   Phone,
@@ -45,9 +45,9 @@ export const Route = createFileRoute("/admin/waitings")({
 
 function Page() {
   const queryClient = useQueryClient();
-  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
-  const [rejectReason, setRejectReason] = React.useState("");
-  const [selectedWaiting, setSelectedWaiting] = React.useState<Waitings | null>(
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [selectedWaiting, setSelectedWaiting] = useState<WaitingPublic | null>(
     null
   );
 
@@ -61,6 +61,20 @@ function Page() {
     queryKey: ["admin", "waitings"],
     queryFn: () => AdminService.readWaitings(),
     refetchInterval: 5000, // 5초마다 새로고침
+  });
+
+  // 웨이팅 입장 완료 처리
+  const confirmEnterMutation = useMutation({
+    mutationFn: (waitingId: string) =>
+      AdminService.confirmEnterWaiting({ waitingId }),
+    onSuccess: () => {
+      toast.success("입장 완료가 확인되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ["admin", "waitings"] });
+    },
+    onError: (error) => {
+      console.error("입장 완료 확인 실패:", error);
+      toast.error("입장 완료 확인에 실패했습니다.");
+    },
   });
 
   // 웨이팅 거절 처리
@@ -99,7 +113,11 @@ function Page() {
     },
   });
 
-  const handleRejectWaiting = (waiting: Waitings) => {
+  const handleConfirmEnter = async (waiting: WaitingPublic) => {
+    await confirmEnterMutation.mutateAsync(waiting.id!);
+  };
+
+  const handleRejectWaiting = (waiting: WaitingPublic) => {
     setSelectedWaiting(waiting);
     setRejectDialogOpen(true);
   };
@@ -129,19 +147,28 @@ function Page() {
     return "text-red-600";
   };
 
-  // 현재 대기중인 웨이팅들만 필터링
-  const activeWaitings = React.useMemo(() => {
+  // 현재 처리가 필요한 웨이팅들만 필터링
+  const unprocessedWaitings = useMemo(() => {
     if (!waitings) return [];
     return waitings.filter(
-      (waiting) => !waiting.rejected_at && !waiting.entered_at
+      (waiting) => waiting.status === "waiting" || waiting.status === "notified"
     );
   }, [waitings]);
 
+  // 현재 대기중인 웨이팅들만 필터링
+  const waitedWaitings = useMemo(() => {
+    if (!waitings) return [];
+    return waitings.filter((waiting) => waiting.status === "waiting");
+  }, [waitings]);
+
   // 처리된 웨이팅들 (입장 또는 거절)
-  const processedWaitings = React.useMemo(() => {
+  const processedWaitings = useMemo(() => {
     if (!waitings) return [];
     return waitings
-      .filter((waiting) => waiting.rejected_at || waiting.entered_at)
+      .filter(
+        (waiting) =>
+          waiting.status === "entered" || waiting.status === "rejected"
+      )
       .slice(0, 10); // 최근 10개만
   }, [waitings]);
 
@@ -187,7 +214,7 @@ function Page() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-sm whitespace-nowrap">
-              대기중 {activeWaitings.length}팀
+              대기중 {waitedWaitings.length}팀
             </Badge>
             <Button
               onClick={() => refetch()}
@@ -204,7 +231,7 @@ function Page() {
         </div>
 
         {/* 일괄 처리 버튼들 */}
-        {activeWaitings.length > 0 && (
+        {waitedWaitings.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">일괄 처리</CardTitle>
@@ -223,7 +250,7 @@ function Page() {
                   onClick={() => dequeueWaitingsMutation.mutate(2)}
                   disabled={
                     dequeueWaitingsMutation.isPending ||
-                    activeWaitings.length < 2
+                    waitedWaitings.length < 2
                   }
                   size="sm"
                 >
@@ -234,7 +261,7 @@ function Page() {
                   onClick={() => dequeueWaitingsMutation.mutate(3)}
                   disabled={
                     dequeueWaitingsMutation.isPending ||
-                    activeWaitings.length < 3
+                    waitedWaitings.length < 3
                   }
                   size="sm"
                 >
@@ -251,7 +278,9 @@ function Page() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              현재 대기중 ({activeWaitings.length}팀)
+              {`현재 대기중(${waitedWaitings.length}팀), 입장 에정(${
+                unprocessedWaitings.length - waitedWaitings.length
+              })`}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -270,7 +299,7 @@ function Page() {
                   </div>
                 ))}
               </div>
-            ) : activeWaitings.length > 0 ? (
+            ) : unprocessedWaitings.length > 0 ? (
               <>
                 {/* 데스크톱 테이블 뷰 */}
                 <div className="hidden md:block">
@@ -287,7 +316,7 @@ function Page() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {activeWaitings.map((waiting, index) => {
+                      {unprocessedWaitings.map((waiting, index) => {
                         const waitingMinutes = getWaitingTime(
                           waiting.created_at!
                         );
@@ -320,10 +349,30 @@ function Page() {
                               </span>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="secondary">대기중</Badge>
+                              {waiting.status === "waiting" ? (
+                                <Badge variant="secondary">대기중</Badge>
+                              ) : waiting.status === "notified" ? (
+                                <Badge variant="default">입장 예정</Badge>
+                              ) : waiting.status === "entered" ? (
+                                <Badge variant="default">입장함</Badge>
+                              ) : waiting.status === "rejected" ? (
+                                <Badge variant="destructive">거절됨</Badge>
+                              ) : (
+                                <Badge variant="outline">알수없음</Badge>
+                              )}
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
+                                {waiting.status === "notified" && (
+                                  <Button
+                                    onClick={() => handleConfirmEnter(waiting)}
+                                    disabled={confirmEnterMutation.isPending}
+                                    variant="default"
+                                    size="sm"
+                                  >
+                                    입장 완료 확인
+                                  </Button>
+                                )}
                                 <Button
                                   onClick={() => handleRejectWaiting(waiting)}
                                   disabled={rejectWaitingMutation.isPending}
@@ -344,7 +393,7 @@ function Page() {
 
                 {/* 모바일 카드 뷰 */}
                 <div className="md:hidden space-y-3">
-                  {activeWaitings.map((waiting, index) => {
+                  {unprocessedWaitings.map((waiting, index) => {
                     const waitingMinutes = getWaitingTime(waiting.created_at!);
                     return (
                       <Card key={waiting.id} className="overflow-hidden">
@@ -367,7 +416,18 @@ function Page() {
                                 </div>
                               </div>
                             </div>
-                            <Badge variant="secondary">대기중</Badge>
+
+                            {waiting.status === "waiting" ? (
+                              <Badge variant="secondary">대기중</Badge>
+                            ) : waiting.status === "notified" ? (
+                              <Badge variant="default">입장 예정</Badge>
+                            ) : waiting.status === "entered" ? (
+                              <Badge variant="default">입장함</Badge>
+                            ) : waiting.status === "rejected" ? (
+                              <Badge variant="destructive">거절됨</Badge>
+                            ) : (
+                              <Badge variant="outline">알수없음</Badge>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
@@ -382,6 +442,16 @@ function Page() {
                           </div>
 
                           <div className="flex gap-2">
+                            {waiting.status === "notified" && (
+                              <Button
+                                onClick={() => handleConfirmEnter(waiting)}
+                                disabled={confirmEnterMutation.isPending}
+                                variant="default"
+                                size="sm"
+                              >
+                                입장 완료 확인
+                              </Button>
+                            )}
                             <Button
                               onClick={() => handleRejectWaiting(waiting)}
                               disabled={rejectWaitingMutation.isPending}

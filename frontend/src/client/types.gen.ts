@@ -37,9 +37,9 @@ export type MenuCookingQueue = {
      */
     oldest_order_time: (string | null);
     /**
-     * 즉시 서빙 가능 여부
+     * 즉시 조리 가능 여부
      */
-    is_instant_serve?: boolean;
+    is_instant_cook?: boolean;
 };
 
 export type MenuOrderStatus = 'ordered' | 'rejected' | 'cooking' | 'served';
@@ -56,9 +56,9 @@ export type MenuPublic = {
     category?: (string | null);
     no_stock?: boolean;
     /**
-     * 즉시 서빙 가능한 메뉴 여부
+     * 즉시 조리 가능한 메뉴 여부 (조리 없이 바로 서빙)
      */
-    is_instant_serve?: boolean;
+    is_instant_cook?: boolean;
     id: string;
     created_at: string;
 };
@@ -75,9 +75,9 @@ export type Menus = {
     category?: (string | null);
     no_stock?: boolean;
     /**
-     * 즉시 서빙 가능한 메뉴 여부
+     * 즉시 조리 가능한 메뉴 여부 (조리 없이 바로 서빙)
      */
-    is_instant_serve?: boolean;
+    is_instant_cook?: boolean;
     id?: string;
     restaurant_id: string;
     created_at?: string;
@@ -119,7 +119,7 @@ export type MenuSalesStats = {
 
 export type MenuUpdate = {
     no_stock?: (boolean | null);
-    is_instant_serve?: (boolean | null);
+    is_instant_cook?: (boolean | null);
 };
 
 export type OrderedMenuCreate = {
@@ -261,11 +261,14 @@ export type Tables = {
     id?: string;
     restaurant_id: string;
     no: number;
+    type?: TableType;
     status?: TableStatus;
     created_at?: string;
 };
 
 export type TableStatus = 'idle' | 'in_use' | 'reserved';
+
+export type TableType = 'normal' | 'kiosk';
 
 export type TableUpdate = {
     status: TableStatus;
@@ -298,6 +301,19 @@ export type WaitingCreate = {
 export type WaitingFind = {
     name: string;
     phone: string;
+};
+
+export type WaitingPublic = {
+    id: string;
+    name: string;
+    phone: string;
+    notified_at: (string | null);
+    entered_at: (string | null);
+    rejected_at: (string | null);
+    rejected_reason: (string | null);
+    status: WaitingStatus;
+    created_at: string;
+    is_entered: boolean;
 };
 
 export type Waitings = {
@@ -335,6 +351,7 @@ export type AdminUpdateMenuResponse = (Menus);
 
 export type AdminReadTablesData = {
     status?: (TableStatus | AllFilter);
+    type?: (TableType | AllFilter);
 };
 
 export type AdminReadTablesResponse = (Array<Tables>);
@@ -350,13 +367,21 @@ export type AdminReadWaitingsData = {
     status?: (WaitingStatus | AllFilter);
 };
 
-export type AdminReadWaitingsResponse = (Array<Waitings>);
+export type AdminReadWaitingsResponse = (Array<WaitingPublic>);
 
 export type AdminDequeueWaitingsData = {
     dequeueCount?: number;
 };
 
-export type AdminDequeueWaitingsResponse = (Array<Waitings>);
+export type AdminDequeueWaitingsResponse = (Array<WaitingPublic>);
+
+export type AdminConfirmEnterWaitingData = {
+    waitingId: string;
+};
+
+export type AdminConfirmEnterWaitingResponse = ({
+    [key: string]: unknown;
+});
 
 export type AdminRejectWaitingData = {
     reason?: string;

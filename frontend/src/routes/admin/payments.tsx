@@ -183,7 +183,7 @@ function Page() {
                       </div>
 
                       {/* 액션 */}
-                      <div className="flex flex-col sm:flex-row items-end gap-2 pt-2 border-t">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-end gap-2 pt-2 border-t">
                         {payment.order_id && (
                           <Button
                             variant="outline"
@@ -258,7 +258,7 @@ function Page() {
                             : "-"}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-end gap-2">
+                          <div className="flex items-center justify-end gap-2">
                             {payment.order_id && (
                               <Button
                                 variant="outline"
