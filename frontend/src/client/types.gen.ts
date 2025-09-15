@@ -42,8 +42,6 @@ export type MenuCookingQueue = {
     is_instant_cook?: boolean;
 };
 
-export type MenuOrderStatus = 'ordered' | 'rejected' | 'cooking' | 'served';
-
 export type MenuPublic = {
     name: string;
     desc?: (string | null);
@@ -132,7 +130,7 @@ export type OrderedMenuForServing = {
     cooked?: boolean;
     reject_reason?: (string | null);
     served_at?: (string | null);
-    status: MenuOrderStatus;
+    status: OrderedMenuStatus;
     menu: MenuPublic;
     order_id: string;
     order_no: number;
@@ -147,7 +145,7 @@ export type OrderedMenuGrouped = {
     menu: MenuPublic;
     amount: number;
     cooked_count?: number;
-    status: MenuOrderStatus;
+    status: OrderedMenuStatus;
     /**
      * 해당 메뉴의 개별 주문 ID들
      */
@@ -163,9 +161,11 @@ export type OrderedMenuPublic = {
     cooked?: boolean;
     reject_reason?: (string | null);
     served_at?: (string | null);
-    status: MenuOrderStatus;
+    status: OrderedMenuStatus;
     menu: MenuPublic;
 };
+
+export type OrderedMenuStatus = 'ordered' | 'rejected' | 'cooked' | 'served';
 
 export type OrderedMenuUpdate = {
     reject_reason?: (string | null);

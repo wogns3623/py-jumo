@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -254,40 +254,45 @@ function Page() {
                           </div>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">상태 변경</label>
-                        <Select
-                          value={table.status || "idle"}
-                          onValueChange={(value: TableStatus) =>
-                            handleStatusChange(value)
-                          }
-                          disabled={updateTableMutation.isPending}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
-                            <SelectItem value="idle">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                                사용 가능
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="in_use">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                                사용 중
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="reserved">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                                예약됨
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
+                      <div>
+                        <Link to={`/menus`} search={{ table: table.id }}>
+                          <Button>메뉴 열기</Button>
+                        </Link>
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">상태 변경</label>
+                      <Select
+                        value={table.status || "idle"}
+                        onValueChange={(value: TableStatus) =>
+                          handleStatusChange(value)
+                        }
+                        disabled={updateTableMutation.isPending}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200 shadow-lg rounded-md z-50">
+                          <SelectItem value="idle">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                              사용 가능
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="in_use">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                              사용 중
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="reserved">
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                              예약됨
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -297,22 +302,73 @@ function Page() {
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-2">키오스크 테이블</h3>
+          <h3 className="text-lg font-semibold mb-2">일반 테이블</h3>
           <div className="grid grid-cols-7 gap-3 sm:gap-4">
             {kioskTables?.map((table) => {
               return (
-                <Card
+                <Popover
                   key={table.id}
-                  className={`border-2 transition-colors aspect-square ${getStatusBackgroundColor(
-                    table.status
-                  )} flex items-center justify-center`}
+                  open={openPopover === table.id}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      handleTableClick(table);
+                    } else {
+                      setOpenPopover(null);
+                      setSelectedTable(null);
+                    }
+                  }}
                 >
-                  <CardContent className="flex items-center justify-center h-full p-4">
-                    <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-center">
-                      {table.no}
-                    </CardTitle>
-                  </CardContent>
-                </Card>
+                  <PopoverTrigger asChild>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="cursor-pointer transition-all hover:shadow-md flex-shrink-0"
+                      // style={{ width: tableWidth }}
+                    >
+                      <Card
+                        className={`border-2 transition-colors aspect-square ${getStatusBackgroundColor(
+                          table.status
+                        )}`}
+                      >
+                        <CardContent className="flex items-center justify-center h-full p-4">
+                          <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold text-center">
+                            {table.no}
+                          </CardTitle>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-lg">
+                          테이블 {table.no}
+                        </h4>
+                        <div className="space-y-1">
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">테이블 ID:</span>{" "}
+                            {table.id?.slice(0, 8)}...
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              현재 상태:
+                            </span>
+                            <Badge
+                              variant={getStatusBadgeVariant(table.status)}
+                            >
+                              {getStatusText(table.status)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <Link to={`/kiosk`} search={{ table: table.id }}>
+                          <Button>키오스크 열기</Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               );
             })}
           </div>
