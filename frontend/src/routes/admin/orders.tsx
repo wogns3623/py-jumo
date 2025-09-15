@@ -173,9 +173,8 @@ function Page() {
   const getStatusBadgeVariant = (order: OrderWithPaymentInfo) => {
     if (order.grouped_ordered_menus.every((menu) => menu.status === "served"))
       return "default";
-    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected") || order.status === "rejected")
       return "destructive";
-    if (order.status === "rejected") return "destructive";
     if (
       order.grouped_ordered_menus.every(
         (menu) => menu.status === "served" || menu.status === "rejected"
@@ -201,9 +200,8 @@ function Page() {
   const getStatusLabel = (order: OrderWithPaymentInfo) => {
     if (order.grouped_ordered_menus.every((menu) => menu.status === "served"))
       return "완료";
-    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
+    if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected") || order.status === "rejected")
       return "거절";
-    if (order.status === "rejected") return "거절";
     if (
       order.grouped_ordered_menus.every(
         (menu) => menu.status === "served" || menu.status === "rejected"
