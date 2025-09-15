@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useMenusSuspense } from "@/hooks/useMenu";
 import type { CartItem } from "@/types/cart";
