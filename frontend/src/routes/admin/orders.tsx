@@ -175,6 +175,7 @@ function Page() {
       return "default";
     if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
       return "destructive";
+    if (order.status === "rejected") return "destructive";
     if (
       order.grouped_ordered_menus.every(
         (menu) => menu.status === "served" || menu.status === "rejected"
@@ -185,15 +186,13 @@ function Page() {
     if (order.grouped_ordered_menus.some((menu) => menu.status === "cooked"))
       return "secondary";
 
-    switch (status) {
+    switch (order.status) {
       case "ordered":
         return "outline";
       case "paid":
         return "secondary";
       case "finished":
         return "default";
-      case "rejected":
-        return "destructive";
       default:
         return "outline";
     }
@@ -204,6 +203,7 @@ function Page() {
       return "완료";
     if (order.grouped_ordered_menus.every((menu) => menu.status === "rejected"))
       return "거절";
+    if (order.status === "rejected") return "거절";
     if (
       order.grouped_ordered_menus.every(
         (menu) => menu.status === "served" || menu.status === "rejected"
@@ -219,8 +219,6 @@ function Page() {
         return "결제완료";
       case "finished":
         return "완료";
-      case "rejected":
-        return "거절";
       default:
         return status;
     }
