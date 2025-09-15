@@ -37,7 +37,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       <Suspense>
         <TanStackDevtools />
       </Suspense>
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        swipeDirections={["right", "left", "top"]}
+      />
     </>
   ),
   notFoundComponent: () => <NotFound />,

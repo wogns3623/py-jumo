@@ -551,7 +551,6 @@ def _update_ordered_menu(
     ordered_menu: OrderedMenus,
     order_data: OrderedMenuUpdate,
 ):
-    print(ordered_menu, order_data)
     if order_data.reject_reason:
         if ordered_menu.served_at:
             raise HTTPException(
@@ -717,7 +716,6 @@ def get_cooked_ordered_menus(
             col(Orders.created_at).asc()
         )  # 주문 생성 시간 순으로 (오래된 주문 먼저)
     ).all()
-    print(ordered_menus_data)
 
     # 데이터 변환
     result = []

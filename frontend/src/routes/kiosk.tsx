@@ -45,13 +45,6 @@ function KioskPage() {
   return (
     <div className="min-h-screen bg-[#F3EFE7] flex-col items-center justify-center">
       {/* 헤더 영역 */}
-      <div className="w-full bg-gray-300 opacity-80 rounded-b-2xl overflow-hidden mb-4">
-        <img
-          src="/assets/images/menu_header.png"
-          alt="Header Image"
-          className="w-full h-full object-contain"
-        />
-      </div>
 
       <QueryErrorResetBoundary>
         {({ reset }) => (

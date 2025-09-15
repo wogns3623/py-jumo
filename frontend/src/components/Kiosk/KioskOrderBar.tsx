@@ -9,6 +9,7 @@ import type { CartItem } from "@/types/cart";
 import { PaymentAnnounceDialog } from "./PaymentAnnounceDialog";
 import { PhoneInputDialog } from "./PhoneInputDialog";
 import { ConfirmModal } from "../shared";
+import { useInactiveContext } from "./inactive.context";
 
 export function KioskOrderBottomBar({
   tableId,
@@ -37,6 +38,7 @@ function ConfirmOrderBottomBar({
   const [isPhoneInputDialogOpen, setIsPhoneInputDialogOpen] = useState(false);
   const [isFinalConfirmOpen, setIsFinalConfirmOpen] = useState(false);
   const [order, setOrder] = useState<OrderWithPaymentInfo | null>(null);
+  const detector = useInactiveContext();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
@@ -60,6 +62,8 @@ function ConfirmOrderBottomBar({
       setCart([]);
 
       console.log("주문 및 결제 정보:", order);
+
+      detector.stop();
       setOrder(order);
     } catch (error) {
       console.error("주문 실패:", error);
@@ -124,9 +128,11 @@ function ConfirmOrderBottomBar({
           onConfirm={() => {
             setIsFinalConfirmOpen(true);
             setOrder(null);
+            detector.start();
           }}
           onCancel={() => {
             setOrder(null);
+            detector.start();
           }}
         />
       )}
