@@ -24,7 +24,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/sonner";
 import { AdminService } from "@/client";
-import type { OrderStatus, MenuOrderStatus } from "@/client/types.gen";
+import type { OrderStatus, OrderedMenuStatus } from "@/client/types.gen";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatKoreanDateTime, formatKoreanDate } from "@/utils/datetime";
 
@@ -115,7 +115,7 @@ function Page() {
       status,
     }: {
       orderedMenuId: string;
-      status: MenuOrderStatus;
+      status: OederedMenuStatus;
     }) => {
       return await AdminService.updateMenuOrder({
         orderedMenuId,
@@ -196,7 +196,7 @@ function Page() {
     }
   };
 
-  const getMenuStatusLabel = (status: MenuOrderStatus) => {
+  const getMenuStatusLabel = (status: OederedMenuStatus) => {
     switch (status) {
       case "ordered":
         return "주문접수";
@@ -211,7 +211,7 @@ function Page() {
     }
   };
 
-  const getMenuStatusBadgeVariant = (status: MenuOrderStatus) => {
+  const getMenuStatusBadgeVariant = (status: OederedMenuStatus) => {
     switch (status) {
       case "ordered":
         return "outline";
