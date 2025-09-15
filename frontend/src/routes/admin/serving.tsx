@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { toast } from "@/components/ui/sonner";
 import { MenuImage } from "@/components/shared/MenuImage";
 import { AdminService } from "@/client";
-import type { OrderedMenuForServing } from "@/client/types.gen";
+import type { OrderedMenuForServing, Tables } from "@/client/types.gen";
 import { CheckCircle, Clock, ChefHat, MapPin } from "lucide-react";
 import {
   formatKoreanTime,
@@ -83,6 +83,7 @@ function Page() {
       {
         order_no: number;
         table_no: number;
+        table: Tables;
         menus: OrderedMenuForServing[];
         earliestCreated: string;
       }
@@ -93,6 +94,7 @@ function Page() {
         orderMap.set(menu.order_no, {
           order_no: menu.order_no,
           table_no: menu.table_no,
+          table: menu.table,
           menus: [],
           earliestCreated: menu.created_at,
         });
@@ -181,7 +183,9 @@ function Page() {
                           </Badge>
                           <Badge variant="outline" className="font-mono">
                             <MapPin className="w-3 h-3 mr-1" />
-                            {order.table_no}번 테이블
+                            {order?.table?.type === "kiosk"
+                              ? "키오스크"
+                              : `${order.table_no}번 테이블`}
                           </Badge>
                           <span className="text-sm text-muted-foreground">
                             주문시간: {formatTime(order.earliestCreated)}
@@ -270,7 +274,10 @@ function Page() {
                             className="text-xs font-mono"
                           >
                             <MapPin className="w-2 h-2 mr-1" />
-                            {order.table_no}번
+
+                            {order?.table?.type === "kiosk"
+                              ? "키오스크"
+                              : `${order.table_no}번 테이블`}
                           </Badge>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
