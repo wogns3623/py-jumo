@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminService, RestaurantsService } from "@/client";
+import type { TableBasic } from "@/client/types.gen";
 
 export function AdminDashboardPage() {
-  // 테이블 현황 조회
+  // 테이블 현황 조회 (기본 정보만, 성능 최적화)
   const { data: tables, isLoading: tablesLoading } = useQuery({
     queryKey: ["admin", "tables"],
-    queryFn: async () => {
+    queryFn: async (): Promise<TableBasic[]> => {
       const response = await AdminService.readTables();
       return response;
     },

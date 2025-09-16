@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import enum
 from typing import Optional, ClassVar
 import uuid
+from functools import cached_property
 
 from sqlmodel import (
     SQLModel,
@@ -10,7 +11,9 @@ from sqlmodel import (
     Column,
     Relationship,
     Sequence,
+    Computed,
 )
+from pydantic import computed_field
 
 
 class User(SQLModel):
@@ -121,10 +124,36 @@ class Tables(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     restaurant: "Restaurants" = Relationship(back_populates="tables")
+    teams: list["Teams"] = Relationship(back_populates="table")
 
 
 class TableUpdate(SQLModel):
     status: TableStatus
+
+
+class TableFind(SQLModel):
+    status: Optional[TableStatus] = None
+    type: Optional[TableType] = None
+
+
+class TablePublic(SQLModel):
+    id: uuid.UUID
+    no: int
+    type: TableType
+    status: TableStatus
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TableBasic(TablePublic):
+    """기본 테이블 정보만 포함한 모델 (성능 최적화용)"""
+    teams_count: int = 0  # 활성 팀 수만 포함
+
+
+class TableWithOrders(TablePublic):
+    teams: list["TeamWithOrders"] = []
 
 
 class WaitingStatus(str, enum.Enum):
@@ -152,10 +181,7 @@ class Waitings(SQLModel, table=True):
     #     back_populates="waiting", sa_relationship_kwargs={"uselist": False}
     # )
 
-    @property
-    def is_entered(self) -> bool:
-        return self.entered_at is not None
-
+    @computed_field  # type: ignore[misc]
     @property
     def status(self) -> WaitingStatus:
         if self.entered_at is not None:
@@ -229,13 +255,20 @@ class TeamCreate(SQLModel):
 
 class TeamPublic(SQLModel):
     id: uuid.UUID
-    table: Tables
     phone: Optional[str] = None
     ended_at: Optional[datetime] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class TeamWithOrders(TeamPublic):
+    orders: list["OrderPublic"]
+
+
+class TeamWithTable(TeamPublic):
+    table: TablePublic
 
 
 class OrderStatus(str, enum.Enum):
@@ -275,6 +308,7 @@ class Orders(OrderBase, table=True):
     payment: Optional["Payments"] = Relationship(back_populates="order")
     ordered_menus: list["OrderedMenus"] = Relationship(back_populates="order")
 
+    @computed_field  # type: ignore[misc]
     @property
     def status(self) -> OrderStatus:
         if self.finished_at is not None:
@@ -286,10 +320,12 @@ class Orders(OrderBase, table=True):
         else:
             return OrderStatus.ordered
 
-    @property
+    @computed_field  # type: ignore[misc]
+    @cached_property
     def total_price(self) -> int:
         return sum(menu_order.menu.price for menu_order in self.ordered_menus)
 
+    @computed_field  # type: ignore[misc]
     @property
     def final_price(self) -> Optional[int]:
         """총 결제 금액 (총액 + 주문번호 뒷 2자리)"""
@@ -297,7 +333,8 @@ class Orders(OrderBase, table=True):
             return None
         return self.total_price - (self.no % 100)
 
-    @property
+    @computed_field  # type: ignore[misc]
+    @cached_property
     def grouped_ordered_menus(self) -> list["OrderedMenuGrouped"]:
         """메뉴별로 그룹화된 주문 메뉴 정보"""
         from collections import defaultdict
@@ -382,7 +419,7 @@ class OrderPublic(OrderBase):
     grouped_ordered_menus: list["OrderedMenuGrouped"]
     payment: Optional["Payments"]
     payment_info: Optional[PaymentInfo] = None
-    team: "TeamPublic"
+    team: "TeamWithTable"
 
     class Config:
         from_attributes = True
@@ -418,6 +455,7 @@ class OrderedMenus(OrderedMenuBase, table=True):
     order: "Orders" = Relationship(back_populates="ordered_menus")
     menu: "Menus" = Relationship()
 
+    @computed_field  # type: ignore[misc]
     @property
     def status(self) -> OrderedMenuStatus:
         if self.served_at is not None:

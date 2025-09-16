@@ -1,13 +1,13 @@
 from sqlmodel import Session, create_engine, select, SQLModel
 from sqlalchemy import Engine
 
-# import logging
 
 from app.core.config import settings
 from app.models import Restaurants, Tables, Menus, TableType
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
 
+# import logging
 # logging.basicConfig()
 # logger = logging.getLogger("sqlalchemy.engine")
 # logger.setLevel(logging.DEBUG)

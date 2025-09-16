@@ -61,26 +61,6 @@ export type MenuPublic = {
     created_at: string;
 };
 
-export type Menus = {
-    name: string;
-    desc?: (string | null);
-    /**
-     * price in won
-     */
-    price: number;
-    image?: (string | null);
-    bg_color?: (string | null);
-    category?: (string | null);
-    no_stock?: boolean;
-    /**
-     * 즉시 조리 가능한 메뉴 여부 (조리 없이 바로 서빙)
-     */
-    is_instant_cook?: boolean;
-    id?: string;
-    restaurant_id: string;
-    created_at?: string;
-};
-
 /**
  * 메뉴별 판매 통계
  */
@@ -189,7 +169,7 @@ export type OrderPublic = {
     grouped_ordered_menus: Array<OrderedMenuGrouped>;
     payment: (Payments | null);
     payment_info?: (PaymentInfo | null);
-    team: TeamPublic;
+    team: TeamWithTable;
 };
 
 export type Orders = {
@@ -201,6 +181,16 @@ export type Orders = {
     team_id: string;
     payment_id?: (string | null);
     no?: (number | null);
+    readonly status: OrderStatus;
+    readonly total_price: number;
+    /**
+     * 총 결제 금액 (총액 + 주문번호 뒷 2자리)
+     */
+    readonly final_price: (number | null);
+    /**
+     * 메뉴별로 그룹화된 주문 메뉴 정보
+     */
+    readonly grouped_ordered_menus: Array<OrderedMenuGrouped>;
 };
 
 export type OrderStatus = 'ordered' | 'paid' | 'rejected' | 'finished';
@@ -222,7 +212,7 @@ export type OrderWithPaymentInfo = {
     grouped_ordered_menus: Array<OrderedMenuGrouped>;
     payment: (Payments | null);
     payment_info: PaymentInfo;
-    team: TeamPublic;
+    team: TeamWithTable;
 };
 
 export type PaymentInfo = {
@@ -269,11 +259,31 @@ export type RestaurantUpdate = {
 };
 
 /**
+ * 기본 테이블 정보만 포함한 모델 (성능 최적화용)
+ */
+export type TableBasic = {
+    id: string;
+    no: number;
+    type: TableType;
+    status: TableStatus;
+    created_at: string;
+    teams_count?: number;
+};
+
+/**
  * 테이블 ID로 직접 주문 생성 (팀도 함께 생성)
  */
 export type TableOrderCreate = {
     table_id: string;
     ordered_menus: Array<OrderedMenuCreate>;
+};
+
+export type TablePublic = {
+    id: string;
+    no: number;
+    type: TableType;
+    status: TableStatus;
+    created_at: string;
 };
 
 export type Tables = {
@@ -293,12 +303,29 @@ export type TableUpdate = {
     status: TableStatus;
 };
 
-export type TeamPublic = {
+export type TableWithOrders = {
     id: string;
-    table: Tables;
+    no: number;
+    type: TableType;
+    status: TableStatus;
+    created_at: string;
+    teams?: Array<TeamWithOrders>;
+};
+
+export type TeamWithOrders = {
+    id: string;
     phone?: (string | null);
     ended_at?: (string | null);
     created_at: string;
+    orders: Array<OrderPublic>;
+};
+
+export type TeamWithTable = {
+    id: string;
+    phone?: (string | null);
+    ended_at?: (string | null);
+    created_at: string;
+    table: TablePublic;
 };
 
 export type Token = {
@@ -345,6 +372,7 @@ export type Waitings = {
     rejected_at?: (string | null);
     rejected_reason?: (string | null);
     created_at?: string;
+    readonly status: WaitingStatus;
 };
 
 export type WaitingStatus = 'waiting' | 'notified' | 'entered' | 'rejected';
@@ -366,21 +394,27 @@ export type AdminUpdateMenuData = {
     requestBody: MenuUpdate;
 };
 
-export type AdminUpdateMenuResponse = (Menus);
+export type AdminUpdateMenuResponse = (MenuPublic);
 
 export type AdminReadTablesData = {
     status?: (TableStatus | AllFilter);
     type?: (TableType | AllFilter);
 };
 
-export type AdminReadTablesResponse = (Array<Tables>);
+export type AdminReadTablesResponse = (Array<TableBasic>);
+
+export type AdminReadTableData = {
+    tableId: string;
+};
+
+export type AdminReadTableResponse = (TableWithOrders);
 
 export type AdminUpdateTableData = {
     requestBody: TableUpdate;
     tableId: string;
 };
 
-export type AdminUpdateTableResponse = (Tables);
+export type AdminUpdateTableResponse = (TablePublic);
 
 export type AdminReadWaitingsData = {
     status?: (WaitingStatus | AllFilter);

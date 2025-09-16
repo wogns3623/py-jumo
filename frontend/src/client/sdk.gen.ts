@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminConfirmEnterWaitingData, AdminConfirmEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminGetCookingQueueResponse, AdminCookOneMenuData, AdminCookOneMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, AdminGetMenuSalesStatsData, AdminGetMenuSalesStatsResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, RestaurantsReadRestaurantsResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse, WaitingsGetWaitingData, WaitingsGetWaitingResponse, WaitingsCancelWaitingByIdData, WaitingsCancelWaitingByIdResponse } from './types.gen';
+import type { AdminAdminLoginData, AdminAdminLoginResponse, AdminUpdateRestaurantData, AdminUpdateRestaurantResponse, AdminUpdateMenuData, AdminUpdateMenuResponse, AdminReadTablesData, AdminReadTablesResponse, AdminReadTableData, AdminReadTableResponse, AdminUpdateTableData, AdminUpdateTableResponse, AdminReadWaitingsData, AdminReadWaitingsResponse, AdminDequeueWaitingsData, AdminDequeueWaitingsResponse, AdminConfirmEnterWaitingData, AdminConfirmEnterWaitingResponse, AdminRejectWaitingData, AdminRejectWaitingResponse, AdminCreateKioskOrderData, AdminCreateKioskOrderResponse, AdminReadOrdersData, AdminReadOrdersResponse, AdminReadOrderData, AdminReadOrderResponse, AdminUpdateOrderData, AdminUpdateOrderResponse, AdminRejectOrderData, AdminRejectOrderResponse, AdminUpdateMenuOrderData, AdminUpdateMenuOrderResponse, AdminRejectMenuOrderData, AdminRejectMenuOrderResponse, AdminGetCookedOrderedMenusResponse, AdminGetCookingQueueResponse, AdminCookOneMenuData, AdminCookOneMenuResponse, AdminReadPaymentsResponse, AdminRefundPaymentData, AdminRefundPaymentResponse, AdminGetMenuSalesStatsData, AdminGetMenuSalesStatsResponse, MenusReadMenusResponse, OrdersCreateOrderData, OrdersCreateOrderResponse, OrdersReadOrdersByTableData, OrdersReadOrdersByTableResponse, RestaurantsReadRestaurantsResponse, UtilsHealthCheckResponse, WaitingsReadWatingsData, WaitingsReadWatingsResponse, WaitingsEnqueueWaitingsData, WaitingsEnqueueWaitingsResponse, WaitingsCancelWaitingData, WaitingsCancelWaitingResponse, WaitingsGetWaitingData, WaitingsGetWaitingResponse, WaitingsCancelWaitingByIdData, WaitingsCancelWaitingByIdResponse } from './types.gen';
 
 export class AdminService {
     /**
@@ -50,7 +50,7 @@ export class AdminService {
      * @param data The data for the request.
      * @param data.menuId
      * @param data.requestBody
-     * @returns Menus Successful Response
+     * @returns MenuPublic Successful Response
      * @throws ApiError
      */
     public static updateMenu(data: AdminUpdateMenuData): CancelablePromise<AdminUpdateMenuResponse> {
@@ -70,10 +70,11 @@ export class AdminService {
     
     /**
      * Read Tables
+     * 테이블 목록 조회 (기본 정보만, 성능 최적화)
      * @param data The data for the request.
      * @param data.status
      * @param data.type
-     * @returns Tables Successful Response
+     * @returns TableBasic Successful Response
      * @throws ApiError
      */
     public static readTables(data: AdminReadTablesData = {}): CancelablePromise<AdminReadTablesResponse> {
@@ -91,11 +92,32 @@ export class AdminService {
     }
     
     /**
+     * Read Table
+     * 특정 테이블의 상세 정보 조회 (팀과 주문 정보 포함)
+     * @param data The data for the request.
+     * @param data.tableId
+     * @returns TableWithOrders Successful Response
+     * @throws ApiError
+     */
+    public static readTable(data: AdminReadTableData): CancelablePromise<AdminReadTableResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/tables/{table_id}',
+            path: {
+                table_id: data.tableId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Update Table
      * @param data The data for the request.
      * @param data.tableId
      * @param data.requestBody
-     * @returns Tables Successful Response
+     * @returns TablePublic Successful Response
      * @throws ApiError
      */
     public static updateTable(data: AdminUpdateTableData): CancelablePromise<AdminUpdateTableResponse> {
@@ -542,7 +564,7 @@ export class MenusService {
      * @param data The data for the request.
      * @param data.menuId
      * @param data.requestBody
-     * @returns Menus Successful Response
+     * @returns MenuPublic Successful Response
      * @throws ApiError
      */
     public static adminUpdateMenu(data: AdminUpdateMenuData): CancelablePromise<AdminUpdateMenuResponse> {
@@ -841,10 +863,11 @@ export class ServingService {
 export class TablesService {
     /**
      * Read Tables
+     * 테이블 목록 조회 (기본 정보만, 성능 최적화)
      * @param data The data for the request.
      * @param data.status
      * @param data.type
-     * @returns Tables Successful Response
+     * @returns TableBasic Successful Response
      * @throws ApiError
      */
     public static adminReadTables(data: AdminReadTablesData = {}): CancelablePromise<AdminReadTablesResponse> {
@@ -862,11 +885,32 @@ export class TablesService {
     }
     
     /**
+     * Read Table
+     * 특정 테이블의 상세 정보 조회 (팀과 주문 정보 포함)
+     * @param data The data for the request.
+     * @param data.tableId
+     * @returns TableWithOrders Successful Response
+     * @throws ApiError
+     */
+    public static adminReadTable(data: AdminReadTableData): CancelablePromise<AdminReadTableResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/admin/tables/{table_id}',
+            path: {
+                table_id: data.tableId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Update Table
      * @param data The data for the request.
      * @param data.tableId
      * @param data.requestBody
-     * @returns Tables Successful Response
+     * @returns TablePublic Successful Response
      * @throws ApiError
      */
     public static adminUpdateTable(data: AdminUpdateTableData): CancelablePromise<AdminUpdateTableResponse> {

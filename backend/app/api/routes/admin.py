@@ -4,7 +4,7 @@ from typing import Union, Sequence
 
 
 from fastapi import APIRouter, HTTPException, Query
-from sqlmodel import select, col, or_, func
+from sqlmodel import select, col, or_, and_, func
 
 from app.api.deps import SessionDep, AdminLoginForm, CurrentAdmin, DefaultRestaurant
 from app.api.services.alimtalk import (
@@ -22,11 +22,17 @@ from app.models import (
     MenuUpdate,
     MenuCookingQueue,
     MenuSalesStats,
+    MenuPublic,
     Tables,
     TableStatus,
     TableType,
     TableUpdate,
+    TableType,
+    TablePublic,
+    TableBasic,
+    TableWithOrders,
     Teams,
+    TeamWithOrders,
     AllFilter,
     Waitings,
     WaitingStatus,
@@ -83,14 +89,14 @@ def update_restaurant(
     return restaurant
 
 
-@router.patch("/menus/{menu_id}", tags=["menus"])
+@router.patch("/menus/{menu_id}", tags=["menus"], response_model=MenuPublic)
 def update_menu(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     menu_id: uuid.UUID,
     menu_data: MenuUpdate,
-) -> Menus:
+):
     menu = session.exec(
         select(Menus).where(
             Menus.id == menu_id,
@@ -109,32 +115,92 @@ def update_menu(
     return menu
 
 
-@router.get("/tables", tags=["tables"])
+@router.get("/tables", tags=["tables"], response_model=Sequence[TableBasic])
 def read_tables(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     status: Union[TableStatus, AllFilter] = AllFilter.all,
     type: Union[TableType, AllFilter] = AllFilter.all,
-) -> Sequence[Tables]:
+):
+    """테이블 목록 조회 (기본 정보만, 성능 최적화)"""
     statement = select(Tables).where(Tables.restaurant_id == restaurant.id)
+    
     if status != AllFilter.all:
         statement = statement.where(Tables.status == status)
     if type != AllFilter.all:
         statement = statement.where(Tables.type == type)
 
     tables = session.exec(statement.order_by(col(Tables.no).asc())).all()
-    return tables
+
+    # 각 테이블의 활성 팀 수 계산
+    result = []
+    for table in tables:
+        # 활성 팀 수 계산
+        teams_count = session.exec(
+            select(func.count(Teams.id))
+            .where(Teams.table_id == table.id, Teams.ended_at == None)
+        ).one()
+        
+        result.append(
+            TableBasic(
+                **table.model_dump(),
+                teams_count=teams_count
+            )
+        )
+
+    return result
 
 
-@router.patch("/tables/{table_id}", tags=["tables"])
+@router.get("/tables/{table_id}", tags=["tables"], response_model=TableWithOrders)
+def read_table(
+    session: SessionDep,
+    admin: CurrentAdmin,
+    restaurant: DefaultRestaurant,
+    table_id: uuid.UUID,
+):
+    """특정 테이블의 상세 정보 조회 (팀과 주문 정보 포함)"""
+    table = session.exec(
+        select(Tables).where(
+            Tables.id == table_id,
+            Tables.restaurant_id == restaurant.id,
+        )
+    ).first()
+    
+    if not table:
+        raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
+
+    # 활성 팀들과 주문 정보 조회
+    teams_with_orders = session.exec(
+        select(Teams)
+        .where(Teams.table_id == table_id, Teams.ended_at == None)
+        .order_by(col(Teams.created_at).desc())
+    ).all()
+
+    # 각 팀의 주문 정보 포함
+    teams_data = []
+    for team in teams_with_orders:
+        teams_data.append(
+            TeamWithOrders(
+                **team.model_dump(),
+                orders=team.orders
+            )
+        )
+
+    return TableWithOrders(
+        **table.model_dump(),
+        teams=teams_data
+    )
+
+
+@router.patch("/tables/{table_id}", tags=["tables"], response_model=TablePublic)
 def update_table(
     session: SessionDep,
     admin: CurrentAdmin,
     restaurant: DefaultRestaurant,
     table_id: uuid.UUID,
     table_data: TableUpdate,
-) -> Tables:
+):
     table = session.exec(
         select(Tables).where(
             Tables.id == table_id,

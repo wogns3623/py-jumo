@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminService } from "@/client";
+import type { TableBasic } from "@/client/types.gen";
 import { parseUTCDateForComparison } from "@/utils/datetime";
 import {
   DollarSign,
@@ -41,10 +42,10 @@ function Page() {
     refetchInterval: 5000, // 5초마다 새로고침
   });
 
-  // 테이블 데이터 가져오기
+  // 테이블 데이터 가져오기 (기본 정보만, 성능 최적화)
   const { data: tables, isLoading: tablesLoading } = useQuery({
     queryKey: ["admin", "tables"],
-    queryFn: () => AdminService.readTables(),
+    queryFn: (): Promise<TableBasic[]> => AdminService.readTables(),
     refetchInterval: 5000, // 5초마다 새로고침
   });
 
