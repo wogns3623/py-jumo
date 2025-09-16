@@ -74,7 +74,7 @@ function MenuCard({
           </h3>
           <p
             className={cn(
-              "text-sm font-normal font-inter mb-2 truncate",
+              "text-sm font-normal font-inter mb-2",
               menu.no_stock ? "text-gray-400" : "text-black"
             )}
           >
