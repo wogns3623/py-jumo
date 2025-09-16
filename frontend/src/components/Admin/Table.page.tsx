@@ -238,10 +238,9 @@ export function TableBasicCard({ table }: { table: TableBasic }) {
             <div className="flex items-center justify-between">
               <h4 className="font-medium">활성 팀 & 주문</h4>
               <Badge variant="outline">
-                {isDetailLoading 
-                  ? "로딩 중..." 
-                  : `${tableDetail?.teams?.length || 0}개 팀`
-                }
+                {isDetailLoading
+                  ? "로딩 중..."
+                  : `${tableDetail?.teams?.length || 0}개 팀`}
               </Badge>
             </div>
 

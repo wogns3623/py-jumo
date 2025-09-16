@@ -149,6 +149,7 @@ class TablePublic(SQLModel):
 
 class TableBasic(TablePublic):
     """기본 테이블 정보만 포함한 모델 (성능 최적화용)"""
+
     teams_count: int = 0  # 활성 팀 수만 포함
 
 

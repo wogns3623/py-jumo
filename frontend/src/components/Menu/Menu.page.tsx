@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
 import type { MenuPublic } from "@/client";
@@ -192,6 +192,11 @@ export function MenuSection({
   );
 }
 
+const categoryDesigns: Record<string, string> = {
+  선착순: "bg-[#FF7171] text-white",
+  "스페셜 메뉴": "bg-[#FEC702] text-white",
+};
+
 export function MenuPageInner({ tableId }: { tableId: string | null }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useLocalStorage<CartItem[]>("cart", []);
@@ -221,22 +226,29 @@ export function MenuPageInner({ tableId }: { tableId: string | null }) {
     setCart(validCart);
   }
 
-  // 메뉴를 카테고리별로 분류 (임시로 메인메뉴와 음료수로 구분)
-  const menuGroups = [
-    {
-      title: "선착순",
-      items: menus.filter((menu) => menu.category === "선착순"),
-      className: "bg-[#FF7171] text-white",
-    },
-    {
-      title: "메인메뉴",
-      items: menus.filter((menu) => menu.category === "메인메뉴"),
-    },
-    {
-      title: "뚱캔들과 생명수",
-      items: menus.filter((menu) => menu.category === "뚱캔들과 생명수"),
-    },
-  ];
+  const menuGroups = useMemo(() => {
+    const groups: { title: string; items: MenuPublic[]; className?: string }[] =
+      [];
+    const categoryMap: Record<string, MenuPublic[]> = {};
+
+    menus.forEach((menu) => {
+      if (!menu.category) menu.category = "기타";
+      if (!categoryMap[menu.category]) {
+        categoryMap[menu.category] = [];
+      }
+      categoryMap[menu.category].push(menu);
+    });
+
+    for (const category in categoryMap) {
+      groups.push({
+        title: category,
+        items: categoryMap[category],
+        className: categoryDesigns[category] || undefined,
+      });
+    }
+
+    return groups;
+  }, [menus]);
 
   return (
     <Fragment>

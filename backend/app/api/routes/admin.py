@@ -125,7 +125,7 @@ def read_tables(
 ):
     """테이블 목록 조회 (기본 정보만, 성능 최적화)"""
     statement = select(Tables).where(Tables.restaurant_id == restaurant.id)
-    
+
     if status != AllFilter.all:
         statement = statement.where(Tables.status == status)
     if type != AllFilter.all:
@@ -138,16 +138,12 @@ def read_tables(
     for table in tables:
         # 활성 팀 수 계산
         teams_count = session.exec(
-            select(func.count(Teams.id))
-            .where(Teams.table_id == table.id, Teams.ended_at == None)
-        ).one()
-        
-        result.append(
-            TableBasic(
-                **table.model_dump(),
-                teams_count=teams_count
+            select(func.count(Teams.id)).where(
+                Teams.table_id == table.id, Teams.ended_at == None
             )
-        )
+        ).one()
+
+        result.append(TableBasic(**table.model_dump(), teams_count=teams_count))
 
     return result
 
@@ -166,7 +162,7 @@ def read_table(
             Tables.restaurant_id == restaurant.id,
         )
     ).first()
-    
+
     if not table:
         raise HTTPException(status_code=404, detail="테이블을 찾을 수 없습니다.")
 
@@ -180,17 +176,9 @@ def read_table(
     # 각 팀의 주문 정보 포함
     teams_data = []
     for team in teams_with_orders:
-        teams_data.append(
-            TeamWithOrders(
-                **team.model_dump(),
-                orders=team.orders
-            )
-        )
+        teams_data.append(TeamWithOrders(**team.model_dump(), orders=team.orders))
 
-    return TableWithOrders(
-        **table.model_dump(),
-        teams=teams_data
-    )
+    return TableWithOrders(**table.model_dump(), teams=teams_data)
 
 
 @router.patch("/tables/{table_id}", tags=["tables"], response_model=TablePublic)
