@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useMenusSuspense } from "@/hooks/useMenu";
 import type { CartItem } from "@/types/cart";
-import { MenuSection } from "../Menu/Menu.page";
+import { MenuSectionGroup } from "@/components/shared/MenuSectionGroup";
 import { KioskOrderBottomBar } from "./KioskOrderBar";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -10,43 +10,11 @@ import {
   InactiveContextProvider,
   useInactiveDectector,
 } from "./inactive.context";
-import { MenuPublic } from "@/client";
-
-const categoryDesigns: Record<string, string> = {
-  선착순: "bg-[#FF7171] text-white",
-  "스페셜 메뉴": "bg-[#FEC702] text-white",
-};
 
 export function KioskPageInner({ tableId }: { tableId: string }) {
   const { data: menus } = useMenusSuspense();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isAdOpen, setIsAdOpen] = useState(true);
-
-  // 메뉴를 카테고리별로 분류 (임시로 메인메뉴와 음료수로 구분)
-
-  const menuGroups = useMemo(() => {
-    const groups: { title: string; items: MenuPublic[]; className?: string }[] =
-      [];
-    const categoryMap: Record<string, MenuPublic[]> = {};
-
-    menus.forEach((menu) => {
-      if (!menu.category) menu.category = "기타";
-      if (!categoryMap[menu.category]) {
-        categoryMap[menu.category] = [];
-      }
-      categoryMap[menu.category].push(menu);
-    });
-
-    for (const category in categoryMap) {
-      groups.push({
-        title: category,
-        items: categoryMap[category],
-        className: categoryDesigns[category] || undefined,
-      });
-    }
-
-    return groups;
-  }, [menus]);
 
   // 1분동안 사용자 조작이 없을 시 setIsAdOpen(true)
   const inactiveDetector = useInactiveDectector({
@@ -97,28 +65,13 @@ export function KioskPageInner({ tableId }: { tableId: string }) {
       </div>
 
       {/* 메뉴 섹션들 */}
-      <div className="max-w-md mx-auto px-2">
-        <div className="flex flex-col gap-0">
-          {menuGroups.map((group) => (
-            <MenuSection
-              key={group.title}
-              title={group.title}
-              menus={group.items}
-              cart={cart}
-              onCartChange={setCart}
-              className={group.className}
-            />
-          ))}
-        </div>
-
-        <div>
-          <img
-            src="/assets/images/menu_bottom.png"
-            alt="Bottom Decoration"
-            className="w-full h-full object-cover"
-          />
-        </div>
-      </div>
+      <MenuSectionGroup
+        menus={menus}
+        cart={cart}
+        onCartChange={setCart}
+        canOrder={true}
+        showBottomImage={true}
+      />
 
       {/* 하단 주문 바 */}
       <KioskOrderBottomBar tableId={tableId} cart={cart} setCart={setCart} />

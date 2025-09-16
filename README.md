@@ -6,8 +6,13 @@
 - Docker, Docker Compose 설치
 
 ```
-docker compose down -v
 docker compose -f docker-compose.backend.yml up --build --force-recreate -d
+```
+
+## DB 초기화
+
+```
+docker compose down -v
 ```
 
 # 개발 서버
