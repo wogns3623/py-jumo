@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 interface ModalButton {
   text: string;
@@ -21,6 +22,7 @@ export function ConfirmModal({
   children,
   confirm,
   cancel,
+  className,
 }: {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -29,10 +31,16 @@ export function ConfirmModal({
   children?: React.ReactNode;
   confirm?: ModalButton;
   cancel?: ModalButton;
+  className?: string;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] w-[95vw] max-h-[90vh] bg-gray-50 p-6 flex flex-col">
+      <DialogContent
+        className={cn(
+          "sm:max-w-[425px] w-[95vw] min-h-fit max-h-[90vh] bg-gray-50 p-2 flex flex-col",
+          className
+        )}
+      >
         <DialogHeader className="mb-0 rounded-t-lg flex-shrink-0">
           <DialogTitle className="text-gray-900">{title}</DialogTitle>
           {titleDescription && (
@@ -42,9 +50,7 @@ export function ConfirmModal({
           )}
         </DialogHeader>
 
-        <div className=" p-4 flex-1 flex items-center justify-center">
-          {children}
-        </div>
+        <div className="flex-1 flex flex-col">{children}</div>
 
         <DialogFooter className="gap-2 mt-0 rounded-b-lg flex-shrink-0">
           {confirm && (

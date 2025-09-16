@@ -119,6 +119,7 @@ export function OrderConfirmDialog({
       onOpenChange={onOpenChange}
       confirm={{ text: "주문하기", onClick: handleConfirm }}
       cancel={{ text: "돌아가기", onClick: handleCancel }}
+      className="min-h-[80vh]"
     >
       {cart.length === 0 ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg mx-6 my-4">
@@ -127,20 +128,25 @@ export function OrderConfirmDialog({
       ) : (
         <div className="flex flex-col flex-1 min-h-0 space-y-4">
           {/* 주문 목록 */}
-          <ScrollArea className="h-80">
-            <div className="space-y-2 w-full">
-              {cart.map((item) => (
-                <OrderItem
-                  key={item.menuId}
-                  item={item}
-                  onQuantityChange={(quantity) =>
-                    updateQuantity(item.menuId, quantity)
-                  }
-                  onRemove={() => removeItem(item.menuId)}
-                />
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="flex-1 relative w-full h-full shadow-inner">
+            <ScrollArea
+              className="flex flex-col w-full h-full"
+              style={{ position: "absolute" }}
+            >
+              <div className="space-y-2 w-full">
+                {cart.map((item) => (
+                  <OrderItem
+                    key={item.menuId}
+                    item={item}
+                    onQuantityChange={(quantity) =>
+                      updateQuantity(item.menuId, quantity)
+                    }
+                    onRemove={() => removeItem(item.menuId)}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
 
           <Separator className="bg-gray-200" />
 

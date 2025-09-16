@@ -21,9 +21,7 @@ function MenuCard({
   onQuantityChange: (quantity: number) => void;
 }) {
   const handleSoldOutClick = () => {
-    toast.error("Something went wrong!", {
-      description: `${menu.name}은(는) 현재 품절입니다.`,
-    });
+    toast.error(`${menu.name}은(는) 현재 품절입니다.`);
   };
 
   return (

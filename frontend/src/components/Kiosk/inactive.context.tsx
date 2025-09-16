@@ -4,28 +4,23 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
 } from "react";
 
-interface InactiveContextProps {
+interface InactiveDetector {
   stop: () => void;
   start: () => void;
 }
 
-const InactiveContext = createContext<InactiveContextProps | null>(null);
+const InactiveContext = createContext<InactiveDetector | null>(null);
 
 export const InactiveContextProvider = ({
   children,
-  stop,
-  start,
-}: PropsWithChildren<InactiveContextProps>) => {
+  detector,
+}: PropsWithChildren<{ detector: InactiveDetector }>) => {
   return (
-    <InactiveContext.Provider
-      value={{
-        start,
-        stop,
-      }}
-    >
+    <InactiveContext.Provider value={detector}>
       {children}
     </InactiveContext.Provider>
   );
@@ -40,7 +35,7 @@ export const useInactiveContext = () => {
 
 const IDLE_TIMEOUT = 60 * 1000;
 const INACTIVE_WARNING_TIMEOUT = 45 * 1000;
-export const useInactiveDectector = ({
+export const useInactiveDetector = ({
   onIdle,
   onWarningBeforeIdle,
   idleTimeoutSecond = IDLE_TIMEOUT,
@@ -50,7 +45,7 @@ export const useInactiveDectector = ({
   onWarningBeforeIdle: () => void;
   idleTimeoutSecond: number;
   idleWarningTimeoutSecond: number;
-}) => {
+}): InactiveDetector => {
   const idleTimerRef = useRef<string | number | null>(null);
   const inactiveWarningTimerRef = useRef<string | number | null>(null);
   const stopCheckRef = useRef(false);
@@ -112,8 +107,5 @@ export const useInactiveDectector = ({
     resetInactivityTimer();
   }, [resetInactivityTimer]);
 
-  return {
-    start,
-    stop,
-  };
+  return useMemo(() => ({ stop, start }), [stop, start]);
 };

@@ -145,7 +145,7 @@ def init_db(session: Session) -> None:
                 image="/assets/images/menus/king_tiger.png",
                 bg_color="#D9D9D9",
                 price=16000,
-                category="스폐셜 메뉴",
+                category="스페셜 메뉴",
             ),
             Menus(
                 restaurant_id=restaurant.id,

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import {
   InactiveContextProvider,
-  useInactiveDectector,
+  useInactiveDetector,
 } from "./inactive.context";
 
 export function KioskPageInner({ tableId }: { tableId: string }) {
@@ -17,10 +17,13 @@ export function KioskPageInner({ tableId }: { tableId: string }) {
   const [isAdOpen, setIsAdOpen] = useState(true);
 
   // 1분동안 사용자 조작이 없을 시 setIsAdOpen(true)
-  const inactiveDetector = useInactiveDectector({
+  const inactiveDetector = useInactiveDetector({
     idleTimeoutSecond: 60 * 1000,
     idleWarningTimeoutSecond: 45 * 1000,
-    onIdle: () => setIsAdOpen(true),
+    onIdle: () => {
+      setCart([]);
+      setIsAdOpen(true);
+    },
     onWarningBeforeIdle: () => {
       toast.warning(
         "15초 뒤 광고 화면으로 되돌아갑니다. 만약 사용중이시라면 화면을 터치해주세요!",
@@ -48,10 +51,7 @@ export function KioskPageInner({ tableId }: { tableId: string }) {
   }
 
   return (
-    <InactiveContextProvider
-      start={inactiveDetector.start}
-      stop={inactiveDetector.stop}
-    >
+    <InactiveContextProvider detector={inactiveDetector}>
       <div className="w-full bg-gray-300 opacity-80 rounded-b-2xl overflow-hidden mb-4">
         <img
           src="/assets/images/menu_header.png"
