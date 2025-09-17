@@ -654,8 +654,6 @@ def _update_ordered_menu(
         # 키오스크 주문인 경우 조리 완료 알림톡 발송
         team = order.team
         if team.phone:  # 키오스크 주문 (전화번호가 있는 경우)
-            # 자동 서빙 완료 처리
-            ordered_menu.served_at = datetime.now(timezone.utc)
             try:
                 send_kiosk_order_ready(restaurant, team.phone, order.no)  # type: ignore
             except Exception as e:
