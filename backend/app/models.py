@@ -222,7 +222,6 @@ class WaitingPublic(SQLModel):
     rejected_reason: Optional[str]
     status: WaitingStatus
     created_at: datetime
-    is_entered: bool
 
     class Config:
         from_attributes = True
