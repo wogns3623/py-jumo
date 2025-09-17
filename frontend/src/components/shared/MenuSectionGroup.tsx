@@ -191,6 +191,7 @@ function MenuSection({
 const categoryDesigns: Record<string, string> = {
   선착순: "bg-[#FF7171] text-white",
   "스페셜 메뉴": "bg-[#FEC702] text-white",
+  disabled: "hidden",
 };
 
 const categoryOrder = ["선착순", "스페셜 메뉴"];
