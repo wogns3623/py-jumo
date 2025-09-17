@@ -781,7 +781,6 @@ def get_cooked_ordered_menus(
                 order_no=order.no,
                 table=table,
                 table_no=table.no,
-                status=ordered_menu.status,
                 menu=ordered_menu.menu,
             )
         )
